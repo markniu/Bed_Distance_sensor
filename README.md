@@ -1,4 +1,4 @@
-## Bed Distance sensor for 3D printer
+## Bed Distance sensor for 3D printer---BDsensor 
 
 This is a high resolution inductive distance sensor, it can measure the distance from bed to nozzle with distance resolution 0.01mm.
 
