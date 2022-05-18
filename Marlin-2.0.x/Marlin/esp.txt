@@ -1,0 +1,3 @@
+
+解决中断死机问题：
+esp32-hal-uart.c--uartWrite 函数中去掉UART_MUTEX_LOCK() 和UART_MUTEX_UNLOCK
