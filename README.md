@@ -1,7 +1,6 @@
 ## BDsensor 
 
 This is a high resolution inductive Bed Distance Sensor, it can measure the distance from bed to nozzle with distance resolution 0.01mm.
-
 there is no distance sensor used on the 3D printer for it's high price with this high resoluion,all the bed level sensor used on 3D printer is proximity e.g. the BLTouch.
  
 
