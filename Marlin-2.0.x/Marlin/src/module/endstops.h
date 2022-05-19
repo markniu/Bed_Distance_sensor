@@ -108,7 +108,6 @@ class Endstops {
     static bool enabled, enabled_globally;
     static endstop_mask_t live_state;
     static volatile endstop_mask_t hit_state; // Use X_MIN, Y_MIN, Z_MIN and Z_MIN_PROBE as BIT index
-
     #if ENDSTOP_NOISE_THRESHOLD
       static endstop_mask_t validated_live_state;
       static uint8_t endstop_poll_count;    // Countdown from threshold for polling
@@ -143,6 +142,9 @@ class Endstops {
      */
     static void update();
 
+#if BD_SENSOR
+    static void  BD_Zaxis_update(bool z_state);
+#endif    
     /**
      * Get Endstop hit state.
      */

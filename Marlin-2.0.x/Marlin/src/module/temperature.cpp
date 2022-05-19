@@ -1429,7 +1429,7 @@ void Temperature::manage_heater() {
   //delayMicroseconds(1000);
   ////////// read all the segments bed temperature       
       tmp=i2c_read_1();
-    endstops.update();
+      
       if(Check_OddEven(tmp))
       {
         z_sensor=(tmp&0x3ff)/100.0;
@@ -1440,6 +1440,9 @@ void Temperature::manage_heater() {
           //  stepper.do_babystep(Z_AXIS, true);
          //   stepper.do_babystep((AxisEnum)axis, curTodo > 0);
         }
+        endstops.BD_Zaxis_update(z_sensor<0.01);
+        endstops.update();
+       
       }
      sprintf(tmp_1,"read:%d,%d,z:%0.2f,%0.2f\n",tmp&0x3ff,Check_OddEven(tmp),current_position.z, z_sensor);
      printf(tmp_1);
