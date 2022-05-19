@@ -16,7 +16,7 @@ Distance resolution| 0.01mm |
 Operating Range|10mm|
 Repeatability|+/- 0.005mm|
 Communication port| I2C | 	 
-Wires| only 4wires: GND,5V,I2C_Data,I2C_Clk
+Connection| only 4 wires: GND,5V,I2C_Data,I2C_Clk
  
 ### Calibrate:
 Send gcode G102 to Calibrate,
