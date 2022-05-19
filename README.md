@@ -26,3 +26,6 @@ normally this process will take about 1 minute in 3D printer .
 
 
 Test video: https://youtu.be/MMPM2GHVfew
+Project status:https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
+Store: www.pandapi3d.com  will come soon
+Support: https://www.facebook.com/groups/380795976169477
