@@ -23,7 +23,7 @@ Send gcode G102 to Calibrate,
 
 we need to calibrate this sensor before first use or the bed plate have been changed to different materials,
 Because different metal plates are made of different materials, they may have different electromagnetic properties
-normally this process will take about 1 minute in 3D printer .
+normally this process will take about within one minute in 3D printer .
 
 
 Test video: https://youtu.be/MMPM2GHVfew
