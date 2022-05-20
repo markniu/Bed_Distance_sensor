@@ -1206,33 +1206,28 @@ void Temperature::min_temp_error(const heater_id_t heater_id) {
 #define DELAY 100
 float z_sensor=0; 
  /******************************************************************************************
-*@brief: 单字节的奇偶校验合成
-*@param:  要合成校验位的字节数（无符号字节）
-*@return: 返回带校验位的字节
-*@descriptions: 单字节校验范围 0 ~ 127
-*               字节前7位‘1’的个数为偶数，第8位置0：（0000 0000）0x00；    
-*               字节前7位‘1’的个数为奇数，第8位置1：（1000 0000）0x80；
+
 ********************************************************************************************/
 unsigned short Add_OddEven(unsigned short byte)
 {
 	unsigned char i;
-	unsigned char n; /*计数1的个数*/
-	unsigned short r; /*存结果*/
+	unsigned char n; 
+	unsigned short r; 
 	n =0;
   for(i=0;i<10;i++)
 	{
 	  if(((byte >>i)&0x01) == 0x01)
 		{
-		   n++;/*计算一个字节前7位‘1’的个数*/
+		   n++;
 		}	
 	}
 	if((n&0x01) == 0x01)
 	{
-		r = byte | 0x400;  /*'1'的个数为奇数，第8位置1*/
+		r = byte | 0x400; 
 	}
 	else
 	{
-	  r = byte | 0x00;  /*'1'的个数为偶数，第8位置0*/
+	  r = byte | 0x00;  
 	}
 	return r;
 }
@@ -1240,32 +1235,28 @@ unsigned short Add_OddEven(unsigned short byte)
 #define BYTE_CHECK_OK     0x01
 #define BYTE_CHECK_ERR    0x00
 /******************************************************************************************
-*@brief: 单字节的奇偶校验
-*@param:   需要校验的字节   （无符号字节）
-*@return: 返回奇偶校验结果
-*@descriptions: 单字节校验范围 0 ~ 127
-*               偶数：（0000 0000）0x00；奇数：（1000 0000）0x80；
+
 ********************************************************************************************/
 unsigned short Check_OddEven(unsigned short byte)
 {
 	unsigned char i;
-	unsigned char n; /*计数1的个数*/
+	unsigned char n;  
 	unsigned char r;  
 	n =0;
-   for(i=0;i<10;i++)/*计数一个字节的前7位*/
+   for(i=0;i<10;i++) 
 	{
 	  if(((byte >>i)&0x01) == 0x01)
 		{
-		   n++; /*计算一个字节前7位‘1’的个数*/
+		   n++;  
 		}	
 	}
-	if((byte>>10) == (n&0x01))/*字节的第8位奇偶位与上面计数的奇偶数校验*/
+	if((byte>>10) == (n&0x01)) 
 	{
-		r = BYTE_CHECK_OK; /*奇偶校验正确*/
+		r = BYTE_CHECK_OK;  
 	}
 	else
 	{
-	  r = BYTE_CHECK_ERR; /*奇偶校验错误*/
+	  r = BYTE_CHECK_ERR;  
 	}
 	return r;
 }	
