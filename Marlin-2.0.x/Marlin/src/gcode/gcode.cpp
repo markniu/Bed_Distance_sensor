@@ -268,7 +268,7 @@ void GcodeSuite::dwell(millis_t time) {
   }
 
 #endif // G29_RETRY_AND_RECOVER
-extern int Calibrate_sensor; 
+extern int BDsensor_config; 
 /**
  * Process the parsed command and dispatch it to its handler
  */
@@ -430,11 +430,12 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 800: parser.debug(); break;                          // G800: GCode Parser Test for G
       #endif
       case 102:  
-        //  G102   T-2     Start Calibrate 
-        //  G102   T-1     Read raw Calibrate data
-        //  G102   T4      >=0 Set the adjustable max Z hight is 0.4mm, if value==0,disable adjust z hight.
-          Calibrate_sensor = parser.intval('T');
-          printf("Calibrate_sensor:%d\n",Calibrate_sensor);
+//G102   T-5     Read raw Calibrate data
+//G102   T-6    Start Calibrate 
+//G102   T4       Set the adjustable max Z hight is 0.4mm, if value==0,disable adjust z hight.
+//G102   T-1    Read sensor information
+          BDsensor_config = parser.intval('T');
+          printf("BDsensor_config:%d\n",BDsensor_config);
        break;
       default: parser.unknown_command_warning(); break;
     }

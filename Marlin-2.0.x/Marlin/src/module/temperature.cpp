@@ -1211,7 +1211,7 @@ void Temperature::min_temp_error(const heater_id_t heater_id) {
 
 #define DELAY 100
 float z_sensor=0; 
-int Calibrate_sensor=0; 
+int BDsensor_config=0; 
 
 #include "stepper.h"
 #include "../gcode/gcode.h"
@@ -1243,7 +1243,7 @@ void Temperature::manage_heater() {
 
  static float z_pose=0.0;
  int timeout_y=100;
- if(Calibrate_sensor<0)
+ if(BDsensor_config<0)
     timeout_y=1000;
  if((millis()-timeout_auto)>timeout_y)// ms
  {
@@ -1268,7 +1268,7 @@ void Temperature::manage_heater() {
       if(BD_I2C_SENSOR.BD_Check_OddEven(tmp))
       {
         z_sensor=(tmp&0x3ff)/100.0;
-        if(current_position.z<(Calibrate_sensor/10.0)&& (IS_SD_PRINTING())&&(Calibrate_sensor>0))
+        if(current_position.z<(BDsensor_config/10.0)&& (IS_SD_PRINTING())&&(BDsensor_config>0))
         {
            // babystep.add_mm(Z_AXIS,z_sensor-current_position.z);
             babystep.set_mm(Z_AXIS,-(z_sensor-current_position.z));
@@ -1288,7 +1288,7 @@ void Temperature::manage_heater() {
       BD_I2C_SENSOR.BD_i2c_stop();
     }
    // if(0)//((tmp&0x3ff)<1020)  
-    if(Calibrate_sensor==-1)// read raw calibrate data
+    if(BDsensor_config==-5)// read raw calibrate data
     {
       BD_I2C_SENSOR.BD_i2c_write(1017);
         delay(1000);
@@ -1300,14 +1300,14 @@ void Temperature::manage_heater() {
           printf(tmp_1);
           delay(500);
         }
-        Calibrate_sensor=0; 
+        BDsensor_config=0; 
         BD_I2C_SENSOR.BD_i2c_write(1018);
          delay(500);
     }
-    else if(Calibrate_sensor<=-2) // start Calibrate
+    else if(BDsensor_config<=-6) // start Calibrate
     {
       delay(100);     
-      if(Calibrate_sensor==-2)
+      if(BDsensor_config==-6)
       {
         BD_I2C_SENSOR.BD_i2c_write(1019);// begain calibrate
         delay(1000);
@@ -1318,7 +1318,7 @@ void Temperature::manage_heater() {
         gcode.process_parsed_command();
         z_pose=0;
         delay(1000);
-        Calibrate_sensor=-3;
+        BDsensor_config=-7;
       }
       else if(planner.get_axis_position_mm(Z_AXIS)<10.0)
       {        
@@ -1329,7 +1329,7 @@ void Temperature::manage_heater() {
            // BD_I2C_SENSOR.BD_i2c_write(1021); // end calibrate
             printf("end calibrate\n");
             z_pose=7;
-            Calibrate_sensor=0;
+            BDsensor_config=0;
             delay(1000);
         }
         else
