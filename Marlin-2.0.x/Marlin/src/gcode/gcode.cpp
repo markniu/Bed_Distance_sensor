@@ -429,7 +429,13 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
       #if ENABLED(DEBUG_GCODE_PARSER)
         case 800: parser.debug(); break;                          // G800: GCode Parser Test for G
       #endif
-      case 102:  Calibrate_sensor=1; break;
+      case 102:  
+        //  G102   T-2     Start Calibrate 
+        //  G102   T-1     Read raw Calibrate data
+        //  G102   T4      >=0 Set the adjustable max Z hight is 0.4mm, if value==0,disable adjust z hight.
+          Calibrate_sensor = parser.intval('T');
+          printf("Calibrate_sensor:%d\n",Calibrate_sensor);
+       break;
       default: parser.unknown_command_warning(); break;
     }
     break;

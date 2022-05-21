@@ -39,6 +39,13 @@
 #if PANDA_BED
   #include <Panda_segmentBed_I2C.h>
 #endif
+
+#if BD_SENSOR
+  #include <Panda_segmentBed_I2C.h>
+  I2C_SegmentBED BD_I2C_SENSOR;
+#endif
+
+
 //void WRITE_HEATER_BED(unsigned char v) ;
 #if EITHER(HAS_COOLER, LASER_COOLANT_FLOW_METER)
   #include "../feature/cooler.h"
@@ -1201,178 +1208,13 @@ void Temperature::min_temp_error(const heater_id_t heater_id) {
 #endif // PIDTEMPCHAMBER
 
 //////////////////
-#define  I2C_BED_SDA  13  
-#define  I2C_BED_SCL  15  
+
 #define DELAY 100
 float z_sensor=0; 
- /******************************************************************************************
-
-********************************************************************************************/
-unsigned short Add_OddEven(unsigned short byte)
-{
-	unsigned char i;
-	unsigned char n; 
-	unsigned short r; 
-	n =0;
-  for(i=0;i<10;i++)
-	{
-	  if(((byte >>i)&0x01) == 0x01)
-		{
-		   n++;
-		}	
-	}
-	if((n&0x01) == 0x01)
-	{
-		r = byte | 0x400; 
-	}
-	else
-	{
-	  r = byte | 0x00;  
-	}
-	return r;
-}
-
-#define BYTE_CHECK_OK     0x01
-#define BYTE_CHECK_ERR    0x00
-/******************************************************************************************
-
-********************************************************************************************/
-unsigned short Check_OddEven(unsigned short byte)
-{
-	unsigned char i;
-	unsigned char n;  
-	unsigned char r;  
-	n =0;
-   for(i=0;i<10;i++) 
-	{
-	  if(((byte >>i)&0x01) == 0x01)
-		{
-		   n++;  
-		}	
-	}
-	if((byte>>10) == (n&0x01)) 
-	{
-		r = BYTE_CHECK_OK;  
-	}
-	else
-	{
-	  r = BYTE_CHECK_ERR;  
-	}
-	return r;
-}	
-
-void   setLow(unsigned char pin) {
-      noInterrupts();
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, LOW);
-    interrupts();
-}
-
-void    setHigh(unsigned char pin) {
-     noInterrupts();
-      pinMode(pin, INPUT_PULLUP);
-     interrupts();
-}
-
-void  set_force_High(unsigned char pin) {
-     noInterrupts();
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, HIGH);
-     interrupts();
-}
-
-
-bool I2C_start(void)
-{
-  setHigh(I2C_BED_SCL);
-  setHigh(I2C_BED_SDA);
-  delayMicroseconds(DELAY);
-  setLow(I2C_BED_SDA);
-  delayMicroseconds(DELAY);
-  setLow(I2C_BED_SCL);
-  delayMicroseconds(DELAY*2);
-
-}
-void  i2c_stop(void) {
-  delayMicroseconds(DELAY*2);
-  setLow(I2C_BED_SDA);
-  delayMicroseconds(DELAY);
-  setHigh(I2C_BED_SCL);
-  delayMicroseconds(DELAY);
-  setHigh(I2C_BED_SDA);
-  delayMicroseconds(DELAY);
-}
-
-unsigned short i2c_read_1(void)
-{
-   
-  I2C_start();
-  //// read
-  setHigh(I2C_BED_SDA);
-  setHigh(I2C_BED_SCL);
-  delayMicroseconds(DELAY*2);
-  setLow(I2C_BED_SCL);
-  ///
-  delayMicroseconds(DELAY);
-  unsigned short b = 0;
-  setHigh(I2C_BED_SDA);
-  for (unsigned char i = 0; i <= 10; i++) {
-    b <<= 1;
-    delayMicroseconds(DELAY);
-    setHigh(I2C_BED_SCL);
-    delayMicroseconds(DELAY);
-    if (digitalRead(I2C_BED_SDA)) b |= 1;
-    setLow(I2C_BED_SCL);
-  }
-  i2c_stop();
-  return b;
-
-}
-
-void i2c_write_1(unsigned int addr)
-{
- 
-  I2C_start();
-  //// write
-  setLow(I2C_BED_SDA);
-  set_force_High(I2C_BED_SCL);
-  delayMicroseconds(DELAY);
-  setLow(I2C_BED_SCL);
-  addr=Add_OddEven(addr);
-  ///write address
-  delayMicroseconds(DELAY);
-  for (int i=10; i >=0; i--) 
- // for (unsigned int curr = 0x400; curr != 0; curr >>= 1) 
-  {
-    if ((addr>>i)&0x01) {set_force_High(I2C_BED_SDA);} else  setLow(I2C_BED_SDA); 
-    //if (addr &curr) {set_force_High(I2C_BED_SDA);} else  setLow(I2C_BED_SDA); 
-    set_force_High(I2C_BED_SCL);
-    delayMicroseconds(DELAY);
-    setLow(I2C_BED_SCL);
-    delayMicroseconds(DELAY);
-  }
-  ////////////
-/* for (unsigned char curr = 0x400; curr != 0; curr >>= 1) {
-    if (curr & data) 
-       set_force_High(I2C_BED_SDA); 
-    else  
-       setLow(I2C_BED_SDA); 
-    setHigh(I2C_BED_SCL);
-    delayMicroseconds(DELAY);
-    setLow(I2C_BED_SCL);
-    delayMicroseconds(DELAY);
-  }
-*/
-
-
-  i2c_stop();
-  
-
-}
-///////////////
-#include "../gcode/gcode.h"
-#include "stepper.h"
 int Calibrate_sensor=0; 
+
+#include "stepper.h"
+#include "../gcode/gcode.h"
 
 /**
  * Manage heating activities for extruder hot-ends and a heated bed
@@ -1383,6 +1225,8 @@ int Calibrate_sensor=0;
  *  - Apply filament width to the extrusion rate (may move)
  *  - Update the heated bed PID output value
  */
+
+
 void Temperature::manage_heater() {
   if (marlin_state == MF_INITIALIZING) return watchdog_refresh(); // If Marlin isn't started, at least reset the watchdog!
    
@@ -1396,20 +1240,20 @@ void Temperature::manage_heater() {
   #endif
 ///////////////////
  static millis_t timeout_auto=0;
- static int n=-1;
+
  static float z_pose=0.0;
  int timeout_y=100;
- if(Calibrate_sensor)
+ if(Calibrate_sensor<0)
     timeout_y=1000;
  if((millis()-timeout_auto)>timeout_y)// ms
  {
-     if(timeout_auto==0)
+   /*  if(timeout_auto==0)
      {  
-       setHigh(I2C_BED_SDA);
-       setHigh(I2C_BED_SCL);
+     //  setHigh(I2C_BED_SDA);
+      // setHigh(I2C_BED_SCL);
        delayMicroseconds(DELAY);
        delayMicroseconds(DELAY);
-     }
+     }*/
     timeout_auto=millis();
   
   if(1)
@@ -1419,12 +1263,12 @@ void Temperature::manage_heater() {
     //delay(500);
   //delayMicroseconds(1000);
   ////////// read all the segments bed temperature       
-      tmp=i2c_read_1();
+      tmp=BD_I2C_SENSOR.BD_i2c_read();
       
-      if(Check_OddEven(tmp))
+      if(BD_I2C_SENSOR.BD_Check_OddEven(tmp))
       {
         z_sensor=(tmp&0x3ff)/100.0;
-        if(current_position.z<4&& (IS_SD_PRINTING()))
+        if(current_position.z<(Calibrate_sensor/10.0)&& (IS_SD_PRINTING())&&(Calibrate_sensor>0))
         {
            // babystep.add_mm(Z_AXIS,z_sensor-current_position.z);
             babystep.set_mm(Z_AXIS,-(z_sensor-current_position.z));
@@ -1435,44 +1279,58 @@ void Temperature::manage_heater() {
         endstops.update();
        
       }
-     sprintf(tmp_1,"read:%d,%d,z:%0.2f,%0.2f\n",tmp&0x3ff,Check_OddEven(tmp),current_position.z, z_sensor);
+     sprintf(tmp_1,"read:%d,%d,z:%0.2f,%0.2f\n",tmp&0x3ff,BD_I2C_SENSOR.BD_Check_OddEven(tmp),current_position.z, z_sensor);
      printf(tmp_1);
     if((tmp&0x3ff)>1020)
     {
-      i2c_stop();
+      BD_I2C_SENSOR.BD_i2c_stop();
       delay(500);
-      i2c_stop();
+      BD_I2C_SENSOR.BD_i2c_stop();
     }
    // if(0)//((tmp&0x3ff)<1020)  
-    if(Calibrate_sensor)
+    if(Calibrate_sensor==-1)// read raw calibrate data
     {
-      delay(100);
-      
-      if(Calibrate_sensor==1)
+      BD_I2C_SENSOR.BD_i2c_write(1017);
+        delay(1000);
+         
+        for(int i=0;i<72;i++)
+        {
+          tmp=BD_I2C_SENSOR.BD_i2c_read();    
+          sprintf(tmp_1,"Calibrate data:%d,%d,%d\n",i,tmp&0x3ff,BD_I2C_SENSOR.BD_Check_OddEven(tmp));
+          printf(tmp_1);
+          delay(500);
+        }
+        Calibrate_sensor=0; 
+        BD_I2C_SENSOR.BD_i2c_write(1018);
+         delay(500);
+    }
+    else if(Calibrate_sensor<=-2) // start Calibrate
+    {
+      delay(100);     
+      if(Calibrate_sensor==-2)
       {
-      //  i2c_write_1(1020);// read data in distance
-        Calibrate_sensor=2; 
-      }
-      else if (Calibrate_sensor==2)
-      {
-        i2c_write_1(1019);// begain calibrate
+        BD_I2C_SENSOR.BD_i2c_write(1019);// begain calibrate
+        delay(1000);
+       // BD_I2C_SENSOR.BD_i2c_write(1019);// begain calibrate
+       // delay(1000);
         sprintf_P(tmp_1,  PSTR("G1 Z0"));
         parser.parse(tmp_1);
         gcode.process_parsed_command();
-
         z_pose=0;
         delay(1000);
-        Calibrate_sensor=3;
+        Calibrate_sensor=-3;
       }
       else if(planner.get_axis_position_mm(Z_AXIS)<10.0)
-      {
-        Calibrate_sensor=10;
+      {        
         if(z_pose>=6.9)
         {
-            i2c_write_1(1021); // end calibrate
+            BD_I2C_SENSOR.BD_i2c_write(1021); // end calibrate
+           // delay(1000);
+           // BD_I2C_SENSOR.BD_i2c_write(1021); // end calibrate
+            printf("end calibrate\n");
             z_pose=7;
             Calibrate_sensor=0;
-            
+            delay(1000);
         }
         else
         {
@@ -1489,7 +1347,7 @@ void Temperature::manage_heater() {
            // printf(tmp_1);
           }
           tmp=z_pose*10;
-          i2c_write_1(tmp);
+          BD_I2C_SENSOR.BD_i2c_write(tmp);
           sprintf(tmp_1+strlen(tmp_1),"; Zpose:%f, w:%d \n",z_pose,tmp);
           printf(tmp_1);
 
@@ -1497,7 +1355,7 @@ void Temperature::manage_heater() {
          // queue.enqueue_now_P(PSTR("G90"));
         }
       }
-      n++;
+       
     }
      
   }
@@ -2334,10 +2192,18 @@ void Temperature::updateTemperaturesFromRawValues() {
  *  - Wait 250ms for temperatures to settle
  *  - Init temp_range[], used for catching min/maxtemp
  */
+
+
+
 void Temperature::init() {
 #if PANDA_BED
    I2CsegmentBED.i2c_init(PANDA_BED_SDA,PANDA_BED_SCL,0x3C);
 #endif   
+#if BD_SENSOR
+#define  I2C_BED_SDA  2  
+#define  I2C_BED_SCL  15  
+    BD_I2C_SENSOR.i2c_init(I2C_BED_SDA,I2C_BED_SCL,0x3C);
+#endif
   TERN_(PROBING_HEATERS_OFF, paused_for_probing = false);
 
   #if BOTH(PIDTEMP, PID_EXTRUSION_SCALING)
