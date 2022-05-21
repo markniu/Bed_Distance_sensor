@@ -3,9 +3,9 @@
 This is a high resolution inductive **Bed Distance Sensor**, it can measure the distance from bed to nozzle with distance resolution 0.01mm.
 there is now no distance sensor used on the **3D printer** for it's high price with this high resoluion for example [IWFK20Z8704](https://www.walkerindustrial.com/IWFK-20Z8704-S35A-BAUMER-10155694-p/iwfk-20z8704-s35a.htm),all the bed level sensor used now on 3D printer is proximity e.g. the BLTouch.
  
-### 0.01mm Distance resolution 
+### Distance resolution: 0.01mm
 ### Sense and adjust Z at every point in real time
-### NO Z offset setting, no probe points
+### No Z offset setting, no probe points
 
 1. with this sensor the printer can adjust the z axis in real time if the bed plate is not flat in every point,also no need to do probe points before every print.not only the plate not flat itself but also the high and uneven temperature will also cause the plate to expand and contract.
 
