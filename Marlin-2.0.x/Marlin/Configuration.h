@@ -1196,9 +1196,9 @@
 // @section machine
 
 // Invert the stepper direction. Change (or reverse the motor connector) if an axis goes the wrong way.
-#define INVERT_X_DIR false
-#define INVERT_Y_DIR false
-#define INVERT_Z_DIR true
+#define INVERT_X_DIR true
+#define INVERT_Y_DIR true
+#define INVERT_Z_DIR false
 
 // @section extruder
 
@@ -2396,7 +2396,7 @@
 //#define DGUS_LCD_UI_HIPRECY
 //#define DGUS_LCD_UI_FYSETC
 //#define DGUS_LCD_UI_MKS
-//	#define REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
+	#define REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
 #if ENABLED(DGUS_LCD_UI_MKS)
   #define USE_MKS_GREEN_UI
 #endif

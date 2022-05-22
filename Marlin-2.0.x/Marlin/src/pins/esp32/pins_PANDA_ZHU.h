@@ -109,7 +109,7 @@
 #define SD_MISO_PIN                           19
 #define SD_SCK_PIN                            18
 #define SDSS                                   5
-#define SD_DETECT_PIN                          13
+#define SD_DETECT_PIN                          2
 
 #define BEEPER_PIN                  100+24+5 
 #define BTN_ENC                     12 
