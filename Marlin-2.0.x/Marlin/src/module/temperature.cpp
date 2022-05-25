@@ -1209,12 +1209,14 @@ void Temperature::min_temp_error(const heater_id_t heater_id) {
 
 //////////////////
 
-#define DELAY 100
-float z_sensor=0; 
-int BDsensor_config=0; 
-
 #include "stepper.h"
 #include "../gcode/gcode.h"
+#define MAX_BD_HEIGHT 6.9
+#define CMD_START_READ_CALIBRATE_DATA   1017
+#define CMD_END_READ_CALIBRATE_DATA   1018
+#define CMD_START_CALIBRATE 1019
+#define CMD_END_CALIBRATE 1021
+int BDsensor_config=0; 
 
 /**
  * Manage heating activities for extruder hot-ends and a heated bed
@@ -1225,8 +1227,6 @@ int BDsensor_config=0;
  *  - Apply filament width to the extrusion rate (may move)
  *  - Update the heated bed PID output value
  */
-
-
 void Temperature::manage_heater() {
   if (marlin_state == MF_INITIALIZING) return watchdog_refresh(); // If Marlin isn't started, at least reset the watchdog!
    
@@ -1243,6 +1243,7 @@ void Temperature::manage_heater() {
 
  static float z_pose=0.0;
  int timeout_y=100;
+ float z_sensor=0; 
  if(BDsensor_config<0)
     timeout_y=1000;
  if((millis()-timeout_auto)>timeout_y)// ms
@@ -1261,6 +1262,7 @@ void Temperature::manage_heater() {
     unsigned short tmp=0;
     char tmp_1[50];
     float cur_z=planner.get_axis_position_mm(Z_AXIS);//current_position.z
+    static float old_cur_z=cur_z;
     //delay(500);
   //delayMicroseconds(1000);
   ////////// read all the segments bed temperature       
@@ -1269,16 +1271,16 @@ void Temperature::manage_heater() {
       if(BD_I2C_SENSOR.BD_Check_OddEven(tmp)&&(tmp&0x3ff)<1020)
       {
         z_sensor=(tmp&0x3ff)/100.0;
-        float abs_z=current_position.z>cur_z?(current_position.z-cur_z):(cur_z-current_position.z);
-        if(cur_z<(BDsensor_config/10.0)/*&& (IS_SD_PRINTING())*/&&(BDsensor_config>0)&&(abs_z<0.005))
+        //float abs_z=current_position.z>cur_z?(current_position.z-cur_z):(cur_z-current_position.z);
+        if(cur_z<(BDsensor_config/10.0)&&(BDsensor_config>0)&&(old_cur_z==cur_z)&&(z_sensor<MAX_BD_HEIGHT))
         {
-           // babystep.add_mm(Z_AXIS,z_sensor-current_position.z);
             babystep.set_mm(Z_AXIS,(cur_z-z_sensor));
-            sprintf(tmp_1,"b:%0.2f,%0.2f,%0.2f,%0.2f\n",(cur_z-z_sensor),cur_z, z_sensor,current_position.z);
-             printf(tmp_1);
-          //  stepper.do_babystep(Z_AXIS, true);
-         //   stepper.do_babystep((AxisEnum)axis, curTodo > 0);
+            sprintf(tmp_1,"Z:%0.2f,curZ:%0.2f,BD:%0.2f\n",current_position.z,cur_z, z_sensor);
+            printf(tmp_1);
         }
+        else
+          babystep.set_mm(Z_AXIS,0);
+        old_cur_z=cur_z;
         endstops.BD_Zaxis_update(z_sensor<=0.01);
         //endstops.update();
        
@@ -1287,22 +1289,22 @@ void Temperature::manage_heater() {
       n++;
       if((n%30)==0)
       {
-        sprintf(tmp_1,"read:%d,%d,z:%0.2f,%0.2f,%0.2f\n",tmp&0x3ff,BD_I2C_SENSOR.BD_Check_OddEven(tmp),cur_z, z_sensor,current_position.z);
+        sprintf(tmp_1,"Read:%d,C:%d,BD:%0.2f,Z:%0.2f,cur_Z:%0.2f\n",tmp&0x3ff,BD_I2C_SENSOR.BD_Check_OddEven(tmp),z_sensor,current_position.z,cur_z);
         printf(tmp_1);
       }
     if((tmp&0x3ff)>1020)
     {
       BD_I2C_SENSOR.BD_i2c_stop();
-      delay(500);
+   //   delay(500);
       BD_I2C_SENSOR.BD_i2c_stop();
     }
    // if(0)//((tmp&0x3ff)<1020)  
     if(BDsensor_config==-5)// read raw calibrate data
     {
-      BD_I2C_SENSOR.BD_i2c_write(1017);
+       BD_I2C_SENSOR.BD_i2c_write(CMD_START_READ_CALIBRATE_DATA);//
         delay(1000);
          
-        for(int i=0;i<72;i++)
+        for(int i=0;i<MAX_BD_HEIGHT*10;i++)
         {
           tmp=BD_I2C_SENSOR.BD_i2c_read();    
           sprintf(tmp_1,"Calibrate data:%d,%d,%d\n",i,tmp&0x3ff,BD_I2C_SENSOR.BD_Check_OddEven(tmp));
@@ -1310,7 +1312,7 @@ void Temperature::manage_heater() {
           delay(500);
         }
         BDsensor_config=0; 
-        BD_I2C_SENSOR.BD_i2c_write(1018);
+        BD_I2C_SENSOR.BD_i2c_write(CMD_END_READ_CALIBRATE_DATA);//
          delay(500);
     }
     else if(BDsensor_config<=-6) // start Calibrate
@@ -1329,15 +1331,15 @@ void Temperature::manage_heater() {
         gcode.process_parsed_command();        
         z_pose=0;
         delay(1000);
-        BD_I2C_SENSOR.BD_i2c_write(1019);// begain calibrate
+        BD_I2C_SENSOR.BD_i2c_write(CMD_START_CALIBRATE);// begain calibrate //
         delay(1000);
         BDsensor_config=-7;
       }
       else if(planner.get_axis_position_mm(Z_AXIS)<10.0)
       {        
-        if(z_pose>=6.9)
+        if(z_pose>=MAX_BD_HEIGHT)
         {
-            BD_I2C_SENSOR.BD_i2c_write(1021); // end calibrate
+            BD_I2C_SENSOR.BD_i2c_write(CMD_END_CALIBRATE); // end calibrate  //
            // delay(1000);
            // BD_I2C_SENSOR.BD_i2c_write(1021); // end calibrate
             printf("end calibrate\n");
@@ -2214,7 +2216,7 @@ void Temperature::init() {
    I2CsegmentBED.i2c_init(PANDA_BED_SDA,PANDA_BED_SCL,0x3C);
 #endif   
 #if BD_SENSOR
-#define  I2C_BED_SDA  13  
+#define  I2C_BED_SDA  2//13  
 #define  I2C_BED_SCL  15  
     BD_I2C_SENSOR.i2c_init(I2C_BED_SDA,I2C_BED_SCL,0x3C);
 #endif
