@@ -38,7 +38,7 @@ Calibrate steps:
 
 
 ### Enable/Disable 
-we can easiy enable or disable this auto level by sending gcode command or and adding gcode in the gcode file.
+we can easily enable or disable this auto level by sending gcode command or and adding gcode in the gcode file.
 
 normally we want to disable it after first layer for example 0.2mm, so we can add this gcode `G102 T2` in the begain of the gcode file.
 
