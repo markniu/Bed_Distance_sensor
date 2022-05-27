@@ -26,7 +26,10 @@
  */
 
 #include "gcode.h"
- #include "../module/temperature.h"
+#include "../module/temperature.h"
+ #if BD_SENSOR
+extern int BDsensor_config; 
+#endif
 GcodeSuite gcode;
 
 #if ENABLED(WIFI_CUSTOM_COMMAND)
@@ -268,7 +271,7 @@ void GcodeSuite::dwell(millis_t time) {
   }
 
 #endif // G29_RETRY_AND_RECOVER
-extern int BDsensor_config; 
+
 /**
  * Process the parsed command and dispatch it to its handler
  */
@@ -355,7 +358,13 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 27: G27(); break;                                    // G27: Nozzle Park
       #endif
 
-      case 28: G28(); break;                                      // G28: Home one or more axes
+      case 28: 
+      #if BD_SENSOR  
+      BDsensor_config=0;
+      #endif
+      G28();
+      
+       break;                                      // G28: Home one or more axes
 
       #if HAS_LEVELING
         case 29:                                                  // G29: Bed leveling calibration
@@ -429,6 +438,7 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
       #if ENABLED(DEBUG_GCODE_PARSER)
         case 800: parser.debug(); break;                          // G800: GCode Parser Test for G
       #endif
+#if BD_SENSOR      
       case 102:  
 //G102   T-5     Read raw Calibrate data
 //G102   T-6    Start Calibrate 
@@ -437,6 +447,7 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
           BDsensor_config = parser.intval('T');
           printf("BDsensor_config:%d\n",BDsensor_config);
        break;
+#endif       
       default: parser.unknown_command_warning(); break;
     }
     break;

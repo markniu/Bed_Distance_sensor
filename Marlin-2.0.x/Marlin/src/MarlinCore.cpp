@@ -702,6 +702,167 @@ inline void manage_inactivity(const bool ignore_stepper_queue=false) {
   #endif
 }
 
+#if BD_SENSOR
+  #include <Panda_segmentBed_I2C.h>
+ 
+  #include "feature/babystep.h"
+
+ // #include "stepper.h"
+ // #include "../gcode/gcode.h"
+  #define MAX_BD_HEIGHT 6.9
+  #define CMD_START_READ_CALIBRATE_DATA   1017
+  #define CMD_END_READ_CALIBRATE_DATA   1018
+  #define CMD_START_CALIBRATE 1019
+  #define CMD_END_CALIBRATE 1021  
+
+  #define  I2C_BD_SDA  2//13  
+  #define  I2C_BD_SCL  15  
+
+  I2C_SegmentBED BD_I2C_SENSOR;
+  int BDsensor_config=0; 
+
+#endif
+#if BD_SENSOR
+
+void BD_sensor_process(void)
+{
+///////////////////
+ static millis_t timeout_auto=0;
+ static float z_pose=0.0;
+ int timeout_y=100;
+ float z_sensor=0; 
+ if(BDsensor_config<0)
+    timeout_y=1000;
+ if((millis()-timeout_auto)>timeout_y)// ms
+ {
+    unsigned short tmp=0;
+    char tmp_1[50];
+    float cur_z=planner.get_axis_position_mm(Z_AXIS);//current_position.z
+    static float old_cur_z=cur_z;
+    static float old_buf_z=current_position.z;
+    timeout_auto=millis();
+
+  ////////// read all the segments bed temperature       
+      tmp=BD_I2C_SENSOR.BD_i2c_read();
+      
+      if(BD_I2C_SENSOR.BD_Check_OddEven(tmp)&&(tmp&0x3ff)<1020)
+      {
+        z_sensor=(tmp&0x3ff)/100.0;
+        if(cur_z<0)
+          BDsensor_config=0;
+        //float abs_z=current_position.z>cur_z?(current_position.z-cur_z):(cur_z-current_position.z);
+        if(cur_z<(BDsensor_config/10.0)&&(BDsensor_config>0)
+          &&(old_cur_z==cur_z)&&(old_buf_z==current_position.z)&&(z_sensor<4))
+        {
+            babystep.set_mm(Z_AXIS,(cur_z-z_sensor));
+            sprintf(tmp_1,"Z:%0.2f,curZ:%0.2f,BD:%0.2f\n",current_position.z,cur_z, z_sensor);
+            printf(tmp_1);
+        }
+        else
+        {
+          babystep.set_mm(Z_AXIS,0);
+        }
+        old_cur_z=cur_z;
+        old_buf_z=current_position.z;
+        endstops.BD_Zaxis_update(z_sensor<=0.01);
+        //endstops.update();
+       
+      }
+      static int n=0;
+      n++;
+     // if((n%30)==0)
+      {
+        sprintf(tmp_1,"Read:%d,C:%d,BD:%0.2f,Z:%0.2f,cur_Z:%0.2f\n",tmp&0x3ff,BD_I2C_SENSOR.BD_Check_OddEven(tmp),z_sensor,current_position.z,cur_z);
+        printf(tmp_1);
+      }
+    if((tmp&0x3ff)>1020)
+    {
+      BD_I2C_SENSOR.BD_i2c_stop();
+   //   delay(500);
+      BD_I2C_SENSOR.BD_i2c_stop();
+    }
+   // if(0)//((tmp&0x3ff)<1020)  
+    if(BDsensor_config==-5)// read raw calibrate data
+    {
+       BD_I2C_SENSOR.BD_i2c_write(CMD_START_READ_CALIBRATE_DATA);//
+        delay(1000);
+         
+        for(int i=0;i<MAX_BD_HEIGHT*10;i++)
+        {
+          tmp=BD_I2C_SENSOR.BD_i2c_read();    
+          sprintf(tmp_1,"Calibrate data:%d,%d,%d\n",i,tmp&0x3ff,BD_I2C_SENSOR.BD_Check_OddEven(tmp));
+          printf(tmp_1);
+          delay(500);
+        }
+        BDsensor_config=0; 
+        BD_I2C_SENSOR.BD_i2c_write(CMD_END_READ_CALIBRATE_DATA);//
+         delay(500);
+    }
+    else if(BDsensor_config<=-6) // start Calibrate
+    {
+      delay(100);     
+      if(BDsensor_config==-6)
+      {
+       
+       // BD_I2C_SENSOR.BD_i2c_write(1019);// begain calibrate
+       // delay(1000);
+        sprintf_P(tmp_1,  PSTR("M17 Z"));
+        parser.parse(tmp_1);
+        gcode.process_parsed_command();
+        sprintf_P(tmp_1,  PSTR("G1 Z0.0"));
+        parser.parse(tmp_1);
+        gcode.process_parsed_command();        
+        z_pose=0;
+        delay(1000);
+        BD_I2C_SENSOR.BD_i2c_write(CMD_START_CALIBRATE);// begain calibrate //
+        delay(1000);
+        BDsensor_config=-7;
+      }
+      else if(planner.get_axis_position_mm(Z_AXIS)<10.0)
+      {        
+        if(z_pose>=MAX_BD_HEIGHT)
+        {
+            BD_I2C_SENSOR.BD_i2c_write(CMD_END_CALIBRATE); // end calibrate  //
+           // delay(1000);
+           // BD_I2C_SENSOR.BD_i2c_write(1021); // end calibrate
+            printf("end calibrate\n");
+            z_pose=7;
+            BDsensor_config=0;
+            delay(1000);
+        }
+        else
+        {
+         // queue.enqueue_now_P(PSTR("G91"));
+          sprintf_P(tmp_1,  PSTR("G0 Z%.2f"), z_pose);
+          
+          parser.parse(tmp_1);
+          gcode.process_parsed_command();
+          float tmp_k=0;
+          while((tmp_k+0.1)<z_pose)
+          {
+            tmp_k=planner.get_axis_position_mm(Z_AXIS);
+          //  sprintf(tmp_1,"z pose %f\n",tmp_k);
+           // printf(tmp_1);
+          }
+          delay(500);
+          tmp=z_pose*10;
+          BD_I2C_SENSOR.BD_i2c_write(tmp);
+          sprintf(tmp_1+strlen(tmp_1),"; Zpose:%f, w:%d \n",z_pose,tmp);
+          printf(tmp_1);
+
+          z_pose+=0.1;
+         // queue.enqueue_now_P(PSTR("G90"));
+        }
+      }
+       
+    }
+     
+ }
+
+////////////////
+
+}
+ #endif
 /**
  * Standard idle routine keeps the machine alive:
  *  - Core Marlin activities
@@ -731,10 +892,10 @@ void idle(TERN_(ADVANCED_PAUSE_FEATURE, bool no_stepper_sleep/*=false*/)) {
     static uint16_t idle_depth = 0;
     if (++idle_depth > 5) SERIAL_ECHOLNPAIR("idle() call depth: ", idle_depth);
   #endif
-
+  BD_sensor_process();  
   // Core Marlin activities
   manage_inactivity(TERN_(ADVANCED_PAUSE_FEATURE, no_stepper_sleep));
-
+ 
   // Manage Heaters (and Watchdog)
   thermalManager.manage_heater();
 
@@ -1569,7 +1730,9 @@ void setup() {
   #endif
 
   marlin_state = MF_RUNNING;
-
+#if BD_SENSOR
+    BD_I2C_SENSOR.i2c_init(I2C_BD_SDA,I2C_BD_SCL,0x3C);
+#endif
   SETUP_LOG("setup() completed.");
 }
 
@@ -1596,7 +1759,7 @@ void loop() {
 
       
     idle();
- 
+     
     #if ENABLED(SDSUPPORT)
       if (card.flag.abort_sd_printing) abortSDPrinting();
       if (marlin_state == MF_SD_COMPLETE) finishSDPrinting();

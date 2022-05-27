@@ -40,11 +40,6 @@
   #include <Panda_segmentBed_I2C.h>
 #endif
 
-#if BD_SENSOR
-  #include <Panda_segmentBed_I2C.h>
-  I2C_SegmentBED BD_I2C_SENSOR;
-#endif
-
 
 //void WRITE_HEATER_BED(unsigned char v) ;
 #if EITHER(HAS_COOLER, LASER_COOLANT_FLOW_METER)
@@ -1209,14 +1204,7 @@ void Temperature::min_temp_error(const heater_id_t heater_id) {
 
 //////////////////
 
-#include "stepper.h"
-#include "../gcode/gcode.h"
-#define MAX_BD_HEIGHT 6.9
-#define CMD_START_READ_CALIBRATE_DATA   1017
-#define CMD_END_READ_CALIBRATE_DATA   1018
-#define CMD_START_CALIBRATE 1019
-#define CMD_END_CALIBRATE 1021
-int BDsensor_config=0; 
+
 
 /**
  * Manage heating activities for extruder hot-ends and a heated bed
@@ -1239,8 +1227,8 @@ void Temperature::manage_heater() {
     }
   #endif
 ///////////////////
+#if 0//BD_SENSOR
  static millis_t timeout_auto=0;
-
  static float z_pose=0.0;
  int timeout_y=100;
  float z_sensor=0; 
@@ -1248,23 +1236,13 @@ void Temperature::manage_heater() {
     timeout_y=1000;
  if((millis()-timeout_auto)>timeout_y)// ms
  {
-   /*  if(timeout_auto==0)
-     {  
-     //  setHigh(I2C_BED_SDA);
-      // setHigh(I2C_BED_SCL);
-       delayMicroseconds(DELAY);
-       delayMicroseconds(DELAY);
-     }*/
-    timeout_auto=millis();
-  
-  if(1)
-  {
     unsigned short tmp=0;
     char tmp_1[50];
     float cur_z=planner.get_axis_position_mm(Z_AXIS);//current_position.z
     static float old_cur_z=cur_z;
-    //delay(500);
-  //delayMicroseconds(1000);
+    static float old_buf_z=current_position.z;
+    timeout_auto=millis();
+
   ////////// read all the segments bed temperature       
       tmp=BD_I2C_SENSOR.BD_i2c_read();
       
@@ -1272,15 +1250,23 @@ void Temperature::manage_heater() {
       {
         z_sensor=(tmp&0x3ff)/100.0;
         //float abs_z=current_position.z>cur_z?(current_position.z-cur_z):(cur_z-current_position.z);
-        if(cur_z<(BDsensor_config/10.0)&&(BDsensor_config>0)&&(old_cur_z==cur_z)&&(z_sensor<MAX_BD_HEIGHT))
+        if(cur_z<(BDsensor_config/10.0)&&(BDsensor_config>0)&&(old_cur_z==cur_z)&&(old_buf_z==current_position.z)&&(z_sensor<4))
         {
             babystep.set_mm(Z_AXIS,(cur_z-z_sensor));
             sprintf(tmp_1,"Z:%0.2f,curZ:%0.2f,BD:%0.2f\n",current_position.z,cur_z, z_sensor);
             printf(tmp_1);
         }
         else
+        {
           babystep.set_mm(Z_AXIS,0);
+          if(z_sensor<cur_z)
+            {
+            //  WRITE(Z_DIR_PIN,READ(Z_DIR_PIN))
+   
+            }
+        }
         old_cur_z=cur_z;
+        old_buf_z=current_position.z;
         endstops.BD_Zaxis_update(z_sensor<=0.01);
         //endstops.update();
        
@@ -1374,8 +1360,8 @@ void Temperature::manage_heater() {
        
     }
      
-  }
  }
+ #endif
 ////////////////
   if (!updateTemperaturesIfReady()) return; // Will also reset the watchdog if temperatures are ready
 
@@ -2215,11 +2201,9 @@ void Temperature::init() {
 #if PANDA_BED
    I2CsegmentBED.i2c_init(PANDA_BED_SDA,PANDA_BED_SCL,0x3C);
 #endif   
-#if BD_SENSOR
-#define  I2C_BED_SDA  2//13  
-#define  I2C_BED_SCL  15  
-    BD_I2C_SENSOR.i2c_init(I2C_BED_SDA,I2C_BED_SCL,0x3C);
-#endif
+//#if BD_SENSOR
+ //   BD_I2C_SENSOR.i2c_init(I2C_BD_SDA,I2C_BD_SCL,0x3C);
+//#endif
   TERN_(PROBING_HEATERS_OFF, paused_for_probing = false);
 
   #if BOTH(PIDTEMP, PID_EXTRUSION_SCALING)

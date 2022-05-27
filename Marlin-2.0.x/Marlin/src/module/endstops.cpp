@@ -61,7 +61,7 @@ volatile Endstops::endstop_mask_t Endstops::hit_state;
 Endstops::endstop_mask_t Endstops::live_state = 0;
 
 #if BD_SENSOR
- bool BD_Z_state;
+bool BD_Z_state;
 #define READ_ENDSTOP(PIN)  (PIN==Z_MIN_PIN)?BD_Z_state:READ(PIN)
 void Endstops::BD_Zaxis_update(bool z_state){
   BD_Z_state=z_state;
