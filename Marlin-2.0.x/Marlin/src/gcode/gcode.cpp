@@ -271,7 +271,7 @@ void GcodeSuite::dwell(millis_t time) {
   }
 
 #endif // G29_RETRY_AND_RECOVER
-
+#include "../module/stepper.h"
 /**
  * Process the parsed command and dispatch it to its handler
  */
@@ -311,7 +311,9 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         I2CsegmentBED.I2C_send_str(tmp,0);
         
         //  I2C_send_str(parser.command_ptr);
-#endif		
+#endif		 
+      //  babystep.set_mm(Z_AXIS,0);
+      stepper.set_directions();
         G0_G1(TERN_(HAS_FAST_MOVES, parser.codenum == 0)); break;
 
       #if ENABLED(ARC_SUPPORT) && DISABLED(SCARA)

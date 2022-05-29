@@ -715,7 +715,7 @@ inline void manage_inactivity(const bool ignore_stepper_queue=false) {
   #define CMD_START_CALIBRATE 1019
   #define CMD_END_CALIBRATE 1021  
 
-  #define  I2C_BD_SDA  2//13  
+  #define  I2C_BD_SDA  13  
   #define  I2C_BD_SCL  15  
 
   I2C_SegmentBED BD_I2C_SENSOR;
@@ -752,7 +752,7 @@ void BD_sensor_process(void)
           BDsensor_config=0;
         //float abs_z=current_position.z>cur_z?(current_position.z-cur_z):(cur_z-current_position.z);
         if(cur_z<(BDsensor_config/10.0)&&(BDsensor_config>0)
-          &&(old_cur_z==cur_z)&&(old_buf_z==current_position.z)&&(z_sensor<4))
+          &&(old_cur_z==cur_z)&&(old_buf_z==current_position.z)&&(z_sensor<(MAX_BD_HEIGHT)))
         {
             babystep.set_mm(Z_AXIS,(cur_z-z_sensor));
             sprintf(tmp_1,"Z:%0.2f,curZ:%0.2f,BD:%0.2f\n",current_position.z,cur_z, z_sensor);
@@ -761,6 +761,8 @@ void BD_sensor_process(void)
         else
         {
           babystep.set_mm(Z_AXIS,0);
+          if(old_cur_z<=cur_z)
+            Z_DIR_WRITE(!INVERT_Z_DIR);
         }
         old_cur_z=cur_z;
         old_buf_z=current_position.z;
@@ -768,6 +770,8 @@ void BD_sensor_process(void)
         //endstops.update();
        
       }
+      else
+        stepper.set_directions();
       static int n=0;
       n++;
      // if((n%30)==0)
@@ -815,7 +819,7 @@ void BD_sensor_process(void)
         z_pose=0;
         delay(1000);
         BD_I2C_SENSOR.BD_i2c_write(CMD_START_CALIBRATE);// begain calibrate //
-        delay(1000);
+        delay(2000);
         BDsensor_config=-7;
       }
       else if(planner.get_axis_position_mm(Z_AXIS)<10.0)
@@ -844,10 +848,10 @@ void BD_sensor_process(void)
           //  sprintf(tmp_1,"z pose %f\n",tmp_k);
            // printf(tmp_1);
           }
-          delay(500);
-          tmp=z_pose*10;
+          delay(800);
+          tmp=(z_pose+0.01)*10;
           BD_I2C_SENSOR.BD_i2c_write(tmp);
-          sprintf(tmp_1+strlen(tmp_1),"; Zpose:%f, w:%d \n",z_pose,tmp);
+          sprintf(tmp_1+strlen(tmp_1),"; Zpose:%.2f, w:%d \n",z_pose,tmp);
           printf(tmp_1);
 
           z_pose+=0.1;
