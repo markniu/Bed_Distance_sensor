@@ -27,7 +27,7 @@
 
 #include "gcode.h"
 #include "../module/temperature.h"
- #if BD_SENSOR
+#if BD_SENSOR
 extern int BDsensor_config; 
 #endif
 GcodeSuite gcode;

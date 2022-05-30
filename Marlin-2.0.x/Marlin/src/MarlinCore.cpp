@@ -721,8 +721,6 @@ inline void manage_inactivity(const bool ignore_stepper_queue=false) {
   I2C_SegmentBED BD_I2C_SENSOR;
   int BDsensor_config=0; 
 
-#endif
-#if BD_SENSOR
 
 void BD_sensor_process(void)
 {
