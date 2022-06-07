@@ -40,9 +40,10 @@ Calibrate steps:
 ### Enable/Disable 
 we can easily enable or disable this auto level by sending gcode command or and adding gcode in the gcode file.
 
-normally we want to disable it after first layer for example 0.2mm, so we can add this gcode `G102 T2` in the begin of the gcode file.
+To enable bed leveling in Cura, add the G102 G-Code right below the G28 (Home All Axes) G-code in the Start G-code section of your printer’s Machine Settings.
+For example `G102 T2` below the G28 , that means it will only do bed leveling below 0.2mm of Z axis height.
 
-send `G102 T0` to disable BDsensor,BTW,the default is disabled.
+send `G102 T0` to disable bedlevel with BDsensor or after homing the printer with `G28` ,BTW,the default is disabled.
 
 
 Test video: https://youtu.be/MMPM2GHVfew
