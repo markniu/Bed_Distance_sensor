@@ -34,17 +34,23 @@ Calibrate steps:
 
 1)Move the Nozzle down until it just touch the bed plate(as the 0 distance).
 
-2)Power on the printer, Send gcode `G102 T-6`,then it will move the z axis slowing up 7mm to calibrate itself until it stop.
+2)Power on the printer, Send gcode `M102 S-6`,then it will move the z axis slowing up 7mm to calibrate itself until it stop.
 
 
 ### Enable/Disable 
 we can easily enable or disable this auto level by sending gcode command or and adding gcode in the gcode file.
 
-To enable bed leveling in Cura, add the G102 G-Code right below the G28 (Home All Axes) G-code in the Start G-code section of your printer’s Machine Settings.
-For example `G102 T2` below the G28 , that means it will only do bed leveling below 0.2mm of Z axis height.
+To enable bed leveling in Cura, add the M102 G-Code right below the G28 (Home All Axes) G-code in the Start G-code section of your printer’s Machine Settings.
+For example `M102 S2` below the G28 , that means it will only do bed leveling below 0.2mm of Z axis height.
 
-send `G102 T0` to disable bedlevel with BDsensor or after homing the printer with `G28` ,BTW,the default is disabled.
+send `M102 S0` to disable bedlevel with BDsensor or after homing the printer with `G28` ,BTW,the default is disabled.
 
+```
+//M102   S-5     Read raw Calibrate data
+//M102   S-6     Start Calibrate 
+//M102   S4      Set the adjustable Z height value,e.g. M102 S4  means it will do adjusting while the Z height <=0.4mm , disable it by M102 S0.
+//M102   S-1     Read sensor information
+```
 
 Test video: https://youtu.be/MMPM2GHVfew
 
