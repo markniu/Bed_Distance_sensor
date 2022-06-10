@@ -56,6 +56,6 @@ Test video: https://youtu.be/MMPM2GHVfew
 
 Project status:https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
 
-Store: www.pandapi3d.com  will come soon
+Store: www.pandapi3d.com  
 
 Support: https://www.facebook.com/groups/380795976169477
