@@ -23,6 +23,13 @@ Support bed plate| only support metal plate |
 Connection| only 4 wires: GND,5V,I2C_Data,I2C_Clk
 Support main board| any board which have 2 free gpio connector | 	 
  
+### Firmware:
+This is a new Sensor, so now only support Marlin firmware,we just have pulled the code to Marlin:
+https://github.com/MarlinFirmware/Marlin/pull/24303
+
+### Main Board:
+ Any board which have 2 free gpio would work, now we have tested it on the stm32 and esp32 based board.
+ 
 ### Calibrate:
 Why calibrate?
 
