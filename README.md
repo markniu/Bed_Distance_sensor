@@ -59,7 +59,11 @@ Send `M102 S0`or`G28`or `M18` will disable bedlevel with BDsensor,BTW,this is di
 //M102   S-1     Read sensor information
 ```
 
-Test video: https://youtu.be/MMPM2GHVfew
+Test video: 
+
+https://youtu.be/4qdCDU4c2ac
+
+https://youtu.be/MMPM2GHVfew
 
 Project status:https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
 
