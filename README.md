@@ -59,6 +59,12 @@ Send `M102 S0`or`G28`or `M18` will disable bedlevel with BDsensor,BTW,this is di
 //M102   S-1     Read sensor information
 ```
 
+### Raw Data
+Here is the data diagram of this sensor, we can see that the distance resolution can be 0.005 to 0.01mm below the 5mm.
+![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/data.jpg)
+
+
+
 Test video: 
 
 https://youtu.be/4qdCDU4c2ac
