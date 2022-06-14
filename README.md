@@ -19,7 +19,7 @@ Distance resolution| 0.01mm |
 Operating Range|7mm|
 Repeatability|+/- 0.005mm|
 Communication port| I2C | 	 
-Support bed plate| only support metal plate | 	 
+Support bed plate|metal plate | 	 
 Connection| only 4 wires: GND,5V,I2C_Data,I2C_Clk
 Support main board| any board which have 2 free gpio connector | 	 
  
