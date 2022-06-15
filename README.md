@@ -16,7 +16,7 @@ there is now no distance sensor used on the **3D printer** for it's high price w
 features |  | .
 --- | --- | --- 
 Distance resolution| 0.01mm | 	
-Operating Range|7mm|
+Operating Range|5mm|
 Repeatability|+/- 0.005mm|
 Communication port| I2C | 	 
 Support bed plate|metal plate | 	 
