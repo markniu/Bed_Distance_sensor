@@ -1,7 +1,7 @@
 ## Auto bed level --- Bed Distance Sensor
 
 BDsensor is a high resolution inductive **Bed Distance Sensor**, it can measure the distance from bed to nozzle with distance resolution 0.01mm.
-there is now no distance sensor used on the **3D printer** for it's high price with this high resoluion for example [IWFK20Z8704](https://www.walkerindustrial.com/IWFK-20Z8704-S35A-BAUMER-10155694-p/iwfk-20z8704-s35a.htm),all the bed level sensor used now on 3D printer is proximity e.g. the BLTouch.
+there is now no distance sensor used on the **3D printer** for it's high price with this high resoluion for example [IWFK20Z8704](https://www.walkerindustrial.com/IWFK-20Z8704-S35A-BAUMER-10155694-p/iwfk-20z8704-s35a.htm),all the bed level sensor used now on 3D printer is proximity switch e.g. the BLTouch.
  
 ### Distance resolution: 0.01mm
 ### Sense and adjust Z at every point in real time
@@ -16,10 +16,10 @@ there is now no distance sensor used on the **3D printer** for it's high price w
 features |  | .
 --- | --- | --- 
 Distance resolution| 0.01mm | 	
-Operating Range|7mm|
+Operating Range|5mm|
 Repeatability|+/- 0.005mm|
 Communication port| I2C | 	 
-Support bed plate| only support metal plate | 	 
+Support bed plate|metal plate | 	 
 Connection| only 4 wires: GND,5V,I2C_Data,I2C_Clk
 Support main board| any board which have 2 free gpio connector | 	 
  
@@ -58,6 +58,12 @@ Send `M102 S0`or`G28`or `M18` will disable bedlevel with BDsensor,BTW,this is di
 //M102   S4      Set the adjustable Z height value,e.g. M102 S4  means it will do adjusting while the Z height <=0.4mm , disable it by M102 S0.
 //M102   S-1     Read sensor information
 ```
+
+### Raw Data
+Here is the data diagram of this sensor, we can see that the distance resolution can be 0.005 to 0.01mm below the 5mm.
+![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/data.jpg)
+
+
 
 Test video: 
 
