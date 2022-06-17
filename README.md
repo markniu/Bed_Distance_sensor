@@ -27,7 +27,13 @@ Support main board| any board which have 2 free gpio connector |
 This is a new Sensor, so now only support Marlin firmware,we just have pulled the code to Marlin:
 https://github.com/MarlinFirmware/Marlin/pull/24303
 
-Firmware for [PandaPi](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/pandapi)  (run marlin on raspberry pi)  , [PandaPi standalone mode](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/standalone/Marlin-2.0.9.3) (run marlin on stm32), [PandaZHU/M4](https://github.com/markniu/PandaZHU) (ESP32 marlin),Enable this features by #define BD_SENSOR 1 in the Configuration.h , enable #define BABYSTEPPING in the Configuration_adv.h and add lib_deps = markyue/Panda_SoftMasterI2C in the ini file.
+Enable this features by `#define BD_SENSOR 1` in the Configuration.h , enable `#define BABYSTEPPING` in the Configuration_adv.h and add `lib_deps = markyue/Panda_SoftMasterI2C` in the ini file,and also do not forget to configure the pins for example:
+```
+#define  I2C_BD_SDA_PIN    PC6
+#define  I2C_BD_SCL_PIN    PB2
+#define  I2C_BD_DELAY  10
+```
+Firmware for [PandaPi](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/pandapi)  (run marlin on raspberry pi)  , [PandaPi standalone mode](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/standalone/Marlin-2.0.9.3) (run marlin on stm32), [PandaZHU/M4](https://github.com/markniu/PandaZHU) (ESP32 marlin),
 
 This BDsensor detect the distance between bed plate and nozzle in real time and use babystep function in marlin to adjust z height.
 
