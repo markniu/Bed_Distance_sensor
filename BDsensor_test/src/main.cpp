@@ -11,7 +11,7 @@ unsigned int n=0,i=0;
 void setup() {
   
   delay(1000);
-  BD_SENSOR_I2C.i2c_init(I2C_BED_SDA,I2C_BED_SCL,0x3C);
+  BD_SENSOR_I2C.i2c_init(I2C_BED_SDA,I2C_BED_SCL,0x3C,10);
   Serial.begin(115200);
 
  // digitalWrite(I2C_BED_SDA, LOW);
