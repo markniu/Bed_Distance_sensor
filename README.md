@@ -27,6 +27,12 @@ Support main board| any board which have 2 free gpio connector |
 This is a new Sensor, so now only support Marlin firmware,we just have pulled the code to Marlin:
 https://github.com/MarlinFirmware/Marlin/pull/24303
 
+Firmware for PandaPi(run marlin on raspberry pi):[https://github.com/markniu/PandaPi](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/pandapi)    
+
+Firmware for PandaPi standalone mode(run marlin on stm32):https://github.com/markniu/PandaPi/tree/master/Marlin2.x/standalone/Marlin-2.0.9.3
+
+Firmware for PandaZHU/M4 (ESP32 marlin):[[https://github.com/markniu/PandaPi/tree/master/Marlin2.x/standalone/Marlin-2.0.9.3](https://github.com/markniu/PandaZHU)](https://github.com/markniu/PandaZHU)
+
 ### Main Board:
  Any board which have 2 free gpio would work, now we have tested it on the stm32 and esp32 based board.
  
