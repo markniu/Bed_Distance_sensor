@@ -77,9 +77,9 @@ Here is the data diagram of this sensor, we can see that the distance resolution
 
 Test video: 
 
-https://youtu.be/4qdCDU4c2ac
-
 https://youtu.be/5Hh-R__WlqY
+
+https://youtu.be/4qdCDU4c2ac
 
 Project status:https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
 
