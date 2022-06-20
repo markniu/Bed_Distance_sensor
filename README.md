@@ -79,7 +79,7 @@ Test video:
 
 https://youtu.be/4qdCDU4c2ac
 
-https://youtu.be/MMPM2GHVfew
+https://youtu.be/5Hh-R__WlqY
 
 Project status:https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
 
