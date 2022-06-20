@@ -79,8 +79,16 @@ https://youtu.be/5Hh-R__WlqY
 
 https://youtu.be/4qdCDU4c2ac
 
-Project status:https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
+Project status:
 
-Store: www.pandapi3d.com  
+https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
 
-Support: https://www.facebook.com/groups/380795976169477
+Where to buy:
+
+www.pandapi3d.com  
+
+Support Forum: 
+
+https://www.facebook.com/groups/380795976169477   
+
+https://www.pandapi3d.com/forum
