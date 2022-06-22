@@ -18,7 +18,7 @@ Operating Range|5mm|
 Repeatability|+/- 0.005mm|
 Communication port| I2C | 	 
 Support bed plate|metal plate | 	 
-Connection| only 4 wires: GND,5V,I2C_Data,I2C_Clk
+Connection| 5.0V(Red),CLK(Green),SDA(White),GND(Black)
 Support main board| any board which have 2 free gpio connector | 	 
  
 ### Firmware:
