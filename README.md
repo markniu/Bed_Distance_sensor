@@ -3,29 +3,37 @@
 BDsensor is a high resolution inductive **Bed Distance Sensor**, it can measure the distance from bed to nozzle with distance resolution 0.01mm.
 there is now no distance sensor used on the **3D printer** for it's high price with this high resoluion for example [IWFK20Z8704](https://www.walkerindustrial.com/IWFK-20Z8704-S35A-BAUMER-10155694-p/iwfk-20z8704-s35a.htm),all the bed level sensor used now on 3D printer is proximity switch e.g. the BLTouch.
  
-### Distance resolution: 0.01mm
-### Sense and adjust Z at every point in real time
-### No Z offset setting, no probe points
 
-1. with this sensor the printer can adjust the z axis in real time if the bed plate is not flat in every point,also no need to do probe points before every print.not only the plate not flat itself but also the high and uneven temperature will also cause the plate to expand and contract.
+1. with this sensor the printer can adjust the z axis in real time if the bed plate is not flat in every point, zero probe point,no Z offset setting.
 
-2. you can do mesh bed leveling like normal proximity sensor but much faster with this sensor, because it's no z axis down and up at every probe point.so you can do more probe points in short time.
+2. you can do mesh bed leveling like normal proximity sensor but much faster with this sensor, there is no vertical movement needed at each point.so we can add more points in short time.There is a lot to look forward to.
+
 
 ![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/516115055.png)
 
 features |  | .
 --- | --- | --- 
 Distance resolution| 0.01mm | 	
-Operating Range|5mm|
+Operating Range|4mm|
 Repeatability|+/- 0.005mm|
 Communication port| I2C | 	 
 Support bed plate|metal plate | 	 
-Connection| only 4 wires: GND,5V,I2C_Data,I2C_Clk
+Connection| 5.0V(Red),CLK(Green),SDA(White),GND(Black)
 Support main board| any board which have 2 free gpio connector | 	 
  
 ### Firmware:
 This is a new Sensor, so now only support Marlin firmware,we just have pulled the code to Marlin:
 https://github.com/MarlinFirmware/Marlin/pull/24303
+
+Enable this features by `#define BD_SENSOR 1` in the Configuration.h , enable `#define BABYSTEPPING` in the Configuration_adv.h and add `lib_deps = markyue/Panda_SoftMasterI2C` in the ini file,and also do not forget to configure the pins for example:
+```
+#define  I2C_BD_SDA_PIN    PC6
+#define  I2C_BD_SCL_PIN    PB2
+#define  I2C_BD_DELAY  10
+```
+Firmware for [PandaPi](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/pandapi)  (run marlin on raspberry pi)  , [PandaPi standalone mode](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/standalone/Marlin-2.0.9.3) (run marlin on stm32), [PandaZHU/M4](https://github.com/markniu/PandaZHU) (ESP32 marlin),
+
+This BDsensor detect the distance between bed plate and nozzle in real time and use babystep function in marlin to adjust z height.
 
 ### Main Board:
  Any board which have 2 free gpio would work, now we have tested it on the stm32 and esp32 based board.
@@ -67,12 +75,20 @@ Here is the data diagram of this sensor, we can see that the distance resolution
 
 Test video: 
 
+https://youtu.be/5Hh-R__WlqY
+
 https://youtu.be/4qdCDU4c2ac
 
-https://youtu.be/MMPM2GHVfew
+Project status:
 
-Project status:https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
+https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
 
-Store: www.pandapi3d.com  
+Where to buy:
 
-Support: https://www.facebook.com/groups/380795976169477
+www.pandapi3d.com  
+
+Support Forum: 
+
+https://www.facebook.com/groups/380795976169477   
+
+https://www.pandapi3d.com/forum
