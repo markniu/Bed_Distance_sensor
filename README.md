@@ -11,8 +11,6 @@ there is now no distance sensor used on the **3D printer** for it's high price w
 
 ![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/516115055.jpg)
 
-![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/0628145342.jpg)
-
 features |  | .
 --- | --- | --- 
 Distance resolution| 0.01mm | 	
