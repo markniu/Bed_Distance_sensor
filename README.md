@@ -11,15 +11,15 @@ there is now no distance sensor used on the **3D printer** for it's high price w
 
 ![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/516115055.jpg)
  
-features |  | .
---- | --- | --- 
-Distance resolution| 0.01mm | 	
-Operating Range|4mm|
-Repeatability|+/- 0.005mm|
-Communication port| I2C | 	 
-Support bed plate|metal plate | 	 
+features |  .
+--- | --- 
+Distance resolution| 0.005~0.01mm  	
+Operating Range|4mm
+Repeatability|+/- 0.005mm
+Communication port| I2C  	 
+Support bed plate|metal plate 	 
 Connection| 5.0V(Red),CLK(Green),SDA(White),GND(Black)
-Support main board| any board which have 2 free gpio connector | 	 
+Support main board| any board which have 2 free gpio connector  	 
  
 ### Firmware:
 This is a new Sensor, so now only support Marlin firmware,we just have pulled the code to Marlin:
