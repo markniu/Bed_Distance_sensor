@@ -9,8 +9,8 @@ there is now no distance sensor used on the **3D printer** for it's high price w
 2. you can do mesh bed leveling like normal proximity sensor but much faster with this sensor, there is no vertical movement needed at each point.so we can add more points in short time.There is a lot to look forward to.
 
 
-![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/516115054.jpg)
-
+![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/516115055.jpg)
+ 
 features |  | .
 --- | --- | --- 
 Distance resolution| 0.01mm | 	
