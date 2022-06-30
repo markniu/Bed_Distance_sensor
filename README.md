@@ -52,7 +52,7 @@ void loop() {
 
 
 ### Marlin Firmware:
-This is a new Sensor, so now only support Marlin firmware,we just have pulled the code to Marlin:
+This is a new Sensor, so now only support Marlin firmware,we just have pulled the code to Marlin and have sent hardware to scott:
 https://github.com/MarlinFirmware/Marlin/pull/24303
 
 Enable this features by `#define BD_SENSOR 1` in the Configuration.h , enable `#define BABYSTEPPING` in the Configuration_adv.h and add `lib_deps = markyue/Panda_SoftMasterI2C` in the ini file,and also do not forget to configure the pins for example:
