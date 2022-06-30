@@ -23,23 +23,27 @@ Support main board| any board which have 2 free gpio pins
 <img  style=" width:800px  " src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/wiring.jpg" >
 
 ### Arduino Testing code:
+here is the arduino testing code,it's very simple, you can read the distance data from BDsensor after init the communication port.
 
 ```
 void setup() {
   delay(500);
+  // init the communication port.
   BD_SENSOR_I2C.i2c_init(I2C_BED_SDA,I2C_BED_SCL,0x3C,10);
   Serial.begin(115200);
 }
 
 void loop() {
     unsigned short read_data=0;
+    //read distance from BDsensor
     read_data=BD_SENSOR_I2C.BD_i2c_read();    
     if(BD_SENSOR_I2C.BD_Check_OddEven(read_data)==0)
       printf("Data Check error!\n");
     else
     {
       Distance=(read_data&0x3ff)/100.0;
-      sprintf(tmp_1,"Distance:%.2f\n",Distance);
+      //display the Distance
+      sprintf(tmp_1,"Distance:%.2f mm\n",Distance);
       printf(tmp_1);
     }
     delay(100);
