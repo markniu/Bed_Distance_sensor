@@ -19,7 +19,7 @@ Repeatability|+/- 0.005mm
 Communication port| I2C  	 
 Support bed plate|metal plate 	 
 Connection| 5.0V(Red),CLK(Green),SDA(White),GND(Black);[Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/blob/main/doc/0220517153950.png)
-Support main board| any board which have 2 free gpio connector  	 
+Support main board| any board which have 2 free gpio pins	 
 <img  style=" width:800px  " src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/wiring.jpg" >
 
 ### Firmware:
