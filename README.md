@@ -66,7 +66,7 @@ Have been Tested Marlin Firmware:[PandaPi](https://github.com/markniu/PandaPi/tr
 This BDsensor detect the distance between bed plate and nozzle in real time and use babystep function in marlin to adjust z height.
 
 ### Main Board:
- Any board which have 2 free gpio pins would work, now we have tested it with all the panda serials board including rasberrypi,stm32 and esp32 based board.
+ Any board which have 2 free gpio pins would work, now we have tested it with all the panda serials boards which controllers include rasberrypi,stm32 and esp32 based board.
  
 ### Calibrate:
 Why calibrate?
