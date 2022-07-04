@@ -109,6 +109,8 @@ Test video:
 
 [<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/135204.jpg" />](https://youtu.be/4qdCDU4c2ac)
 
+### Accuracy Test: 
+[BD sensor VS Dial Gauge](https://youtu.be/SLDsKLupcrk)
 
 Project status:
 
