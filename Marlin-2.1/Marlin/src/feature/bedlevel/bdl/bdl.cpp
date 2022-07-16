@@ -69,6 +69,18 @@ void Bed_Distance_sensor_level::init(unsigned char _sda,unsigned char _scl,int d
   BDsensor_config=0;
 }
 
+
+float Bed_Distance_sensor_level::BD_sensor_read(void){
+  unsigned short tmp=0;
+  float BD_z = NAN;
+  tmp=BD_I2C_SENSOR.BD_i2c_read();      
+  if(BD_I2C_SENSOR.BD_Check_OddEven(tmp)&&(tmp&0x3ff)<1020){
+    BD_z=(tmp&0x3ff)/100.0;
+  }
+  return BD_z;
+
+}
+
 void Bed_Distance_sensor_level::BD_sensor_process(void){
  static millis_t timeout_auto=0;
  static float z_pose=0.0;
@@ -208,7 +220,7 @@ void Bed_Distance_sensor_level::BD_sensor_process(void){
           parser.parse(tmp_1);
           gcode.process_parsed_command();
         //  current_position.z
-          SERIAL_ECHOPGM(tmp_1);
+          //SERIAL_ECHOPGM(tmp_1);
           SERIAL_ECHOLNPGM(" ,Z:",current_position.z);
           while((tmp_k+0.1)<z_pose){
             tmp_k=planner.get_axis_position_mm(Z_AXIS);

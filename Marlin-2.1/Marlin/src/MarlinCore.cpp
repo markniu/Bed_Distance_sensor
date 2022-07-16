@@ -59,6 +59,9 @@
 #include "sd/cardreader.h"
 
 #include "lcd/marlinui.h"
+#if BD_SENSOR
+#include "feature/bedlevel/bdl/bdl.h"
+#endif
 #if HAS_TOUCH_BUTTONS
   #include "lcd/touch/touch_buttons.h"
 #endif
