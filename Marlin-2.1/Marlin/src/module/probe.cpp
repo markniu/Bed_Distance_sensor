@@ -871,6 +871,7 @@ float Probe::probe_at_point(const_float_t rx, const_float_t ry, const ProbePtRai
     #endif
   }
   DEBUG_ECHOLNPGM("measured_z: ", measured_z);
+#endif
   return measured_z;
 }
 
