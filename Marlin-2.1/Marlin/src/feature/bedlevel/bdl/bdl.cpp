@@ -20,9 +20,9 @@
  *
  */
 
-#include "../../../inc/MarlinConfig.h"
+   #include "../../../inc/MarlinConfig.h"
 
-#if ENABLED(BD_SENSOR)
+#if  BD_SENSOR 
 
 #include "../../../MarlinCore.h"
 #include "../../../gcode/gcode.h"
@@ -40,7 +40,7 @@
 #include <Panda_segmentBed_I2C.h>
 
 #include "bdl.h"
-#define DEBUG_OUT_BD 1
+#define DEBUG_OUT_BD 0
 Bed_Distance_sensor_level BD_Level; 
 
 //M102   S-5     Read raw Calibrate data
@@ -55,7 +55,7 @@ Bed_Distance_sensor_level BD_Level;
 #define CMD_END_CALIBRATE 1021  
 #define CMD_READ_VERSION  1016
 
-
+ 
 I2C_SegmentBED BD_I2C_SENSOR;
 
 
@@ -121,7 +121,7 @@ void Bed_Distance_sensor_level::BD_sensor_process(void){
       old_buf_z=current_position.z;
       endstops.BD_Zaxis_update(z_sensor<=0.01);
       //endstops.update();
-      sprintf_P(tmp_1,  PSTR("M117 BD sensor Z:%d.%02dmm"), (int)z_sensor,(int)((int)(z_sensor*100)%100));
+      sprintf(tmp_1,  PSTR("M117 BD sensor Z:%d.%02dmm"), (int)z_sensor,(int)((int)(z_sensor*100)%100));
        
     }
     else
@@ -131,7 +131,7 @@ void Bed_Distance_sensor_level::BD_sensor_process(void){
 #endif     
     
     if(BD_I2C_SENSOR.BD_Check_OddEven(tmp)==0){
-      sprintf_P(tmp_1,  PSTR("M117 BDsensor connect error"));
+      sprintf(tmp_1,  PSTR("M117 BDsensor connect error"));
 #if DEBUG_OUT_BD          
       SERIAL_ECHOLNPGM("BDsensor connect error"); 
 #endif           
@@ -139,7 +139,7 @@ void Bed_Distance_sensor_level::BD_sensor_process(void){
     else if((tmp&0x3ff)>1020){
       BD_I2C_SENSOR.BD_i2c_stop();
       safe_delay(10);
-      sprintf_P(tmp_1,  PSTR("M117 BDsensor data error"));
+      sprintf(tmp_1,  PSTR("M117 BDsensor data error"));
 #if DEBUG_OUT_BD       
       SERIAL_ECHOLNPGM("BDsensor data error"); 
 #endif      
@@ -193,10 +193,10 @@ void Bed_Distance_sensor_level::BD_sensor_process(void){
        // BD_I2C_SENSOR.BD_i2c_write(1019);// begain calibrate
        // delay(1000);
         gcode.stepper_inactive_time = SEC_TO_MS(60*5);
-        sprintf_P(tmp_1,  PSTR("M17 Z"));
+        sprintf(tmp_1,  PSTR("M17 Z"));
         parser.parse(tmp_1);
         gcode.process_parsed_command();
-        sprintf_P(tmp_1,  PSTR("G1 Z0.0"));
+        sprintf(tmp_1,  PSTR("G1 Z0.0"));
         parser.parse(tmp_1);
         gcode.process_parsed_command();        
         z_pose=0;
@@ -216,7 +216,7 @@ void Bed_Distance_sensor_level::BD_sensor_process(void){
         }
         else{
           float tmp_k=0;
-          sprintf_P(tmp_1,  PSTR("G1 Z%d.%d"), (int)z_pose,(int)((int)(z_pose*10)%10));
+          sprintf(tmp_1,  PSTR("G1 Z%d.%d"), (int)z_pose,(int)((int)(z_pose*10)%10));
           parser.parse(tmp_1);
           gcode.process_parsed_command();
         //  current_position.z

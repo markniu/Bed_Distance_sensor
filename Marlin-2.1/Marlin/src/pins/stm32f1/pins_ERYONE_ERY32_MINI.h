@@ -39,11 +39,17 @@
 #define DISABLE_JTAG
 //#define ENABLE_SPI3
 
-#if EITHER(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
+#if  1//EITHER(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
   #define FLASH_EEPROM_EMULATION
   #define EEPROM_PAGE_SIZE     (0x800U)           // 2K
-  #define EEPROM_START_ADDRESS (0x8000000UL + (STM32_FLASH_SIZE) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
+  #define EEPROM_START_ADDRESS (0x8000000UL + (512) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
   #define MARLIN_EEPROM_SIZE (EEPROM_PAGE_SIZE)
+#endif
+
+#if BD_SENSOR
+#define  I2C_BD_SDA_PIN   PA12
+#define  I2C_BD_SCL_PIN   PA11
+#define  I2C_BD_DELAY  60
 #endif
 
 //
@@ -117,7 +123,7 @@
   #endif
 #endif
 
-#define FAN_SOFT_PWM_REQUIRED
+//#define FAN_SOFT_PWM_REQUIRED
 
 //
 // Misc. Functions
@@ -131,6 +137,7 @@
    * Hardware serial communication ports.
    * If undefined software serial is used according to the pins below
    */
+  
   #define X_HARDWARE_SERIAL  MSerial4
   #define Y_HARDWARE_SERIAL  MSerial4
   #define Z_HARDWARE_SERIAL  MSerial4
@@ -147,6 +154,7 @@
   #ifndef E0_SLAVE_ADDRESS
     #define E0_SLAVE_ADDRESS                   0
   #endif
+  
 #endif
 //
 // Temperature Sensors

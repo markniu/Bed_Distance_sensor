@@ -1648,7 +1648,10 @@ void setup() {
 
 #if BD_SENSOR
    // 
-    BD_Level.init(I2C_BD_SDA_PIN,I2C_BD_SCL_PIN,I2C_BD_DELAY);   
+   #if I2C_BD_SDA_PIN==PA11 || I2C_BD_SDA_PIN==PA12
+   Serial.end();
+   #endif
+   BD_Level.init(I2C_BD_SDA_PIN,I2C_BD_SCL_PIN,I2C_BD_DELAY);   
 #endif
   SETUP_LOG("setup() completed.");
 }
