@@ -6,7 +6,7 @@ there is now no distance sensor used on the **3D printer** for it's high price w
 
 1. with this sensor the printer can adjust the z axis in real time if the bed plate is not flat in every point, zero probe point,no Z offset setting.
 
-2. you can do mesh bed leveling like normal proximity sensor but much faster with this sensor, there is no vertical movement needed at each point.so we can add more points in short time.There is a lot to look forward to. [Test Video](https://youtu.be/wK-vogyroMw)
+2. you can do mesh bed leveling like normal proximity sensor but much faster with this sensor, there is no vertical movement needed at each point.so we can add more points in short time.There is a lot to look forward to. [Test Video](https://video.wixstatic.com/video/0d0edf_f2f0b38c765e43c680faaa4f673a74b6/480p/mp4/file.mp4)
 
 
 ![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/516115055.jpg)
