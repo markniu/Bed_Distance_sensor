@@ -3,10 +3,14 @@
 BDsensor is a high resolution inductive **Bed Distance Sensor**, it can measure the distance from bed to nozzle with distance resolution 0.01mm in real time.
 there is now no distance sensor used on the **3D printer** for it's high price with this high resoluion for example [IWFK20Z8704](https://www.walkerindustrial.com/IWFK-20Z8704-S35A-BAUMER-10155694-p/iwfk-20z8704-s35a.htm) is $575,all the bed level sensor used now on 3D printer is proximity switch e.g. the BLTouch.
  
+### Benefits
+1,Menu Bed leveling: The Distance between bed and hotend will be displayed on the screen while you do menu bed leveling so you do not need paper.[video](https://youtu.be/5Hh-R__WlqY)
 
-1. with this sensor the printer can adjust the z axis in real time if the bed plate is not flat in every point, zero probe point,no Z offset setting.
+2,Auto Bed leveling:there is no Z axis up and down while do mesh bed leveling probe,so whole bed leveling will be very fast.[Test Video](https://video.wixstatic.com/video/0d0edf_f2f0b38c765e43c680faaa4f673a74b6/480p/mp4/file.mp4)
 
-2. you can do mesh bed leveling like normal proximity sensor but much faster with this sensor, there is no vertical movement needed at each point.so we can add more points in short time.There is a lot to look forward to. [Test Video](https://video.wixstatic.com/video/0d0edf_f2f0b38c765e43c680faaa4f673a74b6/480p/mp4/file.mp4)
+3,Auto adjust hotend at every point in real time.[video](https://youtu.be/4qdCDU4c2ac)
+
+4, Easy to use, for there is no Z offset setting. 
 
 
 ![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/516115055.jpg)
@@ -53,7 +57,7 @@ void loop() {
 
 ### Marlin Firmware:
 This is a new Sensor, so now only support Marlin firmware,we just have pulled the code to Marlin and have sent hardware to scott:
-https://github.com/MarlinFirmware/Marlin/pull/24303
+https://github.com/MarlinFirmware/Marlin/pull/24554
 
 Enable this features by `#define BD_SENSOR 1` in the Configuration.h , enable `#define BABYSTEPPING` in the Configuration_adv.h and add `lib_deps = markyue/Panda_SoftMasterI2C` in the ini file,and also do not forget to configure the pins for example:
 ```
