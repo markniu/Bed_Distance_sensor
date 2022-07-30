@@ -19,15 +19,15 @@ there is now no distance sensor used on the **3D printer** for it's high price w
  
  . | BDsensor | BLtouch |superPINDA
 --- | --- |--- |---
-Sensor type |Non-contact | Contact |Non-contact
 Sensor type |Distance Sensor| Proximity switch | Proximity switch
 Distance resolution |0.005~0.01mm| None | None
+Sensor type |Non-contact | Contact |Non-contact
 Bed material |Metal| Unlimited | Metal
-Communication |I2C| PWM/Zendstop | Zendstop
+Communication |I2C [Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/blob/main/doc/0220517153950.png)| PWM/Zendstop | Zendstop
 Operating Range|4mm|None|None
 
-[Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/blob/main/doc/0220517153950.png)
-Support main board| any board which have 2 free gpio pins	 
+
+Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
 <img  style=" width:800px  " src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/wiring.jpg" >
 
 ### Arduino Testing code:
