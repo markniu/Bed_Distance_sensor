@@ -19,9 +19,9 @@ there is now no distance sensor used on the **3D printer** for it's high price w
  
  . | BDsensor | BLtouch |superPINDA
 --- | --- |--- |---
-Sensor type |Distance Sensor| Proximity switch | Proximity switch
-Distance resolution |0.005 0.01mm| None | None
 Sensor type |Non-contact | Contact |Non-contact
+Sensor type |Distance Sensor| Proximity switch | Proximity switch
+Distance resolution |0.005~0.01mm| None | None
 Bed material |Metal| Unlimited | Metal
 Communication |I2C| PWM/Zendstop | Zendstop
 Operating Range|4mm|None|None
