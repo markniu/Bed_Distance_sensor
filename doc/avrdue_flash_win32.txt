@@ -1,0 +1,3 @@
+
+for example:
+avrdude -c wiring -P COM7 -b115200 -p atmega2560 -D -U flash:w:firmware_printer.hex:i
