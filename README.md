@@ -72,7 +72,7 @@ Enable this features by `#define BD_SENSOR 1` in the Configuration.h , enable `#
 ```
 Have been Tested Marlin Firmware:[PandaPi](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/pandapi)  (run marlin on raspberry pi)  , [PandaPi standalone mode](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/standalone/Marlin-2.0.9.3) (run marlin on stm32), [PandaZHU/M4](https://github.com/markniu/PandaZHU) (ESP32 marlin),
 
-This BDsensor detect the distance between bed plate and nozzle in real time and use babystep function in marlin to adjust z height.
+
 
 ### Main Board:
  Any board which have 2 free gpio pins would work, or have BLtouch connector.
