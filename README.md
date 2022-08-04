@@ -113,6 +113,7 @@ Here is the data diagram of this sensor, we can see that the distance resolution
 
 Test video: 
 
+![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/FastBD.gif)
 
 [<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/135228.jpg" />](https://youtu.be/5Hh-R__WlqY)
 
