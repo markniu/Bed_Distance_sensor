@@ -29,7 +29,7 @@ Operating Range|4mm|None|None
 Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 
 Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
-<img  style=" width:800px  " src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/wiring.jpg" >
+![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/FastBD.gif)
 
 ### Arduino Testing code:
 here is the arduino testing code,it's very simple, you can read the distance data from BDsensor after init the communication port.
@@ -112,8 +112,6 @@ Here is the data diagram of this sensor, we can see that the distance resolution
 
 
 Test video: 
-
-![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/FastBD.gif)
 
 [<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/135228.jpg" />](https://youtu.be/5Hh-R__WlqY)
 
