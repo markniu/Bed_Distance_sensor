@@ -17,15 +17,18 @@ there is now no distance sensor used on the **3D printer** for it's high price w
 
 ![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/516115055.jpg)
  
-features |  .
---- | --- 
-Distance resolution| 0.005~0.01mm  	
-Operating Range|4mm
-Repeatability|+/- 0.005mm
-Communication port| I2C  	 
-Support bed plate|metal plate 	 
-Connection| 5.0V(Red),CLK(Green),SDA(White),GND(Black);[Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/blob/main/doc/0220517153950.png)
-Support main board| any board which have 2 free gpio pins	 
+ . | BDsensor | BLtouch |superPINDA
+--- | --- |--- |---
+Sensor type |Distance Sensor| Proximity switch | Proximity switch
+Distance resolution |0.005~0.01mm| None | None
+Sensor type |Non-contact | Contact |Non-contact
+Bed material |Metal| Unlimited | Metal
+Communication |I2C [Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/blob/main/doc/0220517153950.png)| PWM/Zendstop | Zendstop
+Operating Range|4mm|None|None
+
+Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
+
+Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
 <img  style=" width:800px  " src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/wiring.jpg" >
 
 ### Arduino Testing code:
@@ -69,10 +72,10 @@ Enable this features by `#define BD_SENSOR 1` in the Configuration.h , enable `#
 ```
 Have been Tested Marlin Firmware:[PandaPi](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/pandapi)  (run marlin on raspberry pi)  , [PandaPi standalone mode](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/standalone/Marlin-2.0.9.3) (run marlin on stm32), [PandaZHU/M4](https://github.com/markniu/PandaZHU) (ESP32 marlin),
 
-This BDsensor detect the distance between bed plate and nozzle in real time and use babystep function in marlin to adjust z height.
+
 
 ### Main Board:
- Any board which have 2 free gpio pins would work, now we have tested it with all the panda serials boards which controllers include rasberrypi,stm32 and esp32 based board.
+ Any board which have 2 free gpio pins would work, or have BLtouch connector.
  
 ### Calibrate:
 Why calibrate?
@@ -115,8 +118,6 @@ Test video:
 
 [<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/135204.jpg" />](https://youtu.be/4qdCDU4c2ac)
 
-### Accuracy Test: 
-[BD sensor VS Dial Gauge](https://youtu.be/SLDsKLupcrk)
 
 Project status:
 
