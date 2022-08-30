@@ -88,7 +88,7 @@ Calibrate steps:
 
 1)Move the Nozzle down until it just touch the bed plate(as the 0 distance).
 
-2)Power on the printer, Send gcode `M102 S-6`,then it will move the z axis slowly up 0.1mm everytime until it up to 4mm.done
+2)Power on the printer, Send gcode `M102 S-6`,then it will move the z axis slowly up 0.1mm everytime until it reach to 4mm.done
 
 
 ### Enable/Disable 
