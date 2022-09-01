@@ -76,7 +76,7 @@ Have been Tested Marlin Firmware:[PandaPi](https://github.com/markniu/PandaPi/tr
 
 ### Main Board:
  Any board which have 2 free gpio pins would work, or have BLtouch connector.
- 
+![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/Connection.jpg) 
 ### Calibrate:
 Why calibrate?
 
