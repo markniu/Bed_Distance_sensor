@@ -91,7 +91,9 @@ Calibrate steps:
 2)Power on the printer, Send gcode `M102 S-6`,then it will move the z axis slowly up 0.1mm everytime until it reach to 4mm.done
 
 
-### Enable/Disable auto leveling at start few layers with M102
+## There are 3 ways to do auto bed leveling:
+**1.Real time leveling at first few layers with M102**
+
 we can easily enable or disable this auto level by sending gcode command or and adding gcode in the gcode file.
 
 To enable bed leveling in Cura, add the M102 G-Code right below the G28 (Home All Axes) G-code in the Start G-code section of your printer’s Machine Settings.
@@ -106,8 +108,11 @@ Send `M102 S0`or`G28`or `M18` will disable bedlevel with BDsensor,BTW,this is di
 //M102   S-1     Read sensor information
 ```
 
-### Auto Bed Leveling with G29
-Another way to do auto bed leveling is like BLtouch with G29,just add a line G29 before G28 .
+**2. Auto Bed Leveling with G29**
+
+Another way to do auto bed leveling is like BLtouch with G29,just add a line G29 before G28.
+
+**3. Combine the above Real time leveling(M102) and Auto Bed Leveling(G29)**
 
 ### Raw Data
 Here is the data diagram of this sensor, we can see that the distance resolution can be <0.005 below the 5mm.
