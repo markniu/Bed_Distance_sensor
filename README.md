@@ -68,7 +68,7 @@ Enable this features by `#define BD_SENSOR 1` in the Configuration.h , enable `#
 ```
 #define  I2C_BD_SDA_PIN    PC6
 #define  I2C_BD_SCL_PIN    PB2
-#define  I2C_BD_DELAY  10
+#define  I2C_BD_DELAY  20
 ```
 Have been Tested Marlin Firmware:[PandaPi](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/pandapi)  (run marlin on raspberry pi)  , [PandaPi standalone mode](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/standalone/Marlin-2.0.9.3) (run marlin on stm32), [PandaZHU/M4](https://github.com/markniu/PandaZHU) (ESP32 marlin),
 
@@ -140,4 +140,4 @@ https://www.facebook.com/groups/380795976169477
 
 https://www.pandapi3d.com/forum
 
-### [Installation](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor)
+### [Installing Bed Distance Sensor](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor)
