@@ -59,24 +59,11 @@ void loop() {
 }
 ```
 
+### [Installing Bed Distance Sensor](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor)
 
 ### Marlin Firmware:
-This is a new Sensor, so now only support Marlin firmware,we just have pulled the code to Marlin and have sent hardware to scott:
-https://github.com/MarlinFirmware/Marlin/pull/24554
+The BDsensor have been integrated to Marlin2.1.x(Since 2022.8.27),you can download the latest here: https://github.com/MarlinFirmware/Marlin What do you need is change the configure file and pins file.
 
-Enable this features by `#define BD_SENSOR 1` in the Configuration.h , enable `#define BABYSTEPPING` in the Configuration_adv.h and add `lib_deps = markyue/Panda_SoftMasterI2C` in the ini file,and also do not forget to configure the pins for example:
-```
-#define  I2C_BD_SDA_PIN    PC6
-#define  I2C_BD_SCL_PIN    PB2
-#define  I2C_BD_DELAY  20
-```
-Have been Tested Marlin Firmware:[PandaPi](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/pandapi)  (run marlin on raspberry pi)  , [PandaPi standalone mode](https://github.com/markniu/PandaPi/tree/master/Marlin2.x/standalone/Marlin-2.0.9.3) (run marlin on stm32), [PandaZHU/M4](https://github.com/markniu/PandaZHU) (ESP32 marlin),
-
-
-
-### Main Board:
- Any board which have 2 free gpio pins would work, or have BLtouch connector.
-![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/Connection.jpg) 
 ### Calibrate:
 Why calibrate?
 
@@ -140,4 +127,4 @@ https://www.facebook.com/groups/380795976169477
 
 https://www.pandapi3d.com/forum
 
-### [Installing Bed Distance Sensor](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor)
+
