@@ -91,7 +91,7 @@ Calibrate steps:
 2)Power on the printer, Send gcode `M102 S-6`,then it will move the z axis slowly up 0.1mm everytime until it reach to 4mm.done
 
 
-### Enable/Disable auto leveling start few layers with M102
+### Enable/Disable auto leveling at start few layers with M102
 we can easily enable or disable this auto level by sending gcode command or and adding gcode in the gcode file.
 
 To enable bed leveling in Cura, add the M102 G-Code right below the G28 (Home All Axes) G-code in the Start G-code section of your printer’s Machine Settings.
