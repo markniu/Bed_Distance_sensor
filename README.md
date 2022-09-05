@@ -139,3 +139,5 @@ Support Forum:
 https://www.facebook.com/groups/380795976169477   
 
 https://www.pandapi3d.com/forum
+
+### [Installation](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor)
