@@ -1,4 +1,4 @@
-## Auto bed level --- Bed Distance Sensor
+##Bed Distance Sensor for 3D printer Bed Leveling
 
 BDsensor is a non-contact Dial Indicator
 
