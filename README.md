@@ -119,6 +119,8 @@ https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-prin
 
 Where to buy:
 
+https://www.aliexpress.com/item/3256804537536912.html
+
 www.pandapi3d.com  
 
 Support Forum: 
