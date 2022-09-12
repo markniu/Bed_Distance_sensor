@@ -108,9 +108,7 @@ Here is the data diagram of this sensor, we can see that the distance resolution
 
 Test video: 
 
-[<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/135228.jpg" />](https://youtu.be/5Hh-R__WlqY)
-
-[<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/135204.jpg" />](https://youtu.be/4qdCDU4c2ac)
+[<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/mainv.jpg" />](https://youtu.be/yx8pluEu0sg)
 
 
 Project status:
