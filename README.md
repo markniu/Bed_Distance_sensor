@@ -89,7 +89,7 @@ For example `M102 S2` below the G28 , that means it will only do bed leveling be
 Send `M102 S0`or`G28`or `M18` will disable bedlevel with BDsensor,BTW,this is disabled by default.
 
 ```
-M102   S-6    // Start Calibrate 
+M102   S-6    // Start Calibrate,before that make sure the nozzle is just touched the bed,and then the printer restarted. 
 M102   S-5    // Read raw Calibrate data
 M102   S4     // Set the adjustable Z height value,e.g. M102 S4  means it will do adjusting while the Z height <=0.4mm , disable it by M102 S0.
 M102   S-1    // Read sensor information
