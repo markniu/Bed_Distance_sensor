@@ -14,8 +14,7 @@ there is now no distance sensor used on the **3D printer** for it's high price w
 
 4, Easy to use, for there is no Z offset setting. 
 
-
-![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/516115055.jpg)
+[<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/mainv.jpg" />](https://www.youtube.com/watch?v=yx8pluEu0sg)
  
  . | BDsensor | BLtouch |superPINDA
 --- | --- |--- |---
@@ -29,7 +28,7 @@ Operating Range|4mm|None|None
 Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 
 Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
-![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/FastBD.gif)
+
 
 ### Arduino Testing code:
 here is the arduino testing code,it's very simple, you can read the distance data from BDsensor after init the communication port.
@@ -104,11 +103,6 @@ Another way to do auto bed leveling is like BLtouch with G29,just add a line G29
 ### Raw Data
 Here is the data diagram of this sensor, we can see that the distance resolution can be <0.005 below the 5mm.
 ![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/data.jpg)
-
-
-Test video: 
-
-[<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/mainv.jpg" />](https://www.youtube.com/watch?v=yx8pluEu0sg)
 
 
 Project status:
