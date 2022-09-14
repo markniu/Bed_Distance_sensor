@@ -6,11 +6,10 @@ BDsensor is a high resolution inductive **Bed Distance Sensor**, it can measure 
 there is now no distance sensor used on the **3D printer** for it's high price with this high resoluion for example [IWFK20Z8704](https://www.walkerindustrial.com/IWFK-20Z8704-S35A-BAUMER-10155694-p/iwfk-20z8704-s35a.htm) is $575,all the bed level sensor used now on 3D printer is proximity switch e.g. the BLTouch.
  
 ### Benefits
-1,Manual Bed leveling: The Distance between bed and hotend will be displayed on the screen while you do manual bed leveling so you do not need paper.[video](https://youtu.be/5Hh-R__WlqY)
+1,Manual Bed leveling: The Distance between bed and hotend will be displayed on the screen while you do manual bed leveling so you do not need paper.
 
-2,Auto Bed leveling:there is no Z axis up and down while do mesh bed leveling probe,so whole bed leveling will be very fast.[Test Video](https://video.wixstatic.com/video/0d0edf_f2f0b38c765e43c680faaa4f673a74b6/480p/mp4/file.mp4)
-
-3,Auto adjust hotend at every point in real time.[video](https://youtu.be/4qdCDU4c2ac)
+2,Auto Bed leveling:there is no Z axis up and down while do mesh bed leveling probe,so whole bed leveling will be very fast.
+3,Auto adjust hotend at every point in real time.
 
 4, Easy to use, for there is no Z offset setting. 
 
