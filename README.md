@@ -29,35 +29,7 @@ Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
 
 
-### Arduino Testing code:
-here is the arduino testing code,it's very simple, you can read the distance data from BDsensor after init the communication port.
-
-```
-void setup() {
-  delay(500);
-  // init the communication port.
-  BD_SENSOR_I2C.i2c_init(I2C_BED_SDA,I2C_BED_SCL,0x3C,10);
-  Serial.begin(115200);
-}
-
-void loop() {
-    unsigned short read_data=0;
-    //read distance from BDsensor
-    read_data=BD_SENSOR_I2C.BD_i2c_read();    
-    if(BD_SENSOR_I2C.BD_Check_OddEven(read_data)==0)
-      printf("Data Check error!\n");
-    else
-    {
-      Distance=(read_data&0x3ff)/100.0;
-      //display the Distance
-      sprintf(tmp_1,"Distance:%.2f mm\n",Distance);
-      printf(tmp_1);
-    }
-    delay(100);
-}
-```
-
-### [Installation](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor)
+### [Installation](https://github.com/markniu/Bed_Distance_sensor/wiki)
 
 ### Marlin Firmware:
 The BDsensor have been integrated to Marlin2.1.x(Since 2022.8.27),you can download the latest here: https://github.com/MarlinFirmware/Marlin What do you need is change the configure file and pins file.
