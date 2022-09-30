@@ -71,10 +71,6 @@ Another way to do auto bed leveling is like BLtouch with G29,just add a line G29
 
 **3. Combine the above Real time leveling(M102) and Auto Bed Leveling(G29)**
 
-### Raw Data
-Here is the data diagram of this sensor, we can see that the distance resolution can be <0.005 below the 5mm.
-![](https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/data.jpg)
-
 
 Project status:
 
