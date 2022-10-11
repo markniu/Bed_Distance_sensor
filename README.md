@@ -9,6 +9,7 @@ there is now no distance sensor used on the **3D printer** for it's high price w
 1,Manual Bed leveling: The Distance between bed and hotend will be displayed on the screen while you do manual bed leveling so you do not need paper.
 
 2,Auto Bed leveling:there is no Z axis up and down while do mesh bed leveling probe,so whole bed leveling will be very fast.
+
 3,Auto adjust hotend at every point in real time.
 
 4, Easy to use, for there is no Z offset setting. 
