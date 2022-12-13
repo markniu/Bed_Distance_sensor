@@ -3,16 +3,16 @@
 BDsensor is a non-contact Dial Indicator
 
 BDsensor is a high resolution inductive **Bed Distance Sensor**, it can measure the distance from bed to nozzle with distance resolution 0.01mm in real time.
-there is now no distance sensor used on the **3D printer** for it's high price with this high resoluion for example [IWFK20Z8704](https://www.walkerindustrial.com/IWFK-20Z8704-S35A-BAUMER-10155694-p/iwfk-20z8704-s35a.htm) is $575,all the bed level sensor used now on 3D printer is proximity switch e.g. the BLTouch.
+there is now no distance sensor used on the **3D printer** ,and all the bed level sensor used now on 3D printer is proximity switch e.g. the BLTouch. 
+[Similar product:IWFK-20Z8704](https://www.walkerindustrial.com/IWFK-20Z8704-S35A-BAUMER-10155694-p/iwfk-20z8704-s35a.htm) 
  
 ### Benefits
-1,Manual Bed leveling: The Distance between bed and hotend will be displayed on the screen while you do manual bed leveling so you do not need paper.
+1,Manual Bed leveling with the Distance on the screen.
 
-2,Auto Bed leveling:there is no Z axis up and down while do mesh bed leveling probe,so whole bed leveling will be very fast.
+2,Fast Auto Bed leveling:there is no Z axis up and down while do mesh bed leveling probe,so whole bed leveling will be very fast.
 
 3,Auto adjust hotend at every point in real time.
 
-4, Easy to use, for there is no Z offset setting. 
 
 [<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/mainv.jpg" />](https://www.youtube.com/watch?v=yx8pluEu0sg)
  
@@ -22,7 +22,7 @@ Sensor type |Distance Sensor| Proximity switch | Proximity switch
 Distance resolution |0.005~0.01mm| None | None
 Sensor type |Non-contact | Contact |Non-contact
 Bed material |Metal| Unlimited | Metal
-Communication |I2C [Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/blob/main/doc/images/0220517153950.png)| PWM/Zendstop | Zendstop
+Communication |I2C [Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/wiki/Data-Protocol)| PWM/Zendstop | Zendstop
 Operating Range|4mm|None|None
 
 Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
@@ -68,7 +68,7 @@ M102   S-1    // Read sensor information
 
 **2. Auto Bed Leveling with G29**
 
-Another way to do auto bed leveling is like BLtouch with G29,just add a line G29 before G28.
+Another way to do auto bed leveling is like BLtouch with G29,just add a line G29 below G28.
 
 **3. Combine the above Real time leveling(M102) and Auto Bed Leveling(G29)**
 
