@@ -1,0 +1,4 @@
+sudo mount 192.168.137.1:/server /media/pio/
+
+/home/pi/klippy-env/bin/python /media/pio/klipper-master/klippy/klippy.py /home/pi/printer.cfger20 -l /tmp/klippy.log
+
