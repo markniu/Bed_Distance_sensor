@@ -30,10 +30,14 @@ Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
 
 
-### [Installation](https://github.com/markniu/Bed_Distance_sensor/wiki)
+### WiKi Installation 
+https://github.com/markniu/Bed_Distance_sensor/wiki
 
 ### Marlin Firmware:
 The BDsensor have been integrated to Marlin2.1.x(Since 2022.8.27),you can download the latest here: https://github.com/MarlinFirmware/Marlin What do you need is change the configure file and pins file.
+
+### Work with Klipper
+https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 
 ### Calibrate:
 Why calibrate?
