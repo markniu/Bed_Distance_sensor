@@ -1,17 +1,20 @@
 ## Bed Distance Sensor --- 3D printer Bed Leveling
 
-BDsensor is a non-contact Dial Indicator
+BDsensor is a high resolution inductive Bed Distance Sensor for 3d printer auto bed leveling and real time adjustment.
 
-BDsensor is a high resolution inductive **Bed Distance Sensor**, it can measure the distance from bed to nozzle with distance resolution 0.01mm in real time.
-there is now no distance sensor used on the **3D printer** ,and all the bed level sensor used now on 3D printer is proximity switch e.g. the BLTouch. 
-[Similar product:IWFK-20Z8704](https://www.walkerindustrial.com/IWFK-20Z8704-S35A-BAUMER-10155694-p/iwfk-20z8704-s35a.htm) 
+it can measure the distance from bed to nozzle with distance resolution 0.01mm.
+
+before now, there is no distance sensor available for 3D printers due to the high price, and nothing with this high resolution. All the current bed level sensors used now on 3D printers are only proximity e.g. the BLTouch, pinta, ezabl, etc.. 
  
-### Benefits
-1,Manual Bed leveling with the Distance on the screen.
+### The Future of Bed Leveling
 
-2,Fast Auto Bed leveling:there is no Z axis up and down while do mesh bed leveling probe,so whole bed leveling will be very fast.
+Faster leveling, realtime compensation, high accuracy.
 
-3,Auto adjust hotend at every point in real time.
+1. with this sensor the printer can adjust the z axis in real time at every location, not just at probe points.
+
+2. No need to do probe points before every print or when hot or cold, it will be automatically compensated for based on actual distance in real time.
+ 
+3. You can do mesh bed leveling like a normal proximity sensor but much faster with this sensor, because there's no z axis down and up at every probe point.
 
 
 [<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/mainv.jpg" />](https://www.youtube.com/watch?v=yx8pluEu0sg)
