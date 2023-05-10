@@ -377,7 +377,7 @@ void report_x_probe(uint16_t sensor_z)
        return;
     struct stepper *s = stepper_oid_lookup(stepx_probe.xoid);
     int cur_stp_x=stepper_get_position(s)-stepx_probe.steps_at_zero;
-    int cur_stp=0,cur_stp_y=0;
+    int cur_stp=cur_stp_x,cur_stp_y=0;
     //// for corexy printer
     if(stepx_probe.kinematics==1){
         struct stepper *ss = stepper_oid_lookup(stepx_probe.y_oid);
@@ -407,8 +407,8 @@ void report_x_probe(uint16_t sensor_z)
     static int kk=0;
     kk++;
     if((kk%10000)==1)
-       output("report_x_probe mcuoid=%c cur_stpx=%c,%c,%c,%c",
-       oid_g,cur_stp_x,cur_stp_y,stepx_probe.y_oid,stepx_probe.xoid);
+       output("report_x_probe mcuoid=%c cur_stp=%c,%c,%c,%c",
+       oid_g,cur_stp,cur_stp_y,stepx_probe.y_oid,stepx_probe.xoid);
     if(cur_stp<=(stepx_probe.min_x-stepx_probe.steps_per_mm*2))
         stepx_probe.x_count=0;
     else if(cur_stp>=(stepx_probe.max_x+stepx_probe.steps_per_mm*2))
@@ -418,8 +418,8 @@ void report_x_probe(uint16_t sensor_z)
         if((cur_stp>=interD)&&((cur_stp_old<interD)||(stepx_probe.x_count==0)))
         {
             //stepx_probe.x_data[stepx_probe.x_count]=BD_Data;
-           // output("report_x_probe mcuoid=%c cur_stp_old0=%c",
-           // oid_g,cur_stp_old);
+            output("report_x_probe mcuoid=%c cur_stp_old0=%c",
+            oid_g,cur_stp_old);
            // output("report_x_probe mcuoid=%c cur_mm0=%c", oid_g,cur_stp);
             memset(data,0,16);
             len=INT_to_String(BD_Data,data);
