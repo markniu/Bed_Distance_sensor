@@ -5,15 +5,25 @@ BD_dir=home_dir+"/Bed_Distance_sensor/klipper"
 print(BD_dir)
 
 
+##copy BDsensor.py
+with open(BD_dir+'/BDsensor.py', 'r') as file:
+    data = file.read().rstrip() 
+    with open(home_dir+'/klipper/klippy/extras/BDsensor.py', "w") as text_file:
+        text_file.write("%s" % data)
+##copy BD_sensor.c
+with open(BD_dir+'/BD_sensor.c', 'r') as file:
+    data = file.read().rstrip() 
+    with open(home_dir+'/klipper/src/BD_sensor.c', "w") as text_file:
+        text_file.write("%s" % data)
+
+
 
 #####
-Bstart_first=0
 ##replace _probe
-with open(BD_dir+'/BDsensor.py', 'r') as file:
+with open(BD_dir+'/probe_bd.py', 'r') as file:
     Bdata = file.read().rstrip()
     
     Bstart=Bdata.find("def _probe(self, speed):")
-    Bstart_first=Bstart
     Bend=Bdata.find(" def ",Bstart)
     if Bend<0 :
         Bend=len(Bdata)
@@ -32,7 +42,7 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
 
 ##replace start_probe
 
-with open(BD_dir+'/BDsensor.py', 'r') as file:
+with open(BD_dir+'/probe_bd.py', 'r') as file:
     Bdata = file.read().rstrip()
     
     Bstart=Bdata.find("def start_probe(self, gcmd):")
@@ -55,7 +65,7 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
 ##replace _move_next   
 
 
-with open(BD_dir+'/BDsensor.py', 'r') as file:
+with open(BD_dir+'/probe_bd.py', 'r') as file:
     Bdata = file.read().rstrip()
     
     Bstart=Bdata.find("def _move_next(self):")
@@ -72,11 +82,9 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
         text_file.write("%s%s\n   %s" % (data[0:start],Bdata[Bstart:Bend],data[end:len(data)]))
 
-with open(home_dir+'/klipper/klippy/extras/BDsensor.py', "w") as text_file:
-    text_file.write("%s %s" % (Bdata[0:Bstart_first],Bdata[Bend:len(Bdata)]))
 
 ##replace endstop.c    
-with open(BD_dir+'/BD_sensor.c', 'r') as file:
+with open(BD_dir+'/endstop_bd.c', 'r') as file:
     Bdata = file.read().rstrip()
     
     Bstart=Bdata.find("////replace endstop.c")
@@ -95,8 +103,7 @@ with open(home_dir+'/klipper/src/endstop.c', 'r') as file:
         with open(home_dir+'/klipper/src/endstop.c', "w") as text_file:
             text_file.write("%s%s\n   %s" % (data[0:start],Bdata[Bstart:Bend],data[end:len(data)]))
 
-with open(home_dir+'/klipper/src/BD_sensor.c', "w") as text_file:
-    text_file.write("%s" % (Bdata[0:Bstart]))
+
 
 ##replace stepper.c
 with open(home_dir+'/klipper/src/stepper.c', 'r') as file:
@@ -106,7 +113,7 @@ with open(home_dir+'/klipper/src/stepper.c', 'r') as file:
     with open(home_dir+'/klipper/src/stepper.c', "w") as text_file:
         text_file.write("%s" % (data))
 
-##replace stepper.c
+##replace sched.c
 with open(home_dir+'/klipper/src/sched.c', 'r') as file:
     data = file.read().rstrip()
     data=data.replace("timer_from_us(100000);","timer_from_us(2000);")
@@ -125,5 +132,4 @@ with open(home_dir+'/klipper/klippy/extras/safe_z_home.py', 'r') as file:
     with open(home_dir+'/klipper/klippy/extras/safe_z_home.py', "w") as text_file:
         text_file.write("%s" % (data))        
 
-
-
+print("Install Bed Distance Sensor into Klipper successfully")
