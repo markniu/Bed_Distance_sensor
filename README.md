@@ -86,16 +86,10 @@ https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-prin
 
 Where to buy:
 
-https://www.aliexpress.com/item/3256804537536912.html
-
-www.pandapi3d.com  
+[https://www.pandapi3d.com/bdsensor](https://www.pandapi3d.com/bdsensor)
 
 [中国大陆淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
 
-Support Forum: 
 
-https://www.facebook.com/groups/380795976169477   
-
-https://www.pandapi3d.com/forum
 
 
