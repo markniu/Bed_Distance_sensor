@@ -416,7 +416,7 @@ class BDsensorEndstopWrapper:
                         ("7 %d\0" %
                         (self.min_x-self.x_offset)).encode('utf-8')])
                     pr=self.Z_Move_Live_cmd.send([self.oid,
-                        ("8 %d\0" % self.max_x).encode('utf-8')])
+                        ("8 %d\0" % (self.max_x-self.x_offset)).encode('utf-8')])
                     pr=self.Z_Move_Live_cmd.send([self.oid,
                         ("9 %d\0" % x_count).encode('utf-8')])
                     pr=self.Z_Move_Live_cmd.send([self.oid,
