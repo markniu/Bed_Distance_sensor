@@ -42,7 +42,7 @@ struct gpio_in sda_gpio_in;
 uint8_t oid_g;
 uint8_t z_oid[4];
 uint32_t endtime_adjust=0;
-uint32_t endtime_upload=0;
+uint32_t endtime_debug=0;
 
 
 
@@ -121,6 +121,7 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays)
 
     stepx_probe.xoid=0;
     stepx_probe.y_oid=0;
+	output("BD_i2c_init mcuoid=%c sda:%c scl:%c dy:%c", oid_g,sda_pin,scl_pin,delay_m);
     return 1;
 }
 
@@ -243,10 +244,16 @@ uint16_t BD_i2c_read(void)
         b = (b & 0x3FF);
     if(b>1024)
         b=1024;
+   // sda_gpio_in=gpio_in_setup(sda_pin, 1);
+	//b=0;
+   // b=gpio_in_read(sda_gpio_in);
+    if((endtime_debug%5000)==0)
+    {
+		output("BDread mcuoid=%c b:%c sda:%c scl:%c dy:%c", oid_g,b,sda_pin,scl_pin,delay_m);
+    }
+	endtime_debug++;
+	
     BD_read_lock=0;
-    //sda_gpio_in=gpio_in_setup(sda_pin, 1);
-    //BD_Data=gpio_in_read(sda_gpio_in);
-    //return BD_Data;
     return b;
 }
 
@@ -406,9 +413,9 @@ void report_x_probe(uint16_t sensor_z)
     //int interD_back=stepx_probe.max_x+x_count*inter_dis;
     static int kk=0;
     kk++;
-    if((kk%10000)==1)
-       output("report_x_probe mcuoid=%c cur_stp=%c,%c,%c,%c",
-       oid_g,cur_stp,cur_stp_y,stepx_probe.y_oid,stepx_probe.xoid);
+   // if((kk%10000)==1)
+    //   output("report_x_probe mcuoid=%c cur_stp=%c,%c,%c,%c",
+     //  oid_g,cur_stp,cur_stp_y,stepx_probe.y_oid,stepx_probe.xoid);
     if(cur_stp<=(stepx_probe.min_x-stepx_probe.steps_per_mm*2))
         stepx_probe.x_count=0;
     else if(cur_stp>=(stepx_probe.max_x+stepx_probe.steps_per_mm*2))
