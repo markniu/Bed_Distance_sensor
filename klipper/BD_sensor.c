@@ -33,7 +33,7 @@
 #define BD_setHigh(x) gpio_out_write(x,1)
 
 
-uint32_t sda_pin=0,scl_pin=0,delay_m=200;
+uint32_t sda_pin=0,scl_pin=0,delay_m=20;
 extern uint16_t BD_Data;
 uint16_t BD_read_flag=1018,BD_read_lock=0;
 
@@ -126,16 +126,24 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays)
 
 uint32_t nsecs_to_ticks_bd(uint32_t ns)
 {
-    return timer_from_us(ns * 1000) / 1000000;
+    //return timer_from_us(ns * 1000) / 1000000;
+	return ns * (CONFIG_CLOCK_FREQ / 1000000);
 }
 
-void ndelay_bd(uint32_t nsecs)
+
+void ndelay_bd_c(uint32_t nsecs)
 {
     if (CONFIG_MACH_AVR)
         return;
     uint32_t end = timer_read_time() + nsecs_to_ticks_bd(nsecs);
     while (timer_is_before(timer_read_time(), end))
         irq_poll();
+}
+void ndelay_bd(uint32_t nsecs)
+{
+    int i=1;
+	while(i--)
+		ndelay_bd_c(nsecs);
 }
 
 unsigned short BD_Add_OddEven(unsigned short byte)

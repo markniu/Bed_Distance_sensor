@@ -204,13 +204,16 @@ class BDsensorEndstopWrapper:
             self.process_M102(self.gcode_que)
             self.gcode_que=None
         strd=str(self.bd_value)+"mm"
-        status_dis=self.printer.lookup_object('display_status')
-        if status_dis is not None:
-            if self.bd_value == 10.24:
-                strd="BDs:ConnectErr"
-            if self.bd_value == 3.9:
-                strd="BDs:Out Range"
-            status_dis.message=strd
+        try:
+            status_dis=self.printer.lookup_object('display_status')
+            if status_dis is not None:
+                if self.bd_value == 10.24:
+                    strd="BDs:ConnectErr"
+                if self.bd_value == 3.9:
+                    strd="BDs:Out Range"
+                status_dis.message=strd
+        except Exception as e:
+            pass
         #self.z_live_adjust()
         return eventtime + BD_TIMER
 
