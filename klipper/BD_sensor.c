@@ -392,11 +392,12 @@ void adust_Z_live(uint16_t sensor_z)
 void report_x_probe(uint16_t sensor_z)
 {
    // BD_Data
+   
     if(stepx_probe.xoid==0||stepx_probe.y_oid==0)
        return;
     struct stepper *s = stepper_oid_lookup(stepx_probe.xoid);
-    int cur_stp_x=stepper_get_position(s)-stepx_probe.steps_at_zero;
-    int cur_stp=-stepx_probe.x_dir*cur_stp_x,cur_stp_y=0;
+    int cur_stp_x=-stepx_probe.x_dir*(stepper_get_position(s)-stepx_probe.steps_at_zero);
+    int cur_stp=cur_stp_x,cur_stp_y=0;
     //// for corexy printer
     if(stepx_probe.kinematics==1){
         struct stepper *ss = stepper_oid_lookup(stepx_probe.y_oid);
@@ -422,11 +423,12 @@ void report_x_probe(uint16_t sensor_z)
     uint8_t data[16];
 //  memset(data,0,16);
     //int interD_back=stepx_probe.max_x+x_count*inter_dis;
-   /* static int kk=0;
+ /*   static int kk=0;
     kk++;
-    if((kk%10000)==1)
+    if((kk%1000)==1)
        output("report_x_probe mcuoid=%c cur_stp=%c,%c,%c,%c",
-       oid_g,cur_stp,cur_stp_y,stepx_probe.min_x,stepx_probe.max_x);*/
+       oid_g,cur_stp,cur_stp_y,stepx_probe.min_x,cur_stp_x);
+       */
     if(cur_stp<=(stepx_probe.min_x-stepx_probe.steps_per_mm*2))
         stepx_probe.x_count=0;
     else if(cur_stp>=(stepx_probe.max_x+stepx_probe.steps_per_mm*2))
@@ -674,7 +676,7 @@ command_Z_Move_Live(uint32_t *args)
             stepx_probe.y_dir*(stepx_probe.y_steps_at_zero*stepx_probe.y_steps_per_mm)/1000;
     }
 
-   //output("Z_Move_L mcuoid=%c j=%c", oid,j);
+  //  output("Z_Move_L mcuoid=%c j=%c %c %c", oid,j,stepx_probe.xoid,stepx_probe.y_oid);
 
     sendf("Z_Move_Live_response oid=%c return_set=%*s", oid,i,(char *)args[2]);
 }

@@ -135,6 +135,7 @@ class BDsensorEndstopWrapper:
         self.mcu.register_config_callback(self.build_config)
         self.adjust_range=0;
         self.old_count=1000;
+        self.homeing=0
         #bd_scheduler = sched.scheduler(time.time, time.sleep)
         #bd_scheduler.enter(1, 1, self.BD_loop, (bd_scheduler,))
         #bd_scheduler.run()
@@ -305,8 +306,82 @@ class BDsensorEndstopWrapper:
 
     def cmd_M102(self, gcmd, wait=False):
          self.gcode_que=gcmd
+    def sync_motor_probe(self):
+        step_time=100
+        self.toolhead = self.printer.lookup_object('toolhead')
+        bedmesh = self.printer.lookup_object('bed_mesh', None)
+        self.min_x, self.min_y = bedmesh.bmc.orig_config['mesh_min']
+        self.max_x, self.max_y = bedmesh.bmc.orig_config['mesh_max']
+        x_count=bedmesh.bmc.orig_config['x_count']
+        kin = self.toolhead.get_kinematics()
+        for stepper in kin.get_steppers():
+            if stepper.get_name()=='stepper_x':
+                steps_per_mm = 1.0/stepper.get_step_dist()
+                x=self.gcode_move.last_position[0]
+                stepper._query_mcu_position()
+                invert_dir, orig_invert_dir = stepper.get_dir_inverted()
+                print("invert_dir:%d,%d" % (invert_dir,orig_invert_dir))
+                print("x ==%.f %.f  %.f steps_per_mm:%d,%u"%
+                    (self.min_x,self.max_x,x_count,steps_per_mm,
+                    stepper.get_oid()))
+                print("kinematics:%s" %
+                    self.config.getsection('printer').get('kinematics'))
+                bedmesh = self.printer.lookup_object('bed_mesh', None)
+                print_type=0 # default is 'cartesian'
+                if 'delta' ==(
+                  self.config.getsection('printer').get('kinematics')):
+                    print_type=2
+                if 'corexy' ==(
+                  self.config.getsection('printer').get('kinematics')):
+                    print_type=1
+
+                x=x*1000
+                
+                pr=self.Z_Move_Live_cmd.send([self.oid, 
+                    ("3 %u\0" % invert_dir).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("7 %d\0" %
+                    (self.min_x-self.x_offset)).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("8 %d\0" % (self.max_x-self.x_offset)).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("9 %d\0" % x_count).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("a %d\0"   % x).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("b %d\0"  % steps_per_mm).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("c %u\0"  % stepper.get_oid()).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("d 0\0" ).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("e %d\0"  % print_type).encode('utf-8')])
+
+                self.results=[]
+                print("xget:%s " %pr['return_set'])
+            if stepper.get_name()=='stepper_y':
+                steps_per_mm = 1.0/stepper.get_step_dist()
+                invert_dir, orig_invert_dir = stepper.get_dir_inverted()
+                y=self.gcode_move.last_position[1]
+                #stepper._query_mcu_position()
+                print("y per_mm:%d,%u"%(steps_per_mm,stepper.get_oid()))
+                #invert_dir, orig_invert_dir = stepper.get_dir_inverted()
+                #bedmesh = self.printer.lookup_object('bed_mesh', None)
+                #bedmesh.bmc.orig_config['mesh_min']
+                y=y*1000
+
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("f %d\0"   % y).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("g %d\0"  % steps_per_mm).encode('utf-8')])
+                pr=self.Z_Move_Live_cmd.send([self.oid, 
+                    ("h %u\0" % invert_dir).encode('utf-8')])    
+                pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("i %u\0"  % stepper.get_oid()).encode('utf-8')])
+        self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
     def process_M102(self, gcmd):
         self.process_m102=1
+        print(gcmd)
         #self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
         #self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
         try:
@@ -522,7 +597,7 @@ class BDsensorEndstopWrapper:
     def home_start(self, print_time, sample_time, sample_count, rest_time,
                    triggered=True):
         print("BD home_start")
-        self.cmd_M102("M102 S-7")
+        self.homeing=1
         ENDSTOP_REST_TIME = .001
         rest_time = min(rest_time, ENDSTOP_REST_TIME)
         self.finish_home_complete = self.mcu_endstop.home_start(
@@ -547,6 +622,9 @@ class BDsensorEndstopWrapper:
     def multi_probe_end(self):
         print("BD multi_probe_end")
         self.bd_sensor.I2C_BD_send("1018")
+        if self.homeing==1:
+            self.sync_motor_probe()
+        self.homeing=0
         if self.stow_on_each_sample:
             return
         self.raise_probe()

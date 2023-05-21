@@ -128,7 +128,7 @@ with open(home_dir+'/klipper/src/Makefile', 'r') as file:
 ##        
 with open(home_dir+'/klipper/klippy/extras/safe_z_home.py', 'r') as file:
     data = file.read().rstrip()
-    data=data.replace("toolhead.manual_move(prevpos[:2], self.speed)",'toolhead.manual_move(prevpos[:2], self.speed)\n        self.gcode.run_script_from_command("M102 S-7")')
+    data=data.replace('     self.gcode.run_script_from_command("M102 S-7")',"")
     with open(home_dir+'/klipper/klippy/extras/safe_z_home.py', "w") as text_file:
         text_file.write("%s" % (data))        
 ##        
