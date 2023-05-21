@@ -399,12 +399,13 @@ class BDsensorEndstopWrapper:
                     steps_per_mm = 1.0/stepper.get_step_dist()
                     x=self.gcode_move.last_position[0]
                     stepper._query_mcu_position()
+                    invert_dir, orig_invert_dir = stepper.get_dir_inverted()
+                    print("invert_dir:%d,%d" % (invert_dir,orig_invert_dir))
                     print("x ==%.f %.f  %.f steps_per_mm:%d,%u"%
                         (self.min_x,self.max_x,x_count,steps_per_mm,
                         stepper.get_oid()))
                     print("kinematics:%s" %
                         self.config.getsection('printer').get('kinematics'))
-                    invert_dir, orig_invert_dir = stepper.get_dir_inverted()
                     bedmesh = self.printer.lookup_object('bed_mesh', None)
                     print_type=0 # default is 'cartesian'
                     if 'delta' ==(
@@ -415,6 +416,9 @@ class BDsensorEndstopWrapper:
                         print_type=1
 
                     x=x*1000
+                    
+                    pr=self.Z_Move_Live_cmd.send([self.oid, 
+                        ("3 %u\0" % invert_dir).encode('utf-8')])
                     pr=self.Z_Move_Live_cmd.send([self.oid,
                         ("7 %d\0" %
                         (self.min_x-self.x_offset)).encode('utf-8')])
@@ -437,6 +441,7 @@ class BDsensorEndstopWrapper:
                     print("xget:%s " %pr['return_set'])
                 if stepper.get_name()=='stepper_y':
                     steps_per_mm = 1.0/stepper.get_step_dist()
+                    invert_dir, orig_invert_dir = stepper.get_dir_inverted()
                     y=self.gcode_move.last_position[1]
                     #stepper._query_mcu_position()
                     print("y per_mm:%d,%u"%(steps_per_mm,stepper.get_oid()))
@@ -449,8 +454,10 @@ class BDsensorEndstopWrapper:
                         ("f %d\0"   % y).encode('utf-8')])
                     pr=self.Z_Move_Live_cmd.send([self.oid,
                         ("g %d\0"  % steps_per_mm).encode('utf-8')])
+                    pr=self.Z_Move_Live_cmd.send([self.oid, 
+                        ("h %u\0" % invert_dir).encode('utf-8')])    
                     pr=self.Z_Move_Live_cmd.send([self.oid,
-                        ("h %u\0"  % stepper.get_oid()).encode('utf-8')])
+                        ("i %u\0"  % stepper.get_oid()).encode('utf-8')])
 
                     self.results=[]
                     print("yget:%s " %pr['return_set'])

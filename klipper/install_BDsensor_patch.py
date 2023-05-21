@@ -137,5 +137,11 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data=data.replace("'sample_retract_dist', 2.,\n                                                   above=0.)","'sample_retract_dist', 2.,)")
     with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
         text_file.write("%s" % (data))        
+##        
+with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
+    data = file.read().rstrip()
+    data=data.replace("sample_retract_dist, above=0.)","sample_retract_dist, )")
+    with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
+        text_file.write("%s" % (data))        
 
 print("Install Bed Distance Sensor into Klipper successfully")

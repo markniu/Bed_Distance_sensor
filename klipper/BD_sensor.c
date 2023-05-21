@@ -42,7 +42,7 @@ struct gpio_in sda_gpio_in;
 uint8_t oid_g;
 uint8_t z_oid[4];
 uint32_t endtime_adjust=0;
-uint32_t endtime_upload=0;
+uint32_t endtime_debug=0;
 
 
 
@@ -82,6 +82,8 @@ struct _step_probe{
     int steps_per_mm;
     int xoid;//oid for x stepper
     int x_count;
+	int x_dir;
+	int y_dir;
     int kinematics;//0:cartesian,1:corexy,2:delta
     ////for y
     int min_y;
@@ -121,6 +123,7 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays)
 
     stepx_probe.xoid=0;
     stepx_probe.y_oid=0;
+	//output("BD_i2c_init mcuoid=%c sda:%c scl:%c dy:%c", oid_g,sda_pin,scl_pin,delay_m);
     return 1;
 }
 
@@ -251,10 +254,18 @@ uint16_t BD_i2c_read(void)
         b = (b & 0x3FF);
     if(b>1024)
         b=1024;
+#if 0
+    sda_gpio_in=gpio_in_setup(sda_pin, 1);
+	b=0;
+    b=gpio_in_read(sda_gpio_in);
+#endif
+    if((endtime_debug%8000)==0)
+    {
+		output("BDread mcuoid=%c b:%c sda:%c scl:%c dy:%c", oid_g,b,sda_pin,scl_pin,delay_m);
+    }
+	endtime_debug++;
+	
     BD_read_lock=0;
-    //sda_gpio_in=gpio_in_setup(sda_pin, 1);
-    //BD_Data=gpio_in_read(sda_gpio_in);
-    //return BD_Data;
     return b;
 }
 
@@ -385,49 +396,48 @@ void report_x_probe(uint16_t sensor_z)
        return;
     struct stepper *s = stepper_oid_lookup(stepx_probe.xoid);
     int cur_stp_x=stepper_get_position(s)-stepx_probe.steps_at_zero;
-    int cur_stp=cur_stp_x,cur_stp_y=0;
+    int cur_stp=-stepx_probe.x_dir*cur_stp_x,cur_stp_y=0;
     //// for corexy printer
     if(stepx_probe.kinematics==1){
         struct stepper *ss = stepper_oid_lookup(stepx_probe.y_oid);
-        cur_stp_y=stepper_get_position(ss)-stepx_probe.y_steps_at_zero;
+        cur_stp_y=-stepx_probe.y_dir*(stepper_get_position(ss)-stepx_probe.y_steps_at_zero);
         cur_stp=(cur_stp_x+cur_stp_y)/2;
     }
-    static int cur_stp_old=0,dir=1;
+    static int cur_stp_old=0,d_dir=0;
     int len=0;
     int inter_dis=(stepx_probe.max_x-stepx_probe.min_x)/(stepx_probe.points-1);
-    int interD=stepx_probe.min_x+stepx_probe.x_count*inter_dis;
+    int interD;
+	interD=stepx_probe.min_x+stepx_probe.x_count*inter_dis;
     if(cur_stp_old!=cur_stp)
     {
         if(cur_stp_old>cur_stp)
         {
-            dir=-1;
-            //interD+=0.05*stepx_probe.steps_per_mm;
+            d_dir=1;
         }
         else
         {
-            dir=1;
-            //interD-=0.05*stepx_probe.steps_per_mm;
+            d_dir=0;
         }
     }
     uint8_t data[16];
-//    memset(data,0,16);
+//  memset(data,0,16);
     //int interD_back=stepx_probe.max_x+x_count*inter_dis;
-    static int kk=0;
+   /* static int kk=0;
     kk++;
     if((kk%10000)==1)
        output("report_x_probe mcuoid=%c cur_stp=%c,%c,%c,%c",
-       oid_g,cur_stp,cur_stp_y,stepx_probe.y_oid,stepx_probe.xoid);
+       oid_g,cur_stp,cur_stp_y,stepx_probe.min_x,stepx_probe.max_x);*/
     if(cur_stp<=(stepx_probe.min_x-stepx_probe.steps_per_mm*2))
         stepx_probe.x_count=0;
     else if(cur_stp>=(stepx_probe.max_x+stepx_probe.steps_per_mm*2))
         stepx_probe.x_count=stepx_probe.points-1;
-    if(dir==1)
+    if(d_dir==0)
     {
         if((cur_stp>=interD)&&((cur_stp_old<interD)||(stepx_probe.x_count==0)))
         {
             //stepx_probe.x_data[stepx_probe.x_count]=BD_Data;
-            output("report_x_probe mcuoid=%c cur_stp_old0=%c",
-            oid_g,cur_stp_old);
+            output("report_x_probe mcuoid=%c cur=%c cur_stp_old0=%c,%c",
+                oid_g,cur_stp,cur_stp_old,interD);
            // output("report_x_probe mcuoid=%c cur_mm0=%c", oid_g,cur_stp);
             memset(data,0,16);
             len=INT_to_String(BD_Data,data);
@@ -459,9 +469,9 @@ void report_x_probe(uint16_t sensor_z)
             ||(stepx_probe.x_count==(stepx_probe.points-1))))
         {
 
-          //  output("report_x_probe mcuoid=%c cur_stp_old1=%c",
-          //      oid_g,cur_stp_old);
-          //  output("report_x_probe mcuoid=%c cur_mm1=%c", oid_g,cur_stp);
+           // output("report_x_probe mcuoid=%c cur=%c cur_stp_old1=%c,%c",
+            //    oid_g,cur_stp,cur_stp_old,interD);
+            //output("report_x_probe mcuoid=%c cur_mm1=%c", oid_g,cur_stp);
             //stepx_probe.x_data[stepx_probe.x_count]=BD_Data;
             memset(data,0,16);
             len=INT_to_String(BD_Data,data);
@@ -573,7 +583,13 @@ command_Z_Move_Live(uint32_t *args)
     else if(tmp[0]=='2')
         step_adj[0].adj_z_range=j;
     else if(tmp[0]=='3')
+    {
         step_adj[0].invert_dir=j;
+		if(j==1)
+			stepx_probe.x_dir=1;
+		else
+			stepx_probe.x_dir=-1;
+    }
     else if(tmp[0]=='4')
     {
         step_adj[0].steps_per_mm=j;
@@ -616,13 +632,13 @@ command_Z_Move_Live(uint32_t *args)
         stepx_probe.xoid=j;
         struct stepper *s = stepper_oid_lookup(j);
         uint32_t cur_stp=stepper_get_position(s);
-        stepx_probe.steps_at_zero=cur_stp-
-            (stepx_probe.steps_at_zero*stepx_probe.steps_per_mm)/1000;
+        stepx_probe.steps_at_zero=cur_stp+
+            stepx_probe.x_dir*(stepx_probe.steps_at_zero*stepx_probe.steps_per_mm)/1000;
         stepx_probe.min_x=stepx_probe.min_x*stepx_probe.steps_per_mm
             +stepx_probe.steps_per_mm;
         stepx_probe.max_x=stepx_probe.max_x*stepx_probe.steps_per_mm
             -stepx_probe.steps_per_mm;
-      //  output("Z_Move_L mcuoid=%c zero=%c", oid,stepx_probe.max_x);
+       // output("Z_Move_L mcuoid=%c zero=%c", oid,stepx_probe.max_x);
         stepx_probe.x_count=0;
     }
     else if(tmp[0]=='d')
@@ -642,16 +658,23 @@ command_Z_Move_Live(uint32_t *args)
     {
         stepx_probe.y_steps_per_mm=j;
     }
-    else if(tmp[0]=='h')
+	else if(tmp[0]=='h')
+    {
+		if(j==1)
+			stepx_probe.y_dir=1;
+		else
+			stepx_probe.y_dir=-1;
+    }
+    else if(tmp[0]=='i')
     {
         stepx_probe.y_oid=j;
         struct stepper *s = stepper_oid_lookup(j);
         uint32_t cur_stp=stepper_get_position(s);
-        stepx_probe.y_steps_at_zero=cur_stp-
-            (stepx_probe.y_steps_at_zero*stepx_probe.y_steps_per_mm)/1000;
+        stepx_probe.y_steps_at_zero=cur_stp+
+            stepx_probe.y_dir*(stepx_probe.y_steps_at_zero*stepx_probe.y_steps_per_mm)/1000;
     }
 
-   output("Z_Move_L mcuoid=%c j=%c", oid,j);
+   //output("Z_Move_L mcuoid=%c j=%c", oid,j);
 
     sendf("Z_Move_Live_response oid=%c return_set=%*s", oid,i,(char *)args[2]);
 }
