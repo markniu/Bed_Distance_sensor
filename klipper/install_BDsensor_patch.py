@@ -1,6 +1,15 @@
 import os
+import sys
 
 home_dir=os.environ['HOME']
+
+try:
+    print (sys.argv[1])
+    home_dir=sys.argv[1]
+except Exception as e:
+    pass
+
+print("home dir:"+home_dir)
 BD_dir=home_dir+"/Bed_Distance_sensor/klipper"
 print(BD_dir)
 
@@ -116,9 +125,16 @@ with open(home_dir+'/klipper/src/stepper.c', 'r') as file:
 ##replace sched.c
 with open(home_dir+'/klipper/src/sched.c', 'r') as file:
     data = file.read().rstrip()
-    data=data.replace("timer_from_us(100000);","timer_from_us(2000);")
+    data=data.replace("timer_from_us(100000);","timer_from_us(timer_period_time);")
     with open(home_dir+'/klipper/src/sched.c', "w") as text_file:
         text_file.write("%s" % (data))
+with open(home_dir+'/klipper/src/sched.c', 'r') as file:
+    data = file.read().rstrip()
+    data=data.replace("} SchedStatus = {.timer_list = &periodic_timer, .last_insert = &periodic_timer};\n\n",
+        "} SchedStatus = {.timer_list = &periodic_timer, .last_insert = &periodic_timer};\nuint32_t timer_period_time=100000;\n")
+    with open(home_dir+'/klipper/src/sched.c', "w") as text_file:
+        text_file.write("%s" % (data))
+
 ##replace src/Makefile
 with open(home_dir+'/klipper/src/Makefile', 'r') as file:
     data = file.read().rstrip()

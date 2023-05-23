@@ -35,6 +35,7 @@
 
 uint32_t sda_pin=0,scl_pin=0,delay_m=20;
 extern uint16_t BD_Data;
+extern uint32_t timer_period_time;
 uint16_t BD_read_flag=1018,BD_read_lock=0;
 
 struct gpio_out sda_gpio, scl_gpio;
@@ -259,12 +260,14 @@ uint16_t BD_i2c_read(void)
 	b=0;
     b=gpio_in_read(sda_gpio_in);
 #endif
+#if 0
+
     if((endtime_debug%8000)==0)
     {
 		output("BDread mcuoid=%c b:%c sda:%c scl:%c dy:%c", oid_g,b,sda_pin,scl_pin,delay_m);
     }
 	endtime_debug++;
-	
+#endif	
     BD_read_lock=0;
     return b;
 }
@@ -393,8 +396,10 @@ void report_x_probe(uint16_t sensor_z)
 {
    // BD_Data
    
-    if(stepx_probe.xoid==0||stepx_probe.y_oid==0)
+    if(stepx_probe.xoid==0||stepx_probe.y_oid==0){
        return;
+    }
+
     struct stepper *s = stepper_oid_lookup(stepx_probe.xoid);
     int cur_stp_x=-stepx_probe.x_dir*(stepper_get_position(s)-stepx_probe.steps_at_zero);
     int cur_stp=cur_stp_x,cur_stp_y=0;
@@ -423,12 +428,12 @@ void report_x_probe(uint16_t sensor_z)
     uint8_t data[16];
 //  memset(data,0,16);
     //int interD_back=stepx_probe.max_x+x_count*inter_dis;
- /*   static int kk=0;
+    static int kk=0;
     kk++;
     if((kk%1000)==1)
        output("report_x_probe mcuoid=%c cur_stp=%c,%c,%c,%c",
        oid_g,cur_stp,cur_stp_y,stepx_probe.min_x,cur_stp_x);
-       */
+       
     if(cur_stp<=(stepx_probe.min_x-stepx_probe.steps_per_mm*2))
         stepx_probe.x_count=0;
     else if(cur_stp>=(stepx_probe.max_x+stepx_probe.steps_per_mm*2))
@@ -632,16 +637,18 @@ command_Z_Move_Live(uint32_t *args)
     else if(tmp[0]=='c')
     {
         stepx_probe.xoid=j;
-        struct stepper *s = stepper_oid_lookup(j);
-        uint32_t cur_stp=stepper_get_position(s);
-        stepx_probe.steps_at_zero=cur_stp+
-            stepx_probe.x_dir*(stepx_probe.steps_at_zero*stepx_probe.steps_per_mm)/1000;
-        stepx_probe.min_x=stepx_probe.min_x*stepx_probe.steps_per_mm
-            +stepx_probe.steps_per_mm;
-        stepx_probe.max_x=stepx_probe.max_x*stepx_probe.steps_per_mm
-            -stepx_probe.steps_per_mm;
-       // output("Z_Move_L mcuoid=%c zero=%c", oid,stepx_probe.max_x);
-        stepx_probe.x_count=0;
+		if(stepx_probe.xoid){
+	        struct stepper *s = stepper_oid_lookup(j);
+	        uint32_t cur_stp=stepper_get_position(s);
+	        stepx_probe.steps_at_zero=cur_stp+
+	            stepx_probe.x_dir*(stepx_probe.steps_at_zero*stepx_probe.steps_per_mm)/1000;
+	        stepx_probe.min_x=stepx_probe.min_x*stepx_probe.steps_per_mm
+	            +stepx_probe.steps_per_mm;
+	        stepx_probe.max_x=stepx_probe.max_x*stepx_probe.steps_per_mm
+	            -stepx_probe.steps_per_mm;
+	       // output("Z_Move_L mcuoid=%c zero=%c", oid,stepx_probe.max_x);
+	        stepx_probe.x_count=0;
+		}
     }
     else if(tmp[0]=='d')
     {
@@ -670,13 +677,19 @@ command_Z_Move_Live(uint32_t *args)
     else if(tmp[0]=='i')
     {
         stepx_probe.y_oid=j;
-        struct stepper *s = stepper_oid_lookup(j);
-        uint32_t cur_stp=stepper_get_position(s);
-        stepx_probe.y_steps_at_zero=cur_stp+
-            stepx_probe.y_dir*(stepx_probe.y_steps_at_zero*stepx_probe.y_steps_per_mm)/1000;
+		if(stepx_probe.y_oid){
+	        struct stepper *s = stepper_oid_lookup(j);
+	        uint32_t cur_stp=stepper_get_position(s);
+	        stepx_probe.y_steps_at_zero=cur_stp+
+	            stepx_probe.y_dir*(stepx_probe.y_steps_at_zero*stepx_probe.y_steps_per_mm)/1000;
+		}
     }
+	else if(tmp[0]=='j')
+	{
+		timer_period_time=j;
+	}
 
-  //  output("Z_Move_L mcuoid=%c j=%c %c %c", oid,j,stepx_probe.xoid,stepx_probe.y_oid);
+    output("Z_Move_L mcuoid=%c j=%c %c %c", oid,j,stepx_probe.xoid,stepx_probe.y_oid);
 
     sendf("Z_Move_Live_response oid=%c return_set=%*s", oid,i,(char *)args[2]);
 }
@@ -724,7 +737,7 @@ DECL_COMMAND(command_config_I2C_BD,
     ///////////////////
     if(endtime_adjust>timer_read_time())
         return;
-    endtime_adjust=timer_read_time() + timer_from_us(500000);
+    endtime_adjust=timer_read_time() + timer_from_us(500000);//500ms
 
     len=INT_to_String(BD_Data,data);
     sendf("BD_Update oid=%c distance_val=%*s", oid_g,len,data);

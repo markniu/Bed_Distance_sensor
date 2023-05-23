@@ -624,6 +624,11 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1018")
         if self.homeing==1:
             self.sync_motor_probe()
+            pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("j 2000\0").encode('utf-8')])
+        else:#set x stepper oid=0 to recovery normal timer
+            pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("j 100000\0").encode('utf-8')])
         self.homeing=0
         if self.stow_on_each_sample:
             return
