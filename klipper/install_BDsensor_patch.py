@@ -126,6 +126,7 @@ with open(home_dir+'/klipper/src/stepper.c', 'r') as file:
 with open(home_dir+'/klipper/src/sched.c', 'r') as file:
     data = file.read().rstrip()
     data=data.replace("timer_from_us(100000);","timer_from_us(timer_period_time);")
+    data=data.replace("timer_from_us(2000);","timer_from_us(timer_period_time);")
     with open(home_dir+'/klipper/src/sched.c', "w") as text_file:
         text_file.write("%s" % (data))
 with open(home_dir+'/klipper/src/sched.c', 'r') as file:
