@@ -735,13 +735,15 @@ DECL_COMMAND(command_config_I2C_BD,
     //return;
     if(endtime_adjust>timer_read_time())
         return;
-    endtime_adjust=timer_read_time() + timer_from_us(50000);//500ms
+    endtime_adjust=timer_read_time() + timer_from_us(50000);//50ms
     
     tm=BD_i2c_read();
-    if(tm<1024)
+    if(tm<1023)
     {
         BD_Data=tm;
     }
+	else
+		BD_Data=0;
 
    // len=INT_to_String(BD_Data,data);
    // sendf("BD_Update oid=%c distance_val=%*s", oid_g,len,data);
