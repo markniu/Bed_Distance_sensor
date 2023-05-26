@@ -127,6 +127,8 @@ with open(home_dir+'/klipper/src/sched.c', 'r') as file:
     data = file.read().rstrip()
     data=data.replace("uint32_t timer_period_time","//")
     data=data.replace("periodic_timer.waketime -= timer_from_us(timer_period_time);","")
+    
+    data=data.replace("periodic_timer.waketime += timer_from_us(2000);","periodic_timer.waketime += timer_from_us(100000);")
     data=data.replace("periodic_timer.waketime += timer_from_us(timer_period_time);","periodic_timer.waketime += timer_from_us(100000);")
     data=data.replace("timer_from_us(100000);","timer_from_us(100000);\n    periodic_timer.waketime -= timer_from_us(timer_period_time);")
     with open(home_dir+'/klipper/src/sched.c', "w") as text_file:
