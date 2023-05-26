@@ -6,7 +6,7 @@ import sched, time
 from threading import Timer
 
 import chelper
-import mcu,math
+import math
 from . import probe
 BD_TIMER = 0.500
 
@@ -34,6 +34,7 @@ def calc_move_time(dist, speed, accel):
 class MCU_I2C_BD:
     def __init__(self,mcu,   sda_pin,scl_pin, delay_t):
         self.mcu = mcu
+        print("MCU_I2C_BD:%s"%mcu)
         self.oid = self.mcu.create_oid()
         # Generate I2C bus config message
         self.config_fmt = (
@@ -41,10 +42,10 @@ class MCU_I2C_BD:
             % (self.oid, sda_pin,scl_pin, delay_t))
         self.cmd_queue = mcu.alloc_command_queue()
         mcu.register_config_callback(self.build_config)
+        self.mcu.add_config_cmd(self.config_fmt)
         self.I2C_BD_send_cmd = self.I2C_BD_receive_cmd = None
     def build_config(self):
-        self.mcu.add_config_cmd(self.config_fmt)
-        print ("MCU_I2C_BD %d" % self.oid)
+        print ("self.config_fmt %s" % self.config_fmt)
         self.I2C_BD_send_cmd = self.mcu.lookup_command(
             "I2C_BD_send oid=%c data=%*s", cq=self.cmd_queue)
         self.I2C_BD_receive_cmd = self.mcu.lookup_query_command(
@@ -63,12 +64,6 @@ class MCU_I2C_BD:
     def I2C_BD_receive(self,  data):
         return self.I2C_BD_receive_cmd.send([self.oid, data])
 
-def MCU_BD_I2C_from_config(mcu,config):
-    # Determine pin from config
-    ppins = config.get_printer().lookup_object("pins")
-    pin_sda=config.get('sda_pin')
-    pin_scl=config.get('scl_pin')
-    return MCU_I2C_BD(mcu,pin_sda,pin_scl,config.get('delay'))
 
 # BDsensor wrapper that enables probe specific features
 # set this type of sda_pin 2 as virtual endstop
@@ -85,16 +80,41 @@ class BDsensorEndstopWrapper:
             config, 'activate_gcode', '')
         self.deactivate_gcode = gcode_macro.load_template(
             config, 'deactivate_gcode', '')
-        # Create an "endstop" object to handle the probe pin
-        ppins = self.printer.lookup_object('pins')
-        pin = config.get('sda_pin')
-        pin_params = ppins.lookup_pin(pin, can_invert=True, can_pullup=True)
-        self.mcu = mcu.get_printer_mcu(self.printer, 'mcu')
-        # set this type of sda_pin 2 as virtual endstop
-        pin_params['pullup']=2
-        self.mcu_endstop = self.mcu.setup_pin('endstop', pin_params)
         self.printer.register_event_handler('klippy:mcu_identify',
                                             self._handle_mcu_identify)
+        # Create an "endstop" object to handle the probe pin
+        #ppins = self.printer.lookup_object('pins')
+       # pin = config.get('sda_pin')
+       # pin_params = ppins.lookup_pin(pin, can_invert=True, can_pullup=True)
+       # self.mcu_endstop = ppins.setup_pin('pwm', config.get('sda_pin'))
+        #self.mcu = pin_params['chip']
+        #print(self.mcu)
+        # set this type of sda_pin 2 as virtual endstop
+        #pin_params['pullup']=2
+        #self.mcu_endstop = self.mcu.setup_pin('endstop', pin_params)
+
+        ppins = self.printer.lookup_object('pins')
+        #self.mcu_pwm = ppins.setup_pin('pwm', config.get('scl_pin'))
+
+        # Command timing
+        self.next_cmd_time = self.action_end_time = 0.
+        self.finish_home_complete = self.wait_trigger_complete = None
+        # Create an "endstop" object to handle the sensor pin
+        
+        
+        pin = config.get('sda_pin')
+        pin_params = ppins.lookup_pin(pin, can_invert=True, can_pullup=True)
+        mcu = pin_params['chip']
+        sda_pin_num = pin_params['pin']
+        self.mcu = mcu
+        print("b2:%s"%mcu)
+        pin_params = ppins.lookup_pin(config.get('scl_pin'), can_invert=True, can_pullup=True)
+        mcu = pin_params['chip']
+        scl_pin_num = pin_params['pin']
+        print("b3:%s"%mcu)
+        pin_params['pullup']=2
+        self.mcu_endstop = mcu.setup_pin('endstop', pin_params)
+
         self.oid = self.mcu.create_oid()
         self.cmd_queue = self.mcu.alloc_command_queue()
         # Setup iterative solver
@@ -105,13 +125,14 @@ class BDsensorEndstopWrapper:
         self.stepper_kinematics = ffi_main.gc(
             ffi_lib.cartesian_stepper_alloc(b'x'), ffi_lib.free)
 
-        self.bd_sensor=MCU_BD_I2C_from_config(self.mcu,config)
+        self.bd_sensor=MCU_I2C_BD(mcu,sda_pin_num,scl_pin_num,config.get('delay'))
+        #MCU_BD_I2C_from_config(self.mcu,config)
         self.distance=5;
         # Register M102 commands
         self.gcode = self.printer.lookup_object('gcode')
         self.gcode.register_command('M102', self.cmd_M102)
         self.no_stop_probe = config.get('no_stop_probe', None)
-        print(self.no_stop_probe)
+
         self.I2C_BD_receive_cmd2 = None
         self.gcode_move = self.printer.load_object(config, "gcode_move")
         self.gcode = self.printer.lookup_object('gcode')
@@ -144,7 +165,11 @@ class BDsensorEndstopWrapper:
         self.bd_update_timer = self.reactor.register_timer(
             self.bd_update_event)
         self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
-        print(config.getfloat('speed', 5.))
+        self.status_dis = None
+        try:
+            status_dis=self.printer.lookup_object('display_status')
+        except Exception as e:
+            pass
 
     def z_live_adjust(self):
         print ("z_live_adjust %d" % self.adjust_range)
@@ -204,18 +229,9 @@ class BDsensorEndstopWrapper:
         if self.gcode_que is not None:
             self.process_M102(self.gcode_que)
             self.gcode_que=None
-        strd=str(self.bd_value)+"mm"
-        try:
-            status_dis=self.printer.lookup_object('display_status')
-            if status_dis is not None:
-                if self.bd_value == 10.24:
-                    strd="BDs:ConnectErr"
-                if self.bd_value == 3.9:
-                    strd="BDs:Out Range"
-                status_dis.message=strd
-        except Exception as e:
-            pass
         #self.z_live_adjust()
+        #self.Z_Move_Live_cmd.send([self.oid,
+        #            ("d 0\0" ).encode('utf-8')])
         return eventtime + BD_TIMER
 
     def build_config(self):
@@ -240,6 +256,13 @@ class BDsensorEndstopWrapper:
         #print("_handle_BD_Update :%s " %params['distance_val'])
         try:
             self.bd_value=int(params['distance_val'])/100.00
+            if self.status_dis is not None:
+                strd=str(self.bd_value)+"mm"
+            if self.bd_value == 10.24:
+                strd="BDs:ConnectErr"
+            if self.bd_value == 3.9:
+               strd="BDs:Out Range"
+            self.status_dis.message=strd
         except ValueError as e:
             pass
         #else:
@@ -403,6 +426,7 @@ class BDsensorEndstopWrapper:
                 self.toolhead.wait_moves()
             ncount=0
             print("process_M102 1")
+            self.gcode.respond_info("Calibrating from 0.0mm to 3.9mm, Waiting...")
             while 1:
                 self.bd_sensor.I2C_BD_send(str(ncount))
                 self.bd_sensor.I2C_BD_send(str(ncount))
@@ -412,11 +436,12 @@ class BDsensorEndstopWrapper:
                     if stepper.is_active_axis('z'):
                         self._force_enable(stepper)
                         self.manual_move(stepper, self.distance, speed)
-                        print("process_M102 2")
                 self.toolhead.wait_moves()
                 ncount=ncount+1
+                    
                 if ncount>=40:
                     self.bd_sensor.I2C_BD_send("1021")
+                    self.gcode.respond_info("Calibrate Finished ")
                     break
         elif  CMD_BD == -5:
             self.bd_sensor.I2C_BD_send("1017")#tart read raw calibrate data
@@ -625,10 +650,10 @@ class BDsensorEndstopWrapper:
         if self.homeing==1:
             self.sync_motor_probe()
             pr=self.Z_Move_Live_cmd.send([self.oid,
-                    ("j 2000\0").encode('utf-8')])
+                    ("j 98000\0").encode('utf-8')])
         else:#set x stepper oid=0 to recovery normal timer
             pr=self.Z_Move_Live_cmd.send([self.oid,
-                    ("j 100000\0").encode('utf-8')])
+                    ("j 0\0").encode('utf-8')])
         self.homeing=0
         if self.stow_on_each_sample:
             return

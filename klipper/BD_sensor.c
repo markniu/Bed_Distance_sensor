@@ -392,7 +392,7 @@ void adust_Z_live(uint16_t sensor_z)
 }
 
 
-void report_x_probe(uint16_t sensor_z)
+void report_x_probe()
 {
    // BD_Data
    
@@ -447,6 +447,7 @@ void report_x_probe(uint16_t sensor_z)
                 oid_g,cur_stp,cur_stp_old,interD);
            // output("report_x_probe mcuoid=%c cur_mm0=%c", oid_g,cur_stp);
             memset(data,0,16);
+		    BD_Data=BD_i2c_read();
             len=INT_to_String(BD_Data,data);
             data[len++]=' ';
             len+=INT_to_String(stepx_probe.x_count,data+len);
@@ -481,6 +482,7 @@ void report_x_probe(uint16_t sensor_z)
             //output("report_x_probe mcuoid=%c cur_mm1=%c", oid_g,cur_stp);
             //stepx_probe.x_data[stepx_probe.x_count]=BD_Data;
             memset(data,0,16);
+		    BD_Data=BD_i2c_read();
             len=INT_to_String(BD_Data,data);
             data[len++]=' ';
             len+=INT_to_String(stepx_probe.x_count+stepx_probe.points,data+len);
@@ -514,9 +516,9 @@ command_I2C_BD_receive(uint32_t *args)
     uint8_t data[8];
     uint16_t BD_z;
 
-    if(BD_read_flag==1018)
-        BD_z=BD_Data;
-    else
+    //if(BD_read_flag==1018)
+    //    BD_z=BD_Data;
+    //else
         BD_z=BD_i2c_read();//BD_Data;
     BD_Data=BD_z;
     memset(data,0,8);
@@ -724,20 +726,21 @@ DECL_COMMAND(command_config_I2C_BD,
 
     if(sda_pin==0||scl_pin==0)
         return;
-    tm=BD_i2c_read();
-    if(tm<1024)
-    {
-        BD_Data=tm;
-    }
-    report_x_probe(BD_Data);
+    report_x_probe();
     //if(endtime_adjust>timer_read_time())
     //    return;
     //endtime_adjust=timer_read_time() + timer_from_us(200000);
     ///adust_Z_live(tm);
     ///////////////////
+    return;
     if(endtime_adjust>timer_read_time())
         return;
     endtime_adjust=timer_read_time() + timer_from_us(500000);//500ms
+    tm=BD_i2c_read();
+    if(tm<1024)
+    {
+        BD_Data=tm;
+    }
 
     len=INT_to_String(BD_Data,data);
     sendf("BD_Update oid=%c distance_val=%*s", oid_g,len,data);
