@@ -516,9 +516,9 @@ command_I2C_BD_receive(uint32_t *args)
     uint8_t data[8];
     uint16_t BD_z;
 
-    //if(BD_read_flag==1018)
-    //    BD_z=BD_Data;
-    //else
+    if(BD_read_flag==1018)
+        BD_z=BD_Data;
+    else
         BD_z=BD_i2c_read();//BD_Data;
     BD_Data=BD_z;
     memset(data,0,8);
@@ -732,18 +732,19 @@ DECL_COMMAND(command_config_I2C_BD,
     //endtime_adjust=timer_read_time() + timer_from_us(200000);
     ///adust_Z_live(tm);
     ///////////////////
-    return;
+    //return;
     if(endtime_adjust>timer_read_time())
         return;
-    endtime_adjust=timer_read_time() + timer_from_us(500000);//500ms
+    endtime_adjust=timer_read_time() + timer_from_us(50000);//500ms
+    
     tm=BD_i2c_read();
     if(tm<1024)
     {
         BD_Data=tm;
     }
 
-    len=INT_to_String(BD_Data,data);
-    sendf("BD_Update oid=%c distance_val=%*s", oid_g,len,data);
+   // len=INT_to_String(BD_Data,data);
+   // sendf("BD_Update oid=%c distance_val=%*s", oid_g,len,data);
 
  }
  DECL_TASK(bd_sensor_task);
