@@ -8,7 +8,7 @@ from threading import Timer
 import chelper
 import math
 from . import probe
-BD_TIMER = 0.500
+BD_TIMER = 0.600
 
 
 # Calculate a move's accel_t, cruise_t, and cruise_v
@@ -34,7 +34,7 @@ def calc_move_time(dist, speed, accel):
 class MCU_I2C_BD:
     def __init__(self,mcu,   sda_pin,scl_pin, delay_t):
         self.mcu = mcu
-        print("MCU_I2C_BD:%s"%mcu)
+        #print("MCU_I2C_BD:%s"%mcu)
         self.oid = self.mcu.create_oid()
         # Generate I2C bus config message
         self.config_fmt = (
@@ -107,11 +107,11 @@ class BDsensorEndstopWrapper:
         mcu = pin_params['chip']
         sda_pin_num = pin_params['pin']
         self.mcu = mcu
-        print("b2:%s"%mcu)
+        #print("b2:%s"%mcu)
         pin_params = ppins.lookup_pin(config.get('scl_pin'), can_invert=True, can_pullup=True)
         mcu = pin_params['chip']
         scl_pin_num = pin_params['pin']
-        print("b3:%s"%mcu)
+        #print("b3:%s"%mcu)
         pin_params['pullup']=2
         self.mcu_endstop = mcu.setup_pin('endstop', pin_params)
 
@@ -131,6 +131,7 @@ class BDsensorEndstopWrapper:
         # Register M102 commands
         self.gcode = self.printer.lookup_object('gcode')
         self.gcode.register_command('M102', self.cmd_M102)
+        self.no_stop_probe = None
         self.no_stop_probe = config.get('no_stop_probe', None)
 
         self.I2C_BD_receive_cmd2 = None
@@ -330,6 +331,12 @@ class BDsensorEndstopWrapper:
     def cmd_M102(self, gcmd, wait=False):
          self.gcode_que=gcmd
     def sync_motor_probe(self):
+        try:
+            if self.no_stop_probe is None:
+                return
+        except AttributeError as e:
+            pass    
+            return
         step_time=100
         self.toolhead = self.printer.lookup_object('toolhead')
         bedmesh = self.printer.lookup_object('bed_mesh', None)
@@ -595,7 +602,7 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         #self.process_m102=0
     def _handle_mcu_identify(self):
-        print("BD _handle_mcu_identify")
+        #print("BD _handle_mcu_identify")
         kin = self.printer.lookup_object('toolhead').get_kinematics()
         for stepper in kin.get_steppers():
             if stepper.is_active_axis('z'):
@@ -671,7 +678,7 @@ class BDsensorEndstopWrapper:
         if self.multi == 'OFF':
             self.raise_probe()
     def get_position_endstop(self):
-        print("BD get_position_endstop")
+        #print("BD get_position_endstop")
         return self.position_endstop
 
 def load_config(config):
