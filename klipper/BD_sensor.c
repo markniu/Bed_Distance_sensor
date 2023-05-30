@@ -125,6 +125,7 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays)
 
     stepx_probe.xoid=0;
     stepx_probe.y_oid=0;
+	endtime_adjust=0;
 	//output("BD_i2c_init mcuoid=%c sda:%c scl:%c dy:%c", oid_g,sda_pin,scl_pin,delay_m);
     return 1;
 }
