@@ -739,7 +739,9 @@ DECL_COMMAND(command_config_I2C_BD,
     ///adust_Z_live(tm);
     ///////////////////
  //   return;
-
+    if(endtime_adjust>(timer_read_time() + timer_from_us(timer_period_endstop*1000*2)))
+		endtime_adjust=timer_read_time() + timer_from_us(timer_period_endstop*1000);//us
+		
 	if(endtime_adjust>timer_read_time())
 	    return;
 	endtime_adjust=timer_read_time() + timer_from_us(timer_period_endstop*1000);//us
