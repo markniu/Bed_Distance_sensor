@@ -44,6 +44,7 @@ uint8_t oid_g;
 uint8_t z_oid[4];
 uint32_t endtime_adjust=0;
 uint32_t endtime_debug=0;
+uint32_t timer_period_endstop=100;
 
 
 
@@ -690,6 +691,10 @@ command_Z_Move_Live(uint32_t *args)
 	{
 		timer_period_time=j;
 	}
+	else if(tmp[0]=='k')
+	{
+		timer_period_endstop=j;
+	}
 
     output("Z_Move_L mcuoid=%c j=%c %c %c", oid,j,stepx_probe.xoid,stepx_probe.y_oid);
 
@@ -733,9 +738,10 @@ DECL_COMMAND(command_config_I2C_BD,
     ///adust_Z_live(tm);
     ///////////////////
  //   return;
-    if(endtime_adjust>timer_read_time())
-        return;
-    endtime_adjust=timer_read_time() + timer_from_us(5000);//5ms
+
+	if(endtime_adjust>timer_read_time())
+	    return;
+	endtime_adjust=timer_read_time() + timer_from_us(timer_period_endstop*1000);//us
     
     tm=BD_i2c_read();
     if(tm<1023)

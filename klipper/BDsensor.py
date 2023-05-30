@@ -409,6 +409,9 @@ class BDsensorEndstopWrapper:
                 pr=self.Z_Move_Live_cmd.send([self.oid,
                     ("i %u\0"  % stepper.get_oid()).encode('utf-8')])
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
+        pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("j 98000\0").encode('utf-8')])
+
     def process_M102(self, gcmd):
         self.process_m102=1
         print(gcmd)
@@ -640,7 +643,9 @@ class BDsensorEndstopWrapper:
         return self.finish_home_complete
 
     def wait_for_trigger(self, eventtime):
-        print("BD wait_for_trigger")  
+        print("BD wait_for_trigger")
+        pr=self.Z_Move_Live_cmd.send([self.oid,
+                ("k 5\0").encode('utf-8')])
         self.finish_home_complete.wait()
         if self.multi == 'OFF':
             self.raise_probe()
@@ -656,11 +661,10 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1018")
         if self.homeing==1:
             self.sync_motor_probe()
-            pr=self.Z_Move_Live_cmd.send([self.oid,
-                    ("j 98000\0").encode('utf-8')])
-        else:#set x stepper oid=0 to recovery normal timer
-            pr=self.Z_Move_Live_cmd.send([self.oid,
-                    ("j 0\0").encode('utf-8')])
+            
+        #else:#set x stepper oid=0 to recovery normal timer
+         #   pr=self.Z_Move_Live_cmd.send([self.oid,
+         #           ("j 0\0").encode('utf-8')])
         self.homeing=0
         if self.stow_on_each_sample:
             return
@@ -677,6 +681,10 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1018")
         if self.multi == 'OFF':
             self.raise_probe()
+        pr=self.Z_Move_Live_cmd.send([self.oid,
+                    ("j 0\0").encode('utf-8')])   
+        pr=self.Z_Move_Live_cmd.send([self.oid,
+                ("k 100\0").encode('utf-8')])
     def get_position_endstop(self):
         #print("BD get_position_endstop")
         return self.position_endstop
