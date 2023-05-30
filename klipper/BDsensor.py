@@ -45,7 +45,7 @@ class MCU_I2C_BD:
         self.mcu.add_config_cmd(self.config_fmt)
         self.I2C_BD_send_cmd = self.I2C_BD_receive_cmd = None
     def build_config(self):
-        print ("self.config_fmt %s" % self.config_fmt)
+        #print ("self.config_fmt %s" % self.config_fmt)
         self.I2C_BD_send_cmd = self.mcu.lookup_command(
             "I2C_BD_send oid=%c data=%*s", cq=self.cmd_queue)
         self.I2C_BD_receive_cmd = self.mcu.lookup_query_command(
@@ -644,6 +644,7 @@ class BDsensorEndstopWrapper:
 
     def wait_for_trigger(self, eventtime):
         print("BD wait_for_trigger")
+        self.bd_sensor.I2C_BD_send("1018")
         pr=self.Z_Move_Live_cmd.send([self.oid,
                 ("k 5\0").encode('utf-8')])
         self.finish_home_complete.wait()
