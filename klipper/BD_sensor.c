@@ -35,7 +35,7 @@
 
 uint32_t sda_pin=0,scl_pin=0,delay_m=20;
 extern uint16_t BD_Data;
-extern uint32_t timer_period_time;
+//extern uint32_t timer_period_time;
 uint16_t BD_read_flag=1018,BD_read_lock=0;
 
 struct gpio_out sda_gpio, scl_gpio;
@@ -690,7 +690,7 @@ command_Z_Move_Live(uint32_t *args)
     }
 	else if(tmp[0]=='j')
 	{
-		timer_period_time=j;
+		//timer_period_time=j;
 	}
 	else if(tmp[0]=='k')
 	{

@@ -103,23 +103,6 @@ with open(home_dir+'/klipper/src/stepper.c', 'r') as file:
     with open(home_dir+'/klipper/src/stepper.c', "w") as text_file:
         text_file.write("%s" % (data))
 
-##replace sched.c
-with open(home_dir+'/klipper/src/sched.c', 'r') as file:
-    data = file.read().rstrip()
-    data=data.replace("uint32_t timer_period_time","//")
-    data=data.replace("periodic_timer.waketime -= timer_from_us(timer_period_time);","")
-    
-    data=data.replace("periodic_timer.waketime += timer_from_us(2000);","periodic_timer.waketime += timer_from_us(100000);")
-    data=data.replace("periodic_timer.waketime += timer_from_us(timer_period_time);","periodic_timer.waketime += timer_from_us(100000);")
-    data=data.replace("timer_from_us(100000);","timer_from_us(100000);\n    periodic_timer.waketime -= timer_from_us(timer_period_time);")
-    with open(home_dir+'/klipper/src/sched.c', "w") as text_file:
-        text_file.write("%s" % (data))
-with open(home_dir+'/klipper/src/sched.c', 'r') as file:
-    data = file.read().rstrip()
-    data=data.replace("} SchedStatus = {.timer_list = &periodic_timer, .last_insert = &periodic_timer};\n",
-        "} SchedStatus = {.timer_list = &periodic_timer, .last_insert = &periodic_timer};\nuint32_t timer_period_time=0;\n")
-    with open(home_dir+'/klipper/src/sched.c', "w") as text_file:
-        text_file.write("%s" % (data))
 
 ##replace src/Makefile
 with open(home_dir+'/klipper/src/Makefile', 'r') as file:
