@@ -32,6 +32,104 @@
                                 % (epos[0], epos[1], epos[2]))
         return epos[:3]
 
+    def _move_next(self):
+        toolhead = self.printer.lookup_object('toolhead')
+        # Lift toolhead
+        speed = self.lift_speed
+        if not self.results:
+            # Use full speed to first probe position
+            speed = self.speed
+        toolhead.manual_move([None, None, self.horizontal_move_z], speed)
+        # Check if done probing
+        if len(self.results) >= len(self.probe_points):
+            toolhead.get_last_move_time() 
+            res = self.finalize_callback(self.probe_offsets, self.results)
+            if res != "retry":
+                return True
+            self.results = []
+        # Move to next XY probe point
+        nextpos = list(self.probe_points[len(self.results)])
+        if self.use_offsets:
+            nextpos[0] -= self.probe_offsets[0]
+            nextpos[1] -= self.probe_offsets[1]
+        toolhead.manual_move(nextpos, self.speed)
+        return False
+
+    def fast_probe_oneline(self, gcmd):
+        
+        probe = self.printer.lookup_object('probe', None)
+        
+        oneline_points = []
+        start_point=list(self.probe_points[len(self.results)])
+        end_point = []
+        for point in self.probe_points:
+            if start_point[1] is point[1]:
+                oneline_points.append(point)
+        n_count=len(oneline_points)
+        if n_count<=1:
+            raise self.printer.config_error(
+                "Seems the mesh direction is not X, points count on x is %d" % (n_count))
+        end_point = list(oneline_points[n_count-1])  
+        print(oneline_points)
+        print(start_point)
+        print(end_point)
+        toolhead = self.printer.lookup_object('toolhead')
+        if self.use_offsets:
+            end_point[0] -= self.probe_offsets[0]
+            end_point[1] -= self.probe_offsets[1]
+        toolhead.manual_move(start_point, self.speed)
+        toolhead.wait_moves()
+        toolhead.manual_move(end_point, self.speed)
+        ####
+        toolhead._flush_lookahead()
+        curtime = toolhead.reactor.monotonic()
+        est_time =toolhead.mcu.estimated_print_time(curtime)
+        line_time = toolhead.print_time-est_time
+        start_time = est_time
+        x_index = 0
+        
+        while (not toolhead.special_queuing_state
+               or toolhead.print_time >= est_time):
+            if not toolhead.can_pause:
+                break                
+            est_time =toolhead.mcu.estimated_print_time(curtime)    
+            
+            if (est_time-start_time) >= x_index*line_time/(n_count-1):    
+                print(" est:%f,t:%f,dst:%f"%(est_time,(est_time-start_time),x_index*line_time/n_count))
+                pos = toolhead.get_position()
+                pos[0] = oneline_points[x_index][0]
+                pos[1] = oneline_points[x_index][1]
+                pr = probe.mcu_probe.I2C_BD_receive_cmd.send([probe.mcu_probe.oid, "32".encode('utf-8')])
+                intd=int(pr['response'])
+                strd=str(intd/100.0)
+                pos[2]=pos[2]-(intd/100.0)
+                probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
+                                        % (pos[0], pos[1], pos[2]))
+               # return pos[:3]
+               # pos = probe.run_probe(gcmd)
+                self.results.append(pos)
+                x_index += 1;
+            curtime = toolhead.reactor.pause(curtime + 0.001)
+            
+    def fast_probe(self, gcmd):
+        toolhead = self.printer.lookup_object('toolhead')
+        probe = self.printer.lookup_object('probe', None)
+        speed = self.lift_speed
+        if not self.results:
+            # Use full speed to first probe position
+            speed = self.speed
+        toolhead.manual_move([None, None, self.horizontal_move_z], speed)
+        self.results = []
+        probe.mcu_probe.bd_sensor.I2C_BD_send("1022")
+        while len(self.results) < len(self.probe_points):
+            self.fast_probe_oneline(gcmd)
+        res = self.finalize_callback(self.probe_offsets, self.results)
+        probe.mcu_probe.bd_sensor.I2C_BD_send("1018")
+        print(self.results)        
+        self.results = []
+        if res != "retry":
+            return True
+
     def start_probe(self, gcmd):
         manual_probe.verify_no_manual_probe(self.printer)
         # Lookup objects
@@ -54,76 +152,19 @@
             raise gcmd.error("horizontal_move_z can't be less than"
                              " probe's z_offset")
         probe.multi_probe_begin()
+        
         try:
             if probe.mcu_probe.no_stop_probe is not None:
-                self._move_next()
-                toolhead = self.printer.lookup_object('toolhead')
-                toolhead.wait_moves()
-                pos = toolhead.get_position()
-                print(pos[2])
-                probe.mcu_probe.results=[]
-                probe.mcu_probe.Z_Move_Live_cmd.send(
-                    [probe.mcu_probe.oid, ("d 0\0").encode('utf-8')])
+                self.fast_probe(gcmd)
+                probe.multi_probe_end() 
+                return
         except AttributeError as e:
             pass
         while 1:
             done = self._move_next()
             if done:
                 break
-            try:
-                if probe.mcu_probe.no_stop_probe is not None:
-                    continue
-            except AttributeError as e:
-                pass
             pos = probe.run_probe(gcmd)
             self.results.append(pos)
-        probe.multi_probe_end()   
-
-    def _move_next(self):
-        toolhead = self.printer.lookup_object('toolhead')
-        probe = self.printer.lookup_object('probe', None)
-        # Lift toolhead
-        speed = self.lift_speed
-        if not self.results:
-            # Use full speed to first probe position
-            speed = self.speed
-        toolhead.manual_move([None, None, self.horizontal_move_z], speed)
-        # Check if done probing
-        if len(self.results) >= len(self.probe_points):
-            toolhead.get_last_move_time()
-            try:
-                if probe.mcu_probe.no_stop_probe is not None:
-                    toolhead = self.printer.lookup_object('toolhead')
-                    toolhead.wait_moves()
-                    probe = self.printer.lookup_object('probe', None)
-                    print(probe.mcu_probe.results)
-                    for i in range(len(self.results)):
-                        self.results[i][2]=self.horizontal_move_z-\
-                          (probe.mcu_probe.results[i]/100.0)
-                        self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-                                    % (self.results[i][0],
-                                    self.results[i][1],
-                                    self.results[i][2]))
-                    print(self.results)
-            except AttributeError as e:
-                pass
-            res = self.finalize_callback(self.probe_offsets, self.results)
-            if res != "retry":
-                return True
-            self.results = []
-        # Move to next XY probe point
-        nextpos = list(self.probe_points[len(self.results)])
-        if self.use_offsets:
-            nextpos[0] -= self.probe_offsets[0]
-            nextpos[1] -= self.probe_offsets[1]
-        toolhead.manual_move(nextpos, self.speed)
-        try:
-            if probe.mcu_probe.no_stop_probe is not None:
-                p_results=[0.0,0.0,0.0]
-                p_results[0]=nextpos[0]
-                p_results[1]=nextpos[1]
-                p_results[2]=0.02
-                self.results.append(p_results)
-        except AttributeError as e:
-            pass
-        return False
+        probe.multi_probe_end()  
+#end

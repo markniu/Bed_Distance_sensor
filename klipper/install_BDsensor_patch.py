@@ -54,31 +54,8 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
 with open(BD_dir+'/probe_bd.py', 'r') as file:
     Bdata = file.read().rstrip()
     
-    Bstart=Bdata.find("def start_probe(self, gcmd):")
-    Bend=Bdata.find(" def ",Bstart)
-    if Bend<0 :
-        Bend=len(Bdata)
-
-print("BD%d,%d,%d"%(Bstart,Bend,len(Bdata)))
-
-with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
-    data = file.read().rstrip()    
-    start=data.find("def start_probe(self, gcmd):")
-    end=data.find(" def ",start)
-    with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
-        text_file.write("%s%s\n   %s" % (data[0:start],Bdata[Bstart:Bend],data[end:len(data)]))
-
-#with open("BDsensor.py", "w") as text_file:
-#    text_file.write("%s %s" % (Bdata[0:Bstart],Bdata[Bend:len(Bdata)]))
-
-##replace _move_next   
-
-
-with open(BD_dir+'/probe_bd.py', 'r') as file:
-    Bdata = file.read().rstrip()
-    
     Bstart=Bdata.find("def _move_next(self):")
-    Bend=Bdata.find(" def ",Bstart)
+    Bend=Bdata.find("\n#end",Bstart)
     if Bend<0 :
         Bend=len(Bdata)
 
@@ -87,9 +64,13 @@ print("BD%d,%d,%d"%(Bstart,Bend,len(Bdata)))
 with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data = file.read().rstrip()    
     start=data.find("def _move_next(self):")
-    end=data.find(" def ",start)
+    end=data.find("    def _manual_probe_start(self):",start)
     with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
-        text_file.write("%s%s\n   %s" % (data[0:start],Bdata[Bstart:Bend],data[end:len(data)]))
+        text_file.write("%s%s\n%s" % (data[0:start],Bdata[Bstart:Bend],data[end:len(data)]))
+
+#with open("BDsensor.py", "w") as text_file:
+#    text_file.write("%s %s" % (Bdata[0:Bstart],Bdata[Bend:len(Bdata)]))
+
 
 
 ##replace endstop.c    
