@@ -143,7 +143,7 @@ class BDsensorEndstopWrapper:
         self.get_steppers = self.mcu_endstop.get_steppers
         #self.home_start = self.mcu_endstop.home_start
         self.home_wait = self.mcu_endstop.home_wait
-        self.query_endstop = self.mcu_endstop.query_endstop
+        #self.query_endstop = self.mcu_endstop.query_endstop
         self.process_m102=0
         self.gcode_que=None
         self.zl=0
@@ -419,11 +419,12 @@ class BDsensorEndstopWrapper:
         #self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
         try:
             CMD_BD = gcmd.get_int('S', None)
-        except AttributeError as e:
+        except Exception as e:
+            pass
             return
         self.toolhead = self.printer.lookup_object('toolhead')
         if CMD_BD == -6:
-            print("process_M102 0")
+            self.gcode.respond_info("Calibrating from 0.0mm to 3.9mm, don't power off the printer")
             kin = self.toolhead.get_kinematics()
             self.bd_sensor.I2C_BD_send("1019")
             distance = 0.5#gcmd.get_float('DISTANCE')
@@ -435,8 +436,7 @@ class BDsensorEndstopWrapper:
                 self._force_enable(stepper)
                 self.toolhead.wait_moves()
             ncount=0
-            print("process_M102 1")
-            self.gcode.respond_info("Calibrating from 0.0mm to 3.9mm, Waiting...")
+            self.gcode.respond_info("Please Waiting... ")
             while 1:
                 self.bd_sensor.I2C_BD_send(str(ncount))
                 self.bd_sensor.I2C_BD_send(str(ncount))
@@ -451,7 +451,8 @@ class BDsensorEndstopWrapper:
                     
                 if ncount>=40:
                     self.bd_sensor.I2C_BD_send("1021")
-                    self.gcode.respond_info("Calibrate Finished ")
+                    self.gcode.respond_info("Calibrate Finished!")
+                    self.gcode.respond_info("You can send M102 S-5 to check the calibration data")
                     break
         elif  CMD_BD == -5:
             self.bd_sensor.I2C_BD_send("1017")#tart read raw calibrate data
@@ -629,6 +630,18 @@ class BDsensorEndstopWrapper:
             raise self.printer.command_error(
                 "Toolhead moved during probe deactivate_gcode script")
 
+    def query_endstop(self, print_time):
+        print("query Z endstop")
+        #params = self.mcu_endstop.query_endstop(print_time)
+        #print(params)
+        self.bd_sensor.I2C_BD_send("1015")#1015   read distance data
+        pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
+        self.bd_value=int(pr['response'])/100.00
+        params = 1 #open
+        if self.bd_value > 0:# trigered
+           params=0         
+        return params
+        
     def home_start(self, print_time, sample_time, sample_count, rest_time,
                    triggered=True):
         print("BD home_start")

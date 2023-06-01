@@ -695,6 +695,7 @@ command_Z_Move_Live(uint32_t *args)
 	else if(tmp[0]=='k')
 	{
 		timer_period_endstop=j;
+		endtime_adjust=0;
 	}
 
     output("Z_Move_L mcuoid=%c j=%c %c %c", oid,j,stepx_probe.xoid,stepx_probe.y_oid);
@@ -721,24 +722,17 @@ DECL_COMMAND(command_config_I2C_BD,
  bd_sensor_task(void)
  {
 
-    uint32_t len=0;
-    uint8_t data[8];
+    //uint32_t len=0;
     uint16_t tm;
 
-    memset(data,0,8);
 
     if(BD_read_flag!=1018)
         return;
 
     if(sda_pin==0||scl_pin==0)
         return;
-    report_x_probe();
-    //if(endtime_adjust>timer_read_time())
-    //    return;
-    //endtime_adjust=timer_read_time() + timer_from_us(200000);
-    ///adust_Z_live(tm);
-    ///////////////////
- //   return;
+    if(timer_period_endstop>=100)
+		return;
     if(endtime_adjust>(timer_read_time() + timer_from_us(timer_period_endstop*1000*2)))
 		endtime_adjust=timer_read_time() + timer_from_us(timer_period_endstop*1000);//us
 		
