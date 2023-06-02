@@ -673,8 +673,8 @@ class BDsensorEndstopWrapper:
     def multi_probe_end(self):
         print("BD multi_probe_end")
         self.bd_sensor.I2C_BD_send("1018")
-        if self.homeing==1:
-            self.sync_motor_probe()
+       # if self.homeing==1:
+        #    self.sync_motor_probe()
             
         #else:#set x stepper oid=0 to recovery normal timer
          #   pr=self.Z_Move_Live_cmd.send([self.oid,
@@ -695,8 +695,8 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1018")
         if self.multi == 'OFF':
             self.raise_probe()
-        pr=self.Z_Move_Live_cmd.send([self.oid,
-                    ("j 0\0").encode('utf-8')])   
+       # pr=self.Z_Move_Live_cmd.send([self.oid,
+        #            ("j 0\0").encode('utf-8')])   
         pr=self.Z_Move_Live_cmd.send([self.oid,
                 ("k 100\0").encode('utf-8')])
     def get_position_endstop(self):

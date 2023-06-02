@@ -75,6 +75,8 @@
         print(end_point)
         toolhead = self.printer.lookup_object('toolhead')
         if self.use_offsets:
+            start_point[0] -= self.probe_offsets[0]
+            start_point[1] -= self.probe_offsets[1]
             end_point[0] -= self.probe_offsets[0]
             end_point[1] -= self.probe_offsets[1]
         toolhead.manual_move(start_point, self.speed)
