@@ -155,13 +155,14 @@
                              " probe's z_offset")
         probe.multi_probe_begin()
         
-        try:
-            if probe.mcu_probe.no_stop_probe is not None:
-                self.fast_probe(gcmd)
-                probe.multi_probe_end() 
-                return
-        except AttributeError as e:
-            pass
+        if gcmd.get_command() == "BED_MESH_CALIBRATE":
+             try:
+                 if probe.mcu_probe.no_stop_probe is not None:
+                     self.fast_probe(gcmd)
+                     probe.multi_probe_end() 
+                     return
+             except AttributeError as e:
+                 pass
         while 1:
             done = self._move_next()
             if done:
