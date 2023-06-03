@@ -518,10 +518,10 @@ command_I2C_BD_receive(uint32_t *args)
     uint8_t data[8];
     uint16_t BD_z;
 
-    if(BD_read_flag==1018)
-        BD_z=BD_Data;
-    else
-        BD_z=BD_i2c_read();//BD_Data;
+    //if(BD_read_flag==1018)
+    //    BD_z=BD_Data;
+    //else
+    BD_z=BD_i2c_read();//BD_Data;
     BD_Data=BD_z;
     memset(data,0,8);
     uint32_t len=0,j=0;

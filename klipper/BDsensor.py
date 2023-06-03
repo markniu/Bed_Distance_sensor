@@ -411,7 +411,17 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         pr=self.Z_Move_Live_cmd.send([self.oid,
                     ("j 98000\0").encode('utf-8')])
+    def BD_Sensor_Read(self,fore_r):
+        if fore_r == 1:
+            self.bd_sensor.I2C_BD_send("1015")#1015   read distance data
+        pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
+        intr = int(pr['response'])
+        if intr >= 1024:
+            pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
+            intr = int(pr['response'])
+        self.bd_value=intr/100.00
 
+        return self.bd_value
     def process_M102(self, gcmd):
         self.process_m102=1
         print(gcmd)
@@ -427,9 +437,9 @@ class BDsensorEndstopWrapper:
             self.gcode.respond_info("Calibrating from 0.0mm to 3.9mm, don't power off the printer")
             kin = self.toolhead.get_kinematics()
             self.bd_sensor.I2C_BD_send("1019")
-            distance = 0.5#gcmd.get_float('DISTANCE')
-            speed = 10#gcmd.get_float('VELOCITY', above=0.)
-            accel = 2000#gcmd.get_float('ACCEL', 0., minval=0.)
+            #distance = 0.5#gcmd.get_float('DISTANCE')
+            speed = 5#gcmd.get_float('VELOCITY', above=0.)
+            accel = 1000#gcmd.get_float('ACCEL', 0., minval=0.)
             self.distance=0.1
             for stepper in kin.get_steppers():
                 #if stepper.is_active_axis('z'):
@@ -444,8 +454,8 @@ class BDsensorEndstopWrapper:
                 self.toolhead.dwell(0.2)
                 for stepper in kin.get_steppers():
                     if stepper.is_active_axis('z'):
-                        self._force_enable(stepper)
-                        self.manual_move(stepper, self.distance, speed)
+                       # self._force_enable(stepper)
+                        self.manual_move(stepper, self.distance, speed,accel)
                 self.toolhead.wait_moves()
                 ncount=ncount+1
                     
@@ -479,7 +489,7 @@ class BDsensorEndstopWrapper:
                 if intd<0x20:
                     intd=0x20
                 x.append(intd)
-                self.toolhead.dwell(0.3)
+                self.toolhead.dwell(0.1)
                 ncount1=ncount1+1
                 if ncount1>=20:
                     self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
@@ -487,9 +497,10 @@ class BDsensorEndstopWrapper:
                     gcmd.respond_raw(res)
                     break
         elif  CMD_BD == -2:# gcode M102 S-2 read distance data
-            self.bd_sensor.I2C_BD_send("1015")#1015   read distance data
-            pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
-            self.bd_value=int(pr['response'])/100.00
+            #self.bd_sensor.I2C_BD_send("1015")#1015   read distance data
+            #pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
+            #self.bd_value=int(pr['response'])/100.00
+            self.bd_value=self.BD_Sensor_Read(1)
             strd=str(self.bd_value)+"mm"
             if self.bd_value == 10.24:
                 strd="BDsensor:Connection Error"
@@ -665,7 +676,7 @@ class BDsensorEndstopWrapper:
             self.raise_probe()
     def multi_probe_begin(self):
         print("BD multi_probe_begin")
-        #self.bd_sensor.I2C_BD_send("1022")
+        self.bd_sensor.I2C_BD_send("1022")
         if self.stow_on_each_sample:
             return
         self.multi = 'FIRST'

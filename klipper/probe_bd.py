@@ -8,14 +8,14 @@
         pos[2] = self.z_position
         #For BD sensor
         try:
-            self.mcu_probe.bd_sensor.I2C_BD_send("1022")
+            #self.mcu_probe.bd_sensor.I2C_BD_send("1022")
             toolhead.wait_moves()
             pos = toolhead.get_position()
-            print(pos[2])
-            pr = self.mcu_probe.I2C_BD_receive_cmd.send([self.mcu_probe.oid, "32".encode('utf-8')])
-            intd=int(pr['response'])
-            strd=str(intd/100.0)
-            pos[2]=pos[2]-(intd/100.0)
+            #pr = self.mcu_probe.I2C_BD_receive_cmd.send([self.mcu_probe.oid, "32".encode('utf-8')])
+            #intd=int(pr['response'])
+            #strd=str(intd/100.0)
+            intd=self.mcu_probe.BD_Sensor_Read(0)
+            pos[2]=pos[2]-intd
             self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                     % (pos[0], pos[1], pos[2]))
             return pos[:3]
@@ -101,10 +101,10 @@
                 pos = toolhead.get_position()
                 pos[0] = oneline_points[x_index][0]
                 pos[1] = oneline_points[x_index][1]
-                pr = probe.mcu_probe.I2C_BD_receive_cmd.send([probe.mcu_probe.oid, "32".encode('utf-8')])
-                intd=int(pr['response'])
-                strd=str(intd/100.0)
-                pos[2]=pos[2]-(intd/100.0)
+                #pr = probe.mcu_probe.I2C_BD_receive_cmd.send([probe.mcu_probe.oid, "32".encode('utf-8')])
+                #intd=int(pr['response'])
+                intd=probe.mcu_probe.BD_Sensor_Read(0)
+                pos[2]=pos[2]-intd
                 probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                         % (pos[0], pos[1], pos[2]))
                # return pos[:3]
@@ -122,11 +122,9 @@
             speed = self.speed
         toolhead.manual_move([None, None, self.horizontal_move_z], speed)
         self.results = []
-        probe.mcu_probe.bd_sensor.I2C_BD_send("1022")
         while len(self.results) < len(self.probe_points):
             self.fast_probe_oneline(gcmd)
         res = self.finalize_callback(self.probe_offsets, self.results)
-        probe.mcu_probe.bd_sensor.I2C_BD_send("1018")
         print(self.results)        
         self.results = []
         if res != "retry":
