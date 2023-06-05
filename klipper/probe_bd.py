@@ -19,7 +19,7 @@
             self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                     % (pos[0], pos[1], pos[2]))
             return pos[:3]
-        except AttributeError as e:
+        except Exception as e:
             pass
         try:
             epos = phoming.probing_move(self.mcu_probe, pos, speed)
