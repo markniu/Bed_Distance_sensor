@@ -9,16 +9,14 @@
         #For BD sensor
         try:
             #self.mcu_probe.bd_sensor.I2C_BD_send("1022")
-            toolhead.wait_moves()
-            pos = toolhead.get_position()
-            #pr = self.mcu_probe.I2C_BD_receive_cmd.send([self.mcu_probe.oid, "32".encode('utf-8')])
-            #intd=int(pr['response'])
-            #strd=str(intd/100.0)
-            intd=self.mcu_probe.BD_Sensor_Read(0)
-            pos[2]=pos[2]-intd
-            self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-                                    % (pos[0], pos[1], pos[2]))
-            return pos[:3]
+            if self.mcu_probe.bd_sensor is not None:
+                toolhead.wait_moves()
+                pos = toolhead.get_position()
+                intd=self.mcu_probe.BD_Sensor_Read(0)
+                pos[2]=pos[2]-intd
+                self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
+                                        % (pos[0], pos[1], pos[2]))
+                return pos[:3]
         except Exception as e:
             pass
         try:
