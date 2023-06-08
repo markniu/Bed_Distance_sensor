@@ -33,7 +33,7 @@
 #define BD_setHigh(x) gpio_out_write(x,1)
 
 
-uint32_t sda_pin=0,scl_pin=0,delay_m=20;
+uint32_t sda_pin=0,scl_pin=0,delay_m=20,homing_pose=0;
 extern uint16_t BD_Data;
 //extern uint32_t timer_period_time;
 uint16_t BD_read_flag=1018,BD_read_lock=0;
@@ -110,10 +110,11 @@ uint16_t Get_Distane_data(void)
 
 }
 
-int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays)
+int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose)
 {
     sda_pin=_sda;
     scl_pin =_scl;
+	homing_pose = h_pose;
     if(delays>0)
         delay_m=delays;
     sda_gpio=gpio_out_setup(sda_pin, 1);
@@ -126,7 +127,7 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays)
     stepx_probe.xoid=0;
     stepx_probe.y_oid=0;
 	endtime_adjust=0;
-	//output("BD_i2c_init mcuoid=%c sda:%c scl:%c dy:%c", oid_g,sda_pin,scl_pin,delay_m);
+	output("BD_i2c_init mcuoid=%c sda:%c scl:%c dy:%c h_p:%c", oid_g,sda_pin,scl_pin,delay_m,homing_pose);
     return 1;
 }
 
@@ -280,7 +281,7 @@ void BD_i2c_write(unsigned int addr)
     //// write
     BD_setLow(sda_gpio);
     BD_setHigh(scl_gpio);
-    ndelay_bd(delay_m);
+    ndelay_bd(delay_m*2);
     BD_setLow(scl_gpio);
     addr=BD_Add_OddEven(addr);
     ///write address
@@ -295,7 +296,7 @@ void BD_i2c_write(unsigned int addr)
             BD_setLow(sda_gpio);
         ndelay_bd(delay_m);
         BD_setHigh(scl_gpio);
-        ndelay_bd(delay_m);
+        ndelay_bd(delay_m*2);
         BD_setLow(scl_gpio);
         ndelay_bd(delay_m);
     }
@@ -345,170 +346,6 @@ extern   uint32_t
 stepper_get_position(struct stepper *s);
 extern   struct stepper *
 stepper_oid_lookup(uint8_t oid);
-
-void adust_Z_live(uint16_t sensor_z)
-{
-   // BD_Data
-/*    if(step_adj[0].zoid==0)
-       return;
-    struct stepper *s = stepper_oid_lookup(step_adj[0].zoid);
-    uint32_t cur_stp=stepper_get_position(s);
-    output("Z_Move_L mcuoid=%c diff_stp=%c",
-        oid_g,(cur_stp-step_adj[0].steps_at_zero));
-    if((step_adj[0].adj_z_range*step_adj[0].steps_per_mm/10)
-        <=(cur_stp-step_adj[0].steps_at_zero))
-        return;
-    if(sensor_z>=390)
-        return;//out of range
-    int diff_step=sensor_z*step_adj[0].steps_per_mm/100
-        -(cur_stp-step_adj[0].steps_at_zero);
-    int dir=0;
-    int old_dir=gpio_output_data_read(s->dir_pin);
-    if(diff_step<0)
-    {
-        diff_step=-diff_step;
-        dir=1;
-    }
-    output("Z_Move_L mcuoid=%c diff_step=%c", oid_g,diff_step);
-    if(step_adj[0].invert_dir==1)
-        dir=~dir;
-    if(dir==0)
-        gpio_out_write(s->dir_pin, 1);
-    else
-        gpio_out_write(s->dir_pin, 0);
-
-    for(int ii=0;ii<diff_step;ii++)
-    {
-        int nn=0;
-        if(ii<diff_step/2)
-            nn= diff_step/2-ii;
-        else
-            nn=ii-diff_step/2;
-        gpio_out_write(s->step_pin, 1);
-        ndelay_bd(step_adj[0].step_time*100000*nn);
-        gpio_out_write(s->step_pin, 0);
-        ndelay_bd(step_adj[0].step_time*100000*nn);
-    }
-    gpio_out_write(s->dir_pin, old_dir);
-    */
-}
-
-
-void report_x_probe()
-{
-   // BD_Data
-   
-    if(stepx_probe.xoid==0||stepx_probe.y_oid==0){
-       return;
-    }
-
-    struct stepper *s = stepper_oid_lookup(stepx_probe.xoid);
-    int cur_stp_x=-stepx_probe.x_dir*(stepper_get_position(s)-stepx_probe.steps_at_zero);
-    int cur_stp=cur_stp_x,cur_stp_y=0;
-    //// for corexy printer
-    if(stepx_probe.kinematics==1){
-        struct stepper *ss = stepper_oid_lookup(stepx_probe.y_oid);
-        cur_stp_y=-stepx_probe.y_dir*(stepper_get_position(ss)-stepx_probe.y_steps_at_zero);
-        cur_stp=(cur_stp_x+cur_stp_y)/2;
-    }
-    static int cur_stp_old=0,d_dir=0;
-    int len=0;
-    int inter_dis=(stepx_probe.max_x-stepx_probe.min_x)/(stepx_probe.points-1);
-    int interD;
-	interD=stepx_probe.min_x+stepx_probe.x_count*inter_dis;
-    if(cur_stp_old!=cur_stp)
-    {
-        if(cur_stp_old>cur_stp)
-        {
-            d_dir=1;
-        }
-        else
-        {
-            d_dir=0;
-        }
-    }
-    uint8_t data[16];
-//  memset(data,0,16);
-    //int interD_back=stepx_probe.max_x+x_count*inter_dis;
-    static int kk=0;
-    kk++;
-    if((kk%1000)==1)
-       output("report_x_probe mcuoid=%c cur_stp=%c,%c,%c,%c",
-       oid_g,cur_stp,cur_stp_y,stepx_probe.min_x,cur_stp_x);
-       
-    if(cur_stp<=(stepx_probe.min_x-stepx_probe.steps_per_mm*2))
-        stepx_probe.x_count=0;
-    else if(cur_stp>=(stepx_probe.max_x+stepx_probe.steps_per_mm*2))
-        stepx_probe.x_count=stepx_probe.points-1;
-    if(d_dir==0)
-    {
-        if((cur_stp>=interD)&&((cur_stp_old<interD)||(stepx_probe.x_count==0)))
-        {
-            //stepx_probe.x_data[stepx_probe.x_count]=BD_Data;
-            output("report_x_probe mcuoid=%c cur=%c cur_stp_old0=%c,%c",
-                oid_g,cur_stp,cur_stp_old,interD);
-           // output("report_x_probe mcuoid=%c cur_mm0=%c", oid_g,cur_stp);
-            memset(data,0,16);
-		    BD_Data=BD_i2c_read();
-            len=INT_to_String(BD_Data,data);
-            data[len++]=' ';
-            len+=INT_to_String(stepx_probe.x_count,data+len);
-            sendf("X_probe_Update oid=%c distance_val=%*s", oid_g,len,data);
-            stepx_probe.x_count++;
-            if(stepx_probe.x_count>=(stepx_probe.points))
-            {
-                stepx_probe.x_count=stepx_probe.points-1;
-/*
-                for(int i=0;i<stepx_probe.points;i++)
-                {
-                    memset(data,0,16);
-                    len=INT_to_String(stepx_probe.x_data[i],data);
-                    data[len++]=' ';
-                    len+=INT_to_String(i,data+len);
-
-                    sendf("X_probe_Update oid=%c distance_val=%*s",
-                    oid_g,len,data);
-                }
-                */
-            }
-        }
-    }
-    else
-    {
-        if((cur_stp<=interD)&&((cur_stp_old>interD)
-            ||(stepx_probe.x_count==(stepx_probe.points-1))))
-        {
-
-           // output("report_x_probe mcuoid=%c cur=%c cur_stp_old1=%c,%c",
-            //    oid_g,cur_stp,cur_stp_old,interD);
-            //output("report_x_probe mcuoid=%c cur_mm1=%c", oid_g,cur_stp);
-            //stepx_probe.x_data[stepx_probe.x_count]=BD_Data;
-            memset(data,0,16);
-		    BD_Data=BD_i2c_read();
-            len=INT_to_String(BD_Data,data);
-            data[len++]=' ';
-            len+=INT_to_String(stepx_probe.x_count+stepx_probe.points,data+len);
-            sendf("X_probe_Update oid=%c distance_val=%*s", oid_g,len,data);
-            stepx_probe.x_count--;
-            if(stepx_probe.x_count<0)
-            {
-                stepx_probe.x_count=0;
-                /*for(int i=0;i<stepx_probe.points;i++)
-                {
-                    memset(data,0,16);
-                    len=INT_to_String(stepx_probe.x_data[i],data);
-                    data[len++]=' ';
-                    len+=INT_to_String(i+stepx_probe.points,data+len);
-                    sendf("X_probe_Update oid=%c distance_val=%*s",
-                        oid_g,len,data);
-                }*/
-            }
-        }
-    }
-    if(cur_stp_old!=cur_stp)
-        cur_stp_old=cur_stp;
-
-}
 
 //for gcode command
 void
@@ -697,6 +534,10 @@ command_Z_Move_Live(uint32_t *args)
 		timer_period_endstop=j;
 		endtime_adjust=0;
 	}
+	else if(tmp[0]=='m')
+	{
+		homing_pose=j; //0.01mm
+	}
 
     output("Z_Move_L mcuoid=%c j=%c %c %c", oid,j,stepx_probe.xoid,stepx_probe.y_oid);
 
@@ -712,10 +553,10 @@ void
 command_config_I2C_BD(uint32_t *args)
 {
     oid_g = args[0];
-    BD_i2c_init(args[1],args[2],args[3]);
+    BD_i2c_init(args[1],args[2],args[3],args[4]);
 }
 DECL_COMMAND(command_config_I2C_BD,
-             "config_I2C_BD oid=%c sda_pin=%u scl_pin=%u delay=%u");
+             "config_I2C_BD oid=%c sda_pin=%u scl_pin=%u delay=%u h_pos=%u");
 
 
  void
@@ -748,6 +589,8 @@ DECL_COMMAND(command_config_I2C_BD,
 	else
 		BD_Data=0;
 
+    if(BD_Data<=homing_pose)
+		BD_Data=0;
    // len=INT_to_String(BD_Data,data);
    // sendf("BD_Update oid=%c distance_val=%*s", oid_g,len,data);
 
