@@ -73,7 +73,7 @@ class BDsensorEndstopWrapper:
         self.printer = config.get_printer()
         self.config = config
         #self.position_endstop = config.getfloat('z_offset')       
-        self.position_endstop = config.getfloat('position_endstop',0., minval=0.)
+        self.position_endstop = config.getfloat('position_endstop',0., minval=0.,below=2.5)
         self.stow_on_each_sample = config.getboolean(
             'deactivate_on_each_sample', True)
         gcode_macro = self.printer.load_object(config, 'gcode_macro')
@@ -414,8 +414,8 @@ class BDsensorEndstopWrapper:
         pr=self.Z_Move_Live_cmd.send([self.oid,
                     ("j 98000\0").encode('utf-8')])
     def BD_Sensor_Read(self,fore_r):
-        if fore_r == 1:
-            self.bd_sensor.I2C_BD_send("1015")#1015   read distance data
+        if fore_r > 0:
+            self.bd_sensor.I2C_BD_send("1018")#1015   read distance data
         pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
         intr = int(pr['response'])
         if intr >= 1024:
@@ -424,9 +424,13 @@ class BDsensorEndstopWrapper:
         self.bd_value=intr/100.00
         if fore_r == 0:
             if self.bd_value >= 10.24:
-                raise self.printer.command_error("Bed Distance Sensor data error:%.f" % (self.bd_value))
+                raise self.printer.command_error("Bed Distance Sensor data error:%.2f" % (self.bd_value))
             elif self.bd_value > 3.8:
-                raise self.printer.command_error("Bed Distance Sensor, out of range.:%.f " % (self.bd_value))
+                raise self.printer.command_error("Bed Distance Sensor, out of range.:%.2f " % (self.bd_value))
+        elif fore_r == 2:
+            if self.bd_value >= 10.24:
+                raise self.printer.command_error("Bed Distance Sensor data error:%.2f" % (self.bd_value))
+
         return self.bd_value
     def process_M102(self, gcmd):
         self.process_m102=1
@@ -454,6 +458,7 @@ class BDsensorEndstopWrapper:
                 self.toolhead.wait_moves()
             ncount=0
             self.gcode.respond_info("Please Waiting... ")
+            self.toolhead.dwell(0.8)
             while 1:
                 self.bd_sensor.I2C_BD_send(str(ncount))
                 self.bd_sensor.I2C_BD_send(str(ncount))
@@ -469,6 +474,7 @@ class BDsensorEndstopWrapper:
                     
                 if ncount>=40:
                     self.bd_sensor.I2C_BD_send("1021")
+                    self.toolhead.dwell(1)
                     self.gcode.respond_info("Calibrate Finished!")
                     self.gcode.respond_info("You can send M102 S-5 to check the calibration data")
                     break
@@ -514,7 +520,7 @@ class BDsensorEndstopWrapper:
             strd=str(self.bd_value)+"mm"
             if self.bd_value == 10.24:
                 strd="BDsensor:Connection Error"
-            if self.bd_value == 3.9:
+            elif self.bd_value >= 3.9:
                 strd="BDsensor:Out of measure Range"
             gcmd.respond_raw(strd)
         elif  CMD_BD ==-7:# gcode M102 Sx
@@ -595,9 +601,11 @@ class BDsensorEndstopWrapper:
                     print("yget:%s " %pr['return_set'])
                     #print(cmd_fmt)
             #self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
+        elif  CMD_BD ==-8:
+            self.bd_sensor.I2C_BD_send("1022") #reboot sensor
         elif  CMD_BD > 100:# gcode M102 Sx live adjust
              self.adjust_range = CMD_BD
-             self.bd_sensor.I2C_BD_send("1022")
+             #self.bd_sensor.I2C_BD_send("1022")
              step_time=100
              self.toolhead = self.printer.lookup_object('toolhead')
              kin = self.toolhead.get_kinematics()
@@ -623,7 +631,7 @@ class BDsensorEndstopWrapper:
                          % stepper.get_oid()).encode('utf-8')])
                      print("get:%s " %pr['return_set'])
                      #print(cmd_fmt)
-             self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
+             #self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
         #self.process_m102=0
@@ -656,14 +664,14 @@ class BDsensorEndstopWrapper:
         print("query Z endstop")
         #params = self.mcu_endstop.query_endstop(print_time)
         #print(params)
-        self.bd_sensor.I2C_BD_send("1015")#1015   read distance data
-        pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
-        self.bd_value=int(pr['response'])/100.00
-        params = 1 #open
-        if self.bd_value > 0:# trigered
-           params=0         
+        #self.bd_sensor.I2C_BD_send("1018")#1015   read distance data
+        #pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
+        self.bd_value=self.BD_Sensor_Read(2)
+        params = 1 #trigered
+        if self.bd_value > self.position_endstop:# open
+           params=0
         return params
-        
+
     def home_start(self, print_time, sample_time, sample_count, rest_time,
                    triggered=True):
         print("BD home_start")
@@ -678,8 +686,8 @@ class BDsensorEndstopWrapper:
         return self.finish_home_complete
 
     def wait_for_trigger(self, eventtime):
-        print("BD wait_for_trigger")
-        self.bd_sensor.I2C_BD_send("1018")
+        #print("BD wait_for_trigger") 
+        self.BD_Sensor_Read(2)
        # home_pos=self.position_endstop*100
        # pr=self.Z_Move_Live_cmd.send([self.oid,
        #         ("m %d\0" % home_pos).encode('utf-8')])
@@ -690,7 +698,7 @@ class BDsensorEndstopWrapper:
             self.raise_probe()
     def multi_probe_begin(self):
         print("BD multi_probe_begin")
-        self.bd_sensor.I2C_BD_send("1022")
+        #self.bd_sensor.I2C_BD_send("1022")
         if self.stow_on_each_sample:
             return
         self.multi = 'FIRST'

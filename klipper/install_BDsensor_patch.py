@@ -9,9 +9,9 @@ try:
 except Exception as e:
     pass
 
-print("home dir:"+home_dir)
+print("\nIs '"+home_dir+"' the home dir?\nusage example:python /home/pi/Bed_Distance_sensor/klipper/install_BDsensor_patch.py /home/pi\n ")
 BD_dir=home_dir+"/Bed_Distance_sensor/klipper"
-print(BD_dir)
+#print(BD_dir)
 
 
 ##copy BDsensor.py
@@ -37,7 +37,7 @@ with open(BD_dir+'/probe_bd.py', 'r') as file:
     if Bend<0 :
         Bend=len(Bdata)
 
-print("BD%d,%d,%d"%(Bstart,Bend,len(Bdata)))
+#print("BD%d,%d,%d"%(Bstart,Bend,len(Bdata)))
 
 with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data = file.read().rstrip()    
@@ -59,7 +59,7 @@ with open(BD_dir+'/probe_bd.py', 'r') as file:
     if Bend<0 :
         Bend=len(Bdata)
 
-print("BD%d,%d,%d"%(Bstart,Bend,len(Bdata)))
+#print("BD%d,%d,%d"%(Bstart,Bend,len(Bdata)))
 
 with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data = file.read().rstrip()    
@@ -95,27 +95,13 @@ with open(home_dir+'/klipper/src/endstop.c', 'r') as file:
 
 
 
-##replace stepper.c
-with open(home_dir+'/klipper/src/stepper.c', 'r') as file:
-    data = file.read().rstrip()
-    data=data.replace("static struct stepper *","struct stepper *")
-    data=data.replace("static uint32_t","uint32_t")
-    with open(home_dir+'/klipper/src/stepper.c', "w") as text_file:
-        text_file.write("%s" % (data))
-
-
 ##replace src/Makefile
 with open(home_dir+'/klipper/src/Makefile', 'r') as file:
     data = file.read().rstrip()
     data=data.replace("basecmd.c debugcmds.c","basecmd.c BD_sensor.c debugcmds.c")
     with open(home_dir+'/klipper/src/Makefile', "w") as text_file:
         text_file.write("%s" % (data))
-##        
-with open(home_dir+'/klipper/klippy/extras/safe_z_home.py', 'r') as file:
-    data = file.read().rstrip()
-    data=data.replace('     self.gcode.run_script_from_command("M102 S-7")',"")
-    with open(home_dir+'/klipper/klippy/extras/safe_z_home.py', "w") as text_file:
-        text_file.write("%s" % (data))        
+     
 ##        
 with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data = file.read().rstrip()
@@ -129,4 +115,4 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
         text_file.write("%s" % (data))        
 
-print("Install Bed Distance Sensor into Klipper successfully")
+print("Install Bed Distance Sensor into Klipper successfully\n")
