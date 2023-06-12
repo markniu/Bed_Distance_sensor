@@ -46,7 +46,8 @@ https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 ## There are 3 ways to do auto bed leveling:
 **1.Real time leveling at first few layers with M102**
 
-this feature is only work with marlin.
+this feature is only work with marlin at this time.
+
 we can easily enable or disable this auto level by sending gcode command or and adding gcode in the gcode file.
 
 To enable bed leveling in Cura, add the M102 G-Code right below the G28 (Home All Axes) G-code in the Start G-code section of your printer’s Machine Settings.
