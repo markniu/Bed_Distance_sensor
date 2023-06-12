@@ -62,7 +62,8 @@ M102   S-1    // Read sensor information
 ```
 
 **2. Fast Auto Bed Leveling**
-Here is a auto bed leveling test, 10*10 probe points with speed 200mm/s
+
+Here is an auto bed leveling test, 10*10 probe points with the same speed 200mm/s
 
 BLtouch: 5 minutes and 40 seconds
 
