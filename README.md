@@ -42,23 +42,11 @@ The BDsensor have been integrated to Marlin2.1.x(Since 2022.8.27),you can downlo
 ### Work with Klipper
 https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 
-### Calibrate:
-Why calibrate?
-
-we need to calibrate this sensor before first use or the bed plate have been changed to different materials,
-Because different metal plates may have different electromagnetic properties.
-normally this process will take about within one minute in 3D printer .
-
-Calibrate steps:
-
-1)Move the Nozzle down until it just touch the bed plate(as the 0 distance).
-
-2)Power on the printer, Send gcode `M102 S-6`,then it will move the z axis slowly up 0.1mm everytime until it reach to 3.9mm.done
-
 
 ## There are 3 ways to do auto bed leveling:
 **1.Real time leveling at first few layers with M102**
 
+this feature is only work with marlin.
 we can easily enable or disable this auto level by sending gcode command or and adding gcode in the gcode file.
 
 To enable bed leveling in Cura, add the M102 G-Code right below the G28 (Home All Axes) G-code in the Start G-code section of your printer’s Machine Settings.
@@ -67,15 +55,18 @@ For example `M102 S2` below the G28 , that means it will only do bed leveling be
 Send `M102 S0`or`G28`or `M18` will disable bedlevel with BDsensor,BTW,this is disabled by default.
 
 ```
-M102   S-6    // Start Calibrate,before that make sure the nozzle is just touched the bed,and then the printer restarted. 
+M102   S-6    // Start Calibrate,before that make sure the nozzle is just touched the bed,and then restart the printer. 
 M102   S-5    // Read raw Calibrate data
 M102   S4     // Set the adjustable Z height value,e.g. M102 S4  means it will do adjusting while the Z height <=0.4mm , disable it by M102 S0.
 M102   S-1    // Read sensor information
 ```
 
-**2. Auto Bed Leveling with G29**
+**2. Fast Auto Bed Leveling**
+Here is a auto bed leveling test, 10*10 probe points with speed 200mm/s
 
-Another way to do auto bed leveling is like BLtouch with G29,just add a line G29 below G28.
+BLtouch: 5 minutes and 40 seconds
+
+BDsensor: 25 seconds
 
 **3. Combine the above Real time leveling(M102) and Auto Bed Leveling(G29)**
 
