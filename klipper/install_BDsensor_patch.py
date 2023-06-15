@@ -9,7 +9,7 @@ try:
 except Exception as e:
     pass
 
-print("\nIs '"+home_dir+"' the home dir?\nusage example:python /home/pi/Bed_Distance_sensor/klipper/install_BDsensor_patch.py /home/pi\n ")
+print("\nyour klipper path is '"+home_dir+"' \nusage example:python /home/pi/Bed_Distance_sensor/klipper/install_BDsensor_patch.py /home/pi\n ")
 BD_dir=home_dir+"/Bed_Distance_sensor/klipper"
 #print(BD_dir)
 
@@ -112,6 +112,7 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
 with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data = file.read().rstrip()
     data=data.replace("sample_retract_dist, above=0.)","sample_retract_dist, )")
+    data=data.replace("import logging\nimport pins","import logging,time\nimport pins")
     with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
         text_file.write("%s" % (data))        
 

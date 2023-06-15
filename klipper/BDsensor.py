@@ -470,6 +470,7 @@ class BDsensorEndstopWrapper:
                        # self._force_enable(stepper)
                         self.manual_move(stepper, self.distance, speed,accel)
                 self.toolhead.wait_moves()
+                self.toolhead.dwell(0.2)
                 ncount=ncount+1
                     
                 if ncount>=40:
@@ -603,35 +604,8 @@ class BDsensorEndstopWrapper:
             #self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         elif  CMD_BD ==-8:
             self.bd_sensor.I2C_BD_send("1022") #reboot sensor
-        elif  CMD_BD > 100:# gcode M102 Sx live adjust
-             self.adjust_range = CMD_BD
-             #self.bd_sensor.I2C_BD_send("1022")
-             step_time=100
-             self.toolhead = self.printer.lookup_object('toolhead')
-             kin = self.toolhead.get_kinematics()
-             for stepper in kin.get_steppers():
-                 if stepper.is_active_axis('z'):
-                     steps_per_mm = 1.0/stepper.get_step_dist()
-                     z=self.gcode_move.last_position[2]
-                     stepper._query_mcu_position()
-                     invert_dir, orig_invert_dir = stepper.get_dir_inverted()
-                     z=z*1000
-                     print("z step_at_zero:%d"% z)
-                     pr=self.Z_Move_Live_cmd.send([self.oid, ("1 %d\0"
-                         % z).encode('utf-8')])
-                     pr=self.Z_Move_Live_cmd.send([self.oid, ("2 %u\0"
-                         % CMD_BD).encode('utf-8')])
-                     pr=self.Z_Move_Live_cmd.send([self.oid, ("3 %u\0"
-                         % orig_invert_dir).encode('utf-8')])
-                     pr=self.Z_Move_Live_cmd.send([self.oid, ("4 %u\0"
-                         % steps_per_mm).encode('utf-8')])
-                     pr=self.Z_Move_Live_cmd.send([self.oid, ("5 %u\0"
-                         % step_time).encode('utf-8')])
-                     pr=self.Z_Move_Live_cmd.send([self.oid, ("6 %u\0"
-                         % stepper.get_oid()).encode('utf-8')])
-                     print("get:%s " %pr['return_set'])
-                     #print(cmd_fmt)
-             #self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
+        else:
+            return
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
         #self.process_m102=0

@@ -11,6 +11,7 @@
             #self.mcu_probe.bd_sensor.I2C_BD_send("1022")
             if self.mcu_probe.bd_sensor is not None:
                 toolhead.wait_moves()
+                time.sleep(0.004)
                 pos = toolhead.get_position()
                 intd=self.mcu_probe.BD_Sensor_Read(0)
                 pos[2]=pos[2]-intd
