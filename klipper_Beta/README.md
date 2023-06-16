@@ -1,12 +1,15 @@
 
-This is the Beta version patch code for klipper.
+### This is the Beta version patch code for klipper.
 
+if you like to test with this new code please run
+```
+python ~/Bed_Distance_sensor/klipper_Beta/install_BDsensor_patch.py
+```
+instead of 
+```
+python ~/Bed_Distance_sensor/klipper/install_BDsensor_patch.py
+```
 
-```
-git clone https://github.com/markniu/Bed_Distance_sensor.git
-python ~/Bed_Distance_sensor/klipper_Beta/install_BDsensor_patch.py 
-cd ~/klipper/
-make menuconfig
-make clean
-make
-```
+in the installation step of Klipper
+
+https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
