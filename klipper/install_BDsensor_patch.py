@@ -9,7 +9,7 @@ try:
 except Exception as e:
     pass
 
-print("\nyour klipper path is '"+home_dir+"' \nusage example:python /home/pi/Bed_Distance_sensor/klipper/install_BDsensor_patch.py /home/pi\n ")
+print("\nthe path of klipper is '"+home_dir+"' \nusage example:python /home/pi/Bed_Distance_sensor/klipper/install_BDsensor_patch.py "+home_dir+"\n")
 BD_dir=home_dir+"/Bed_Distance_sensor/klipper"
 #print(BD_dir)
 
@@ -43,6 +43,24 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data = file.read().rstrip()    
     start=data.find("def _probe(self, speed):")
     end=data.find(" def ",start)
+    with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
+        text_file.write("%s%s\n   %s" % (data[0:start],Bdata[Bstart:Bend],data[end:len(data)]))
+
+##replace run_probe
+with open(BD_dir+'/probe_bd.py', 'r') as file:
+    Bdata = file.read().rstrip()
+    
+    Bstart=Bdata.find("def run_probe(self, gcmd):")
+    Bend=Bdata.find(" def ",Bstart)
+    if Bend<0 :
+        Bend=len(Bdata)
+
+#print("BD%d,%d,%d"%(Bstart,Bend,len(Bdata)))
+
+with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
+    data = file.read().rstrip()    
+    start=data.find("def run_probe(self, gcmd):")
+    end=data.find(" cmd_PROBE_help = ",start)
     with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
         text_file.write("%s%s\n   %s" % (data[0:start],Bdata[Bstart:Bend],data[end:len(data)]))
 
@@ -105,7 +123,7 @@ with open(home_dir+'/klipper/src/Makefile', 'r') as file:
 ##        
 with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data = file.read().rstrip()
-    data=data.replace("'sample_retract_dist', 2.,\n                                                   above=0.)","'sample_retract_dist', 2.,)")
+    data=data.replace("'sample_retract_dist', 2.,\n                                                   above=0.)","'sample_retract_dist', 0.,)")
     with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
         text_file.write("%s" % (data))        
 ##        

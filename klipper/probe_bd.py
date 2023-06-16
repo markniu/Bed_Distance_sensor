@@ -30,7 +30,49 @@
         self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                 % (epos[0], epos[1], epos[2]))
         return epos[:3]
-
+    def run_probe(self, gcmd):
+        speed = gcmd.get_float("PROBE_SPEED", self.speed, above=0.)
+        lift_speed = self.get_lift_speed(gcmd)
+        sample_count = gcmd.get_int("SAMPLES", self.sample_count, minval=1)
+        sample_retract_dist = gcmd.get_float("SAMPLE_RETRACT_DIST",
+                                             self.sample_retract_dist, )
+        samples_tolerance = gcmd.get_float("SAMPLES_TOLERANCE",
+                                           self.samples_tolerance, minval=0.)
+        samples_retries = gcmd.get_int("SAMPLES_TOLERANCE_RETRIES",
+                                       self.samples_retries, minval=0)
+        samples_result = gcmd.get("SAMPLES_RESULT", self.samples_result)
+        must_notify_multi_probe = not self.multi_probe_pending
+        if must_notify_multi_probe:
+            self.multi_probe_begin()
+        probexy = self.printer.lookup_object('toolhead').get_position()[:2]
+        retries = 0
+        positions = []
+        while len(positions) < sample_count:
+            # Probe position
+            pos = self._probe(speed)
+            positions.append(pos)
+            # Check samples tolerance
+            z_positions = [p[2] for p in positions]
+            if max(z_positions) - min(z_positions) > samples_tolerance:
+                if retries >= samples_retries:
+                    raise gcmd.error("Probe samples exceed samples_tolerance")
+                gcmd.respond_info("Probe samples exceed tolerance. Retrying...")
+                retries += 1
+                positions = []
+            try:
+                if self.mcu_probe.bd_sensor is not None:
+                    continue
+            except Exception as e:
+                pass
+            # Retract
+            if len(positions) < sample_count:
+                self._move(probexy + [pos[2] + sample_retract_dist], lift_speed)
+        if must_notify_multi_probe:
+            self.multi_probe_end()
+        # Calculate and return result
+        if samples_result == 'median':
+            return self._calc_median(positions)
+        return self._calc_mean(positions)
     def _move_next(self):
         toolhead = self.printer.lookup_object('toolhead')
         # Lift toolhead
