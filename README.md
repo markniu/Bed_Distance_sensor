@@ -33,15 +33,16 @@ Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
 
 
-### WiKi Installation 
-https://github.com/markniu/Bed_Distance_sensor/wiki
+### Installing Klipper:
+https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor
 
-### Marlin Firmware:
 The BDsensor have been integrated to Marlin2.1.x(Since 2022.8.27),you can download the latest here: https://github.com/MarlinFirmware/Marlin What do you need is change the configure file and pins file.
 
-### Work with Klipper
+### Installing Klipper
 https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 
+#### Mount BDsensor
+https://www.thingiverse.com/thing:6098131
 
 ## There are 3 ways to do auto bed leveling:
 **1.Real time leveling at first few layers with M102**
