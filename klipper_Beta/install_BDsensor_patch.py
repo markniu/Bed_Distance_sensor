@@ -2,16 +2,18 @@ import os
 import sys
 
 home_dir=os.environ['HOME']
-
+BD_type="klipper"
 try:
-    print (sys.argv[1])
-    home_dir=sys.argv[1]
+   # print (sys.argv[0])
+    home_dir=sys.argv[1]    
+    if sys.argv[0].find("klipper_Beta") > 0:
+        BD_type="klipper_Beta"
 except Exception as e:
     pass
 
-print("\nthe path of klipper is '"+home_dir+"' ? \nusage example:python /home/pi/Bed_Distance_sensor/klipper/install_BDsensor_patch.py "+home_dir+"\n")
-BD_dir=home_dir+"/Bed_Distance_sensor/klipper"
-#print(BD_dir)
+print("the path of klipper is '"+home_dir+"' ? \nusage example:python /home/pi/Bed_Distance_sensor/klipper/install_BDsensor_patch.py "+home_dir+"\n")
+BD_dir=home_dir+"/Bed_Distance_sensor/"+BD_type
+print(BD_dir)
 
 
 ##copy BDsensor.py
