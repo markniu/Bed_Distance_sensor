@@ -1,41 +1,10 @@
-    def _probe(self, speed):
-        toolhead = self.printer.lookup_object('toolhead')
-        curtime = self.printer.get_reactor().monotonic()
-        if 'z' not in toolhead.get_status(curtime)['homed_axes']:
-            raise self.printer.command_error("Must home before probe")
-        phoming = self.printer.lookup_object('homing')
-        pos = toolhead.get_position()
-        pos[2] = self.z_position
-        #For BD sensor
-        try:
-            #self.mcu_probe.bd_sensor.I2C_BD_send("1022")
-            if self.mcu_probe.bd_sensor is not None:
-                toolhead.wait_moves()
-                time.sleep(0.004)
-                pos = toolhead.get_position()
-                intd=self.mcu_probe.BD_Sensor_Read(0)
-                pos[2]=pos[2]-intd
-                self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-                                        % (pos[0], pos[1], pos[2]))
-                return pos[:3]
-        except Exception as e:
-            pass
-        try:
-            epos = phoming.probing_move(self.mcu_probe, pos, speed)
-        except self.printer.command_error as e:
-            reason = str(e)
-            if "Timeout during endstop homing" in reason:
-                reason += HINT_TIMEOUT
-            raise self.printer.command_error(reason)
-        self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-                                % (epos[0], epos[1], epos[2]))
-        return epos[:3]
+ 
     def run_probe(self, gcmd):
         speed = gcmd.get_float("PROBE_SPEED", self.speed, above=0.)
         lift_speed = self.get_lift_speed(gcmd)
         sample_count = gcmd.get_int("SAMPLES", self.sample_count, minval=1)
         sample_retract_dist = gcmd.get_float("SAMPLE_RETRACT_DIST",
-                                             self.sample_retract_dist, )
+                                             self.sample_retract_dist, above=0.)
         samples_tolerance = gcmd.get_float("SAMPLES_TOLERANCE",
                                            self.samples_tolerance, minval=0.)
         samples_retries = gcmd.get_int("SAMPLES_TOLERANCE_RETRIES",
@@ -47,8 +16,36 @@
         probexy = self.printer.lookup_object('toolhead').get_position()[:2]
         retries = 0
         positions = []
-        while len(positions) < sample_count:
+        toolhead = self.printer.lookup_object('toolhead')
+        #gcmd.respond_info("speed:%.3f"%speed)
+        while len(positions) < sample_count:         
             # Probe position
+            try:
+                if ((self.mcu_probe.bd_sensor is not None) and 
+                        ((gcmd.get_command() == "BED_MESH_CALIBRATE") or
+                        (gcmd.get_command() == "QUAD_GANTRY_LEVEL"))):
+                    #pos = self._probe(speed)
+                    toolhead.wait_moves()
+                    time.sleep(0.004)
+                    pos = toolhead.get_position()
+                    intd=self.mcu_probe.BD_Sensor_Read(0)
+                    pos[2]=pos[2]-intd
+                    self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
+                                            % (pos[0], pos[1], pos[2]))
+                    #return pos[:3]
+                    positions.append(pos[:3])
+                    # Check samples tolerance
+                    z_positions = [p[2] for p in positions]
+                    if max(z_positions) - min(z_positions) > samples_tolerance:
+                        if retries >= samples_retries:
+                            raise gcmd.error("Probe samples exceed samples_tolerance")
+                        gcmd.respond_info("Probe samples exceed tolerance. Retrying...")
+                        retries += 1
+                        positions = []
+                    continue
+            except Exception as e:
+                #gcmd.respond_info("%s"%str(e))
+                pass
             pos = self._probe(speed)
             positions.append(pos)
             # Check samples tolerance
@@ -59,11 +56,6 @@
                 gcmd.respond_info("Probe samples exceed tolerance. Retrying...")
                 retries += 1
                 positions = []
-            try:
-                if self.mcu_probe.bd_sensor is not None:
-                    continue
-            except Exception as e:
-                pass
             # Retract
             if len(positions) < sample_count:
                 self._move(probexy + [pos[2] + sample_retract_dist], lift_speed)
@@ -83,7 +75,7 @@
         toolhead.manual_move([None, None, self.horizontal_move_z], speed)
         # Check if done probing
         if len(self.results) >= len(self.probe_points):
-            toolhead.get_last_move_time() 
+            toolhead.get_last_move_time()
             res = self.finalize_callback(self.probe_offsets, self.results)
             if res != "retry":
                 return True
@@ -198,7 +190,7 @@
              try:
                  if probe.mcu_probe.no_stop_probe is not None:
                      self.fast_probe(gcmd)
-                     probe.multi_probe_end() 
+                     probe.multi_probe_end()
                      return
              except AttributeError as e:
                  pass
@@ -208,5 +200,5 @@
                 break
             pos = probe.run_probe(gcmd)
             self.results.append(pos)
-        probe.multi_probe_end()  
+        probe.multi_probe_end()
 #end

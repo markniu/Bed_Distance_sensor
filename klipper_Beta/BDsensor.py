@@ -696,6 +696,7 @@ class BDsensorEndstopWrapper:
             self.toolhead.wait_moves()
             time.sleep(0.004)
             self.gcode.run_script_from_command("G92 Z%.3f" % self.bd_value)
+            self.gcode.respond_info("The actually triggered position of Z is %.3f mm"%self.bd_value)
             
         #else:#set x stepper oid=0 to recovery normal timer
          #   pr=self.Z_Move_Live_cmd.send([self.oid,
