@@ -27,6 +27,7 @@ Sensor type |Non-contact | Contact |Non-contact
 Bed material |Metal| Unlimited | Metal
 Communication |I2C [Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/wiki/Data-Protocol)| PWM/Zendstop | Zendstop
 Operating Range|4mm|None|None
+CANBUS module|support|support|support
 
 Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 
