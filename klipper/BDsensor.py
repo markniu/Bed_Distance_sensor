@@ -495,8 +495,8 @@ class BDsensorEndstopWrapper:
                         break
                     gcmd.respond_raw("BDSensor mounted too high!  0.4mm to 2.4mm from BED at zero position is recommended")
                     break
-                if intd < 55 :
-                    gcmd.respond_raw("BDSensor mounted too close! 0.4mm to 2.4mm from BED at zero position is recommended")
+                if intd < 45 :
+                    gcmd.respond_raw("BDSensor mounted too close! please mount the BDsensor 0.2~0.4mm higher")
                     break
                 self.toolhead.dwell(0.1)
                 ncount1=ncount1+1
@@ -690,8 +690,13 @@ class BDsensorEndstopWrapper:
     def multi_probe_end(self):
         print("BD multi_probe_end")
         self.bd_sensor.I2C_BD_send("1018")
-       # if self.homeing==1:
-        #    self.sync_motor_probe()
+        if self.homeing==1:           
+            self.bd_value=self.BD_Sensor_Read(0)
+            self.toolhead = self.printer.lookup_object('toolhead')
+            self.toolhead.wait_moves()
+            time.sleep(0.004)
+            self.gcode.run_script_from_command("G92 Z%.3f" % self.bd_value)
+            self.gcode.respond_info("The actually triggered position of Z is %.3f mm"%self.bd_value)
             
         #else:#set x stepper oid=0 to recovery normal timer
          #   pr=self.Z_Move_Live_cmd.send([self.oid,

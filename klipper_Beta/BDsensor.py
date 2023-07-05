@@ -721,9 +721,8 @@ class BDsensorEndstopWrapper:
         #            ("j 0\0").encode('utf-8')])   
         pr=self.Z_Move_Live_cmd.send([self.oid,
                 ("k 100\0").encode('utf-8')])
-
     def get_position_endstop(self):
-        print("BD get_position_endstop")
+        #print("BD get_position_endstop")
         return self.position_endstop
 
 def load_config(config):
