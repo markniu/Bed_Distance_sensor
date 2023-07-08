@@ -3,8 +3,6 @@
 [BDsensor](https://www.pandapi3d.com/bdsensor) is a high resolution inductive Bed Distance Sensor for 3d printer auto bed leveling and real time adjustment.
 
 it can measure the distance from bed to nozzle with distance resolution 0.01mm.
-
-before now, there is no distance sensor available for 3D printers due to the high price, and nothing with this high resolution. All the current bed level sensors used now on 3D printers are only proximity e.g. the BLTouch, pinta, ezabl, etc.. 
  
 ### The Future of Bed Leveling
 
@@ -34,12 +32,12 @@ Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
 
 
-### Installing Marlin:
+### Marlin installation:
 https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor
 
 The BDsensor have been integrated to Marlin2.1.x(Since 2022.8.27),you can download the latest here: https://github.com/markniu/Marlin_PR What do you need is change the configure file and pins file.
 
-### Installing Klipper
+### Klipper installation:
 https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 
 #### Mount BDsensor
