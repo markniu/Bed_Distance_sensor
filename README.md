@@ -3,14 +3,12 @@
 [BDsensor](https://www.pandapi3d.com/bdsensor) is a high resolution inductive Bed Distance Sensor for 3d printer auto bed leveling and real time adjustment.
 
 it can measure the distance from bed to nozzle with distance resolution 0.01mm.
-
-before now, there is no distance sensor available for 3D printers due to the high price, and nothing with this high resolution. All the current bed level sensors used now on 3D printers are only proximity e.g. the BLTouch, pinta, ezabl, etc.. 
  
 ### The Future of Bed Leveling
 
 Faster leveling, realtime compensation, high accuracy.
 
-1. with this sensor the printer can adjust the z axis in real time at every location, not just at probe points.
+1. with this sensor the printer can adjust the z axis in real time at every location, not just at probe points.(now only the marlin support this feature)
 
 2. No need to do probe points before every print or when hot or cold, it will be automatically compensated for based on actual distance in real time.
  
@@ -34,12 +32,12 @@ Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
 
 
-### Installing Klipper:
+### Marlin installation:
 https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor
 
-The BDsensor have been integrated to Marlin2.1.x(Since 2022.8.27),you can download the latest here: https://github.com/MarlinFirmware/Marlin What do you need is change the configure file and pins file.
+The BDsensor have been integrated to Marlin2.1.x(Since 2022.8.27),you can download the latest here: https://github.com/markniu/Marlin_PR What do you need is change the configure file and pins file.
 
-### Installing Klipper
+### Klipper installation:
 https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 
 #### Mount BDsensor
@@ -71,8 +69,6 @@ Here is an auto bed leveling test, 10*10 probe points with the same speed 200mm/
 BLtouch: 5 minutes and 40 seconds
 
 BDsensor: 25 seconds
-
-**3. Combine the above Real time leveling(M102) and Auto Bed Leveling(G29)**
 
 
 Project status:
