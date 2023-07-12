@@ -44,7 +44,7 @@
                         positions = []
                     continue
             except Exception as e:
-                gcmd.respond_info("%s"%str(e))
+                #gcmd.respond_info("%s"%str(e))
                 pass
             pos = self._probe(speed)
             positions.append(pos)
