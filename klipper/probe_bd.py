@@ -22,8 +22,8 @@
             # Probe position
             try:
                 if ((self.mcu_probe.bd_sensor is not None) and 
-                        ((gcmd.get_command() == "BED_MESH_CALIBRATE") or
-                        (gcmd.get_command() == "QUAD_GANTRY_LEVEL"))):
+                        (( "BED_MESH_CALIBRATE" in gcmd.get_command()) or
+                        ("QUAD_GANTRY_LEVEL" in gcmd.get_command()))):
                     #pos = self._probe(speed)
                     toolhead.wait_moves()
                     time.sleep(0.004)
@@ -45,6 +45,8 @@
                     continue
             except Exception as e:
                 #gcmd.respond_info("%s"%str(e))
+                gcmd.respond_info("%s"%str(e))
+                #raise gcmd.error("%s"%str(e))
                 pass
             pos = self._probe(speed)
             positions.append(pos)
@@ -185,15 +187,18 @@
             raise gcmd.error("horizontal_move_z can't be less than"
                              " probe's z_offset")
         probe.multi_probe_begin()
-        
-        if gcmd.get_command() == "BED_MESH_CALIBRATE":
+        gcmd.respond_info("g code:%s"%gcmd.get_command())
+        if "BED_MESH_CALIBRATE" in gcmd.get_command():
              try:
                  if probe.mcu_probe.no_stop_probe is not None:
                      self.fast_probe(gcmd)
                      probe.multi_probe_end()
                      return
              except AttributeError as e:
-                 pass
+                gcmd.respond_info("%s"%str(e))
+                # raise gcmd.error("%s"%str(e))
+                pass
+
         while 1:
             done = self._move_next()
             if done:
