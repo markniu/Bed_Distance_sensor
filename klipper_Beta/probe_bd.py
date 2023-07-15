@@ -45,7 +45,7 @@
                     continue
             except Exception as e:
                 #gcmd.respond_info("%s"%str(e))
-                gcmd.respond_info("%s"%str(e))
+                #gcmd.respond_info("%s"%str(e))
                 #raise gcmd.error("%s"%str(e))
                 pass
             pos = self._probe(speed)
@@ -90,12 +90,16 @@
         toolhead.manual_move(nextpos, self.speed)
         return False
 
-    def fast_probe_oneline(self, gcmd):
+    def fast_probe_oneline(self, direction):
         
         probe = self.printer.lookup_object('probe', None)
         
         oneline_points = []
-        start_point=list(self.probe_points[len(self.results)])
+        start_point = []
+        if "backward" in  direction:
+            start_point=list(self.probe_points[len(self.results_copy)-1])
+        else:
+            start_point=list(self.probe_points[len(self.results)])
         end_point = []
         for point in self.probe_points:
             if start_point[1] is point[1]:
@@ -104,10 +108,13 @@
         if n_count<=1:
             raise self.printer.config_error(
                 "Seems the mesh direction is not X, points count on x is %d" % (n_count))
-        end_point = list(oneline_points[n_count-1])  
-        print(oneline_points)
-        print(start_point)
-        print(end_point)
+        if "backward" in  direction:        
+            oneline_points.reverse()
+        
+        end_point = list(oneline_points[n_count-1])
+        #print(oneline_points)
+        #print(start_point)
+        #print(end_point)
         toolhead = self.printer.lookup_object('toolhead')
         if self.use_offsets:
             start_point[0] -= self.probe_offsets[0]
@@ -144,7 +151,11 @@
                                         % (pos[0], pos[1], pos[2]))
                # return pos[:3]
                # pos = probe.run_probe(gcmd)
-                self.results.append(pos)
+                if "backward" in  direction:
+                    self.results_1.append(pos)
+                    self.results_copy.pop()
+                else:
+                    self.results.append(pos)
                 x_index += 1;
             curtime = toolhead.reactor.pause(curtime + 0.001)
             
@@ -158,10 +169,25 @@
         toolhead.manual_move([None, None, self.horizontal_move_z], speed)
         self.results = []
         while len(self.results) < len(self.probe_points):
-            self.fast_probe_oneline(gcmd)
+            self.fast_probe_oneline("forward")
+        #print("results:",self.results)    
+        self.results_copy = self.results.copy()
+        #print(self.results_copy) 
+        self.results_1 = []
+        while len(self.results_1) < len(self.probe_points):
+            self.fast_probe_oneline("backward")
+        
+        self.results_1.reverse()
+        #print("results_1_1:",self.results_1)
+        for index in range(len(self.results)):
+            self.results[index][2] =  (self.results[index][2] + self.results_1[index][2])/2
+            probe.gcode.respond_info("finalize probe at %.3f,%.3f is z=%.6f"
+                                        % (self.results[index][0], self.results[index][1], self.results[index][2]))
         res = self.finalize_callback(self.probe_offsets, self.results)
-        print(self.results)        
+        #print("results:",self.results)
+       
         self.results = []
+        self.results_1 = []
         if res != "retry":
             return True
 
@@ -195,7 +221,7 @@
                      probe.multi_probe_end()
                      return
              except AttributeError as e:
-                gcmd.respond_info("%s"%str(e))
+                #gcmd.respond_info("%s"%str(e))
                 # raise gcmd.error("%s"%str(e))
                 pass
 
