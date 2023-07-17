@@ -109,7 +109,18 @@ class BDsensorEndstopWrapper:
         sda_pin_num = pin_params['pin']
         self.mcu = mcu
         #print("b2:%s"%mcu)
-        pin_params = ppins.lookup_pin(config.get('scl_pin'), can_invert=True, can_pullup=True)
+        pin_s = []
+        try:
+            pin_s=config.get('scl_pin')
+        except Exception as e:
+            try:
+                pin_s=config.get('clk_pin')
+            except Exception as e:
+                raise self.printer.command_error("%s"%str(e))    
+               
+            pass
+            
+        pin_params = ppins.lookup_pin(pin_s, can_invert=True, can_pullup=True)
         mcu = pin_params['chip']
         scl_pin_num = pin_params['pin']
         #print("b3:%s"%mcu)
@@ -691,12 +702,13 @@ class BDsensorEndstopWrapper:
         print("BD multi_probe_end")
         self.bd_sensor.I2C_BD_send("1018")
         if self.homeing==1:           
+            #time.sleep(0.004)
             self.bd_value=self.BD_Sensor_Read(0)
-            self.toolhead = self.printer.lookup_object('toolhead')
-            self.toolhead.wait_moves()
-            time.sleep(0.004)
+            #self.toolhead = self.printer.lookup_object('toolhead')
+            #self.toolhead.wait_moves()
             self.gcode.run_script_from_command("G92 Z%.3f" % self.bd_value)
-            self.gcode.respond_info("The actually triggered position of Z is %.3f mm"%self.bd_value)
+            #self.gcode.respond_info("The actually triggered position of Z is %.3f mm"%self.bd_value)
+            
             
         #else:#set x stepper oid=0 to recovery normal timer
          #   pr=self.Z_Move_Live_cmd.send([self.oid,
