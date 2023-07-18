@@ -171,7 +171,7 @@
         while len(self.results) < len(self.probe_points):
             self.fast_probe_oneline("forward")
         #print("results:",self.results)    
-        self.results_copy = self.results.copy()
+        self.results_copy = copy.copy(self.results)
         #print(self.results_copy) 
         self.results_1 = []
         while len(self.results_1) < len(self.probe_points):
