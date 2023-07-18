@@ -139,7 +139,7 @@
             est_time =toolhead.mcu.estimated_print_time(curtime)    
             
             if (est_time-start_time) >= x_index*line_time/(n_count-1):    
-                print(" est:%f,t:%f,dst:%f"%(est_time,(est_time-start_time),x_index*line_time/n_count))
+                #print(" est:%f,t:%f,dst:%f"%(est_time,(est_time-start_time),x_index*line_time/n_count))
                 pos = toolhead.get_position()
                 pos[0] = oneline_points[x_index][0]
                 pos[1] = oneline_points[x_index][1]
@@ -147,8 +147,8 @@
                 #intd=int(pr['response'])
                 intd=probe.mcu_probe.BD_Sensor_Read(0)
                 pos[2]=pos[2]-intd
-                probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-                                        % (pos[0], pos[1], pos[2]))
+                #probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
+                #                        % (pos[0], pos[1], pos[2]))
                # return pos[:3]
                # pos = probe.run_probe(gcmd)
                 if "backward" in  direction:
@@ -181,7 +181,7 @@
         #print("results_1_1:",self.results_1)
         for index in range(len(self.results)):
             self.results[index][2] =  (self.results[index][2] + self.results_1[index][2])/2
-            probe.gcode.respond_info("finalize probe at %.3f,%.3f is z=%.6f"
+            probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                         % (self.results[index][0], self.results[index][1], self.results[index][2]))
         res = self.finalize_callback(self.probe_offsets, self.results)
         #print("results:",self.results)
