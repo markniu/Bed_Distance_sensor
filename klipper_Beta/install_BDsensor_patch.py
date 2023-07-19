@@ -112,6 +112,7 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data = file.read().rstrip()
     #data=data.replace("sample_retract_dist, above=0.)","sample_retract_dist, )")
     data=data.replace("import logging\nimport pins","import logging,time,copy\nimport pins")
+    data=data.replace("import logging,time\nimport pins","import logging,time,copy\nimport pins")
     with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
         text_file.write("%s" % (data))
 
