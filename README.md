@@ -21,15 +21,24 @@ Faster leveling, realtime compensation, high accuracy.
 --- | --- |--- |---
 Sensor type |Distance Sensor| Proximity switch | Proximity switch
 Distance resolution |0.005~0.01mm| None | None
-Sensor type |Non-contact | Contact |Non-contact
 Bed material |Metal| Unlimited | Metal
 Communication |I2C [Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/wiki/Data-Protocol)| PWM/Zendstop | Zendstop
 Operating Range|4mm|None|None
-CANBUS module|support|support|support
+
+
+ . | Marlin | Klipper
+--- | --- |---  
+Real Time leveling |Support| None  
+Fast probe |Support| Support 
+Fast probe(No toolhead stop probe)|Support | Support 
+Distance display |Support | Support 
+Can bus toolhead|None | Support 
+
 
 Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 
 Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
+
 
 
 ### Marlin installation:
