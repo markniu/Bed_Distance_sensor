@@ -3,6 +3,8 @@
 [BDsensor](https://www.pandapi3d.com/bdsensor) is a high resolution inductive Bed Distance Sensor for 3d printer auto bed leveling and real time adjustment.
 
 it can measure the distance from bed to nozzle with distance resolution 0.01mm.
+
+ <img src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/new/doc/images/Connection1.jpg" width="600" /> 
  
 ### The Future of Bed Leveling
 
