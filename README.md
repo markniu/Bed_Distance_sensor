@@ -10,7 +10,7 @@ Faster leveling, realtime compensation, high accuracy.
 
 1. No need to do probe points before every print, it will be automatically compensated for based on actual distance in real time.
  
-2. You can do mesh bed leveling like a normal proximity sensor but much faster with this sensor.
+2. You can do mesh bed leveling like a normal proximity sensor but much faster with this BDsensor.
    
 3. Thanks for the distance value can be shown on the screen, you can do manual bed leveling more easily.
 
