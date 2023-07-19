@@ -10,11 +10,11 @@ it can measure the bed distance at any point at any time and without moving the 
 
 Faster leveling, realtime compensation, high accuracy.
 
-1. with this sensor the printer can adjust the z axis in real time at every location, not just at probe points.(now only the marlin support this feature)
-
-2. No need to do probe points before every print or when hot or cold, it will be automatically compensated for based on actual distance in real time.
+1. No need to do probe points before every print or when hot or cold, it will be automatically compensated for based on actual distance in real time.
  
-3. You can do mesh bed leveling like a normal proximity sensor but much faster with this sensor, because there's no z axis down and up at every probe point.
+2. You can do mesh bed leveling like a normal proximity sensor but much faster with this sensor, because there's no z axis down and up at every probe point.
+   
+3. Thanks for the distance value can be shown on the screen, you can do manual bed leveling more easily.
 
  [Test Video](https://www.youtube.com/watch?v=yx8pluEu0sg)
  . | BDsensor | BLtouch |superPINDA
