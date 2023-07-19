@@ -24,8 +24,16 @@ Distance resolution |0.005~0.01mm| None | None
 Bed material |Metal| Unlimited | Metal
 Communication |I2C [Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/wiki/Data-Protocol)| PWM/Zendstop | Zendstop
 Operating Range|4mm|None|None
+Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 
 
+#### Hardware:
+Support any mainboard(8 bit or 32 bit) or Can bus module
+
+Wire: Compatible with the BLtouch	connector. 
+
+
+#### Software
  . | Marlin | Klipper
 --- | --- |---  
 Real Time leveling |Support| None  
@@ -33,11 +41,6 @@ Fast probe |Support| Support
 Fast probe(No toolhead stop probe)|Support | Support 
 Distance display |Support | Support 
 Can bus toolhead|None | Support 
-
-
-Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
-
-Support main board: any board which have 2 free gpio pins,Compatible with the BLtouch	connector. 
 
 
 
@@ -51,34 +54,6 @@ https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 
 #### Mount BDsensor
 https://www.thingiverse.com/thing:6098131
-
-## There are 3 ways to do auto bed leveling:
-**1.Real time leveling at first few layers with M102**
-
-this feature is only work with marlin at this time.
-
-we can easily enable or disable this auto level by sending gcode command or and adding gcode in the gcode file.
-
-To enable bed leveling in Cura, add the M102 G-Code right below the G28 (Home All Axes) G-code in the Start G-code section of your printer’s Machine Settings.
-For example `M102 S2` below the G28 , that means it will only do bed leveling below 0.2mm of Z axis height.
-
-Send `M102 S0`or`G28`or `M18` will disable bedlevel with BDsensor,BTW,this is disabled by default.
-
-```
-M102   S-6    // Start Calibrate,before that make sure the nozzle is just touched the bed,and then restart the printer. 
-M102   S-5    // Read raw Calibrate data
-M102   S4     // Set the adjustable Z height value,e.g. M102 S4  means it will do adjusting while the Z height <=0.4mm , disable it by M102 S0.
-M102   S-1    // Read sensor information
-```
-
-**2. Fast Auto Bed Leveling**
-
-Here is an auto bed leveling test, 10*10 probe points with the same speed 200mm/s
-
-BLtouch: 5 minutes and 40 seconds
-
-BDsensor: 25 seconds
-
 
 Project status:
 
