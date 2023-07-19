@@ -10,7 +10,7 @@ it can measure the bed distance at any point at any time and without moving the 
 
 Faster leveling, realtime compensation, high accuracy.
 
-1. No need to do probe points before every print or when hot or cold, it will be automatically compensated for based on actual distance in real time.
+1. No need to do probe points before every print, it will be automatically compensated for based on actual distance in real time.
  
 2. You can do mesh bed leveling like a normal proximity sensor but much faster with this sensor, because there's no z axis down and up at every probe point.
    
