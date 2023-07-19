@@ -36,11 +36,11 @@ Wire: Compatible with the BLtouch	connector.
 ### Software
  . | Marlin | Klipper
 --- | --- |---  
-Real Time leveling |Support| None  
+Real Time leveling |Support| No  
 Fast probe |Support| Support 
 Fast probe(No toolhead stop probe)|Support | Support 
 Distance display |Support | Support 
-Can bus toolhead|None | Support 
+Can bus toolhead|No | Support 
 
 
 
