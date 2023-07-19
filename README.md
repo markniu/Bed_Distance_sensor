@@ -27,13 +27,13 @@ Operating Range|4mm|None|None
 Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
 
 
-#### Hardware:
+### Hardware:
 Support any mainboard(8 bit or 32 bit) or Can bus module
 
 Wire: Compatible with the BLtouch	connector. 
 
 
-#### Software
+### Software
  . | Marlin | Klipper
 --- | --- |---  
 Real Time leveling |Support| None  
@@ -44,26 +44,15 @@ Can bus toolhead|None | Support
 
 
 
-### Marlin installation:
-https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor
+Marlin installation: https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor
 
-The BDsensor have been integrated to Marlin2.1.x(Since 2022.8.27),you can download the latest here: https://github.com/markniu/Marlin_PR What do you need is change the configure file and pins file.
+Klipper installation: https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 
-### Klipper installation:
-https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 
-#### Mount BDsensor
-https://www.thingiverse.com/thing:6098131
+Project status: https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
 
-Project status:
-
-https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
-
-Where to buy:
-
-[https://www.pandapi3d.com/bdsensor](https://www.pandapi3d.com/bdsensor)
-
-[中国大陆淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
+Where to buy: [https://www.pandapi3d.com/bdsensor](https://www.pandapi3d.com/bdsensor) , if you are in China please purchase it here
+ [中国大陆淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
 
 
 <img alt="alt_text"   src="https://github.com/markniu/Bed_Distance_sensor/blob/new/doc/images/map.jpg" />
