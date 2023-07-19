@@ -82,5 +82,4 @@ Where to buy:
 [中国大陆淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
 
 
-
-
+<img alt="alt_text"   src="https://github.com/markniu/Bed_Distance_sensor/blob/new/doc/images/map.jpg" />
