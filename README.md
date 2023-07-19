@@ -1,12 +1,10 @@
-## Bed Distance Sensor --- 3D printer Bed Leveling
+##  The Future of 3D printer Bed Leveling
 
 [BDsensor](https://www.pandapi3d.com/bdsensor) is the first distance sensor that can work with 3D printer and do fast bed leveling and adjust z axis in real time.
 
 it can measure the bed distance at any point in real time without moving the z axis up and down.
 
  <img src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/new/doc/images/Connection1.jpg" width="600" /> 
- 
-### The Future of Bed Leveling
 
 Faster leveling, realtime compensation, high accuracy.
 
