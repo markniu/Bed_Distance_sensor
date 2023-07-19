@@ -16,9 +16,7 @@ Faster leveling, realtime compensation, high accuracy.
  
 3. You can do mesh bed leveling like a normal proximity sensor but much faster with this sensor, because there's no z axis down and up at every probe point.
 
-
-[<img alt="alt_text"   src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/main/doc/images/mainv.jpg" />](https://www.youtube.com/watch?v=yx8pluEu0sg)
- 
+ [Test Video](https://www.youtube.com/watch?v=yx8pluEu0sg)
  . | BDsensor | BLtouch |superPINDA
 --- | --- |--- |---
 Sensor type |Distance Sensor| Proximity switch | Proximity switch
