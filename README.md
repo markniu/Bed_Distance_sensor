@@ -10,7 +10,7 @@ Faster leveling, realtime compensation, high accuracy.
 
 1. No need to do probe points before every print, it will be automatically compensated for based on actual distance in real time.
  
-2. You can do mesh bed leveling like a normal proximity sensor but much faster with this BDsensor.
+2. You can do bed mesh leveling like a normal proximity sensor but much faster with this BDsensor.
    
 3. Thanks for the distance value can be shown on the screen, you can do manual bed leveling more easily.
 
@@ -35,8 +35,8 @@ Wire: Compatible with the BLtouch	connector.
  . | Marlin | Klipper
 --- | --- |---  
 Real Time leveling |Support| No  
-Fast probe |Support| Support 
-Fast probe(No toolhead stop probe)|Support | Support 
+Fast bed mesh |Support| Support 
+Fast bed mesh(No toolhead stop probe)|Support | Support 
 Distance display |Support | Support 
 Can bus toolhead|No | Support 
 
