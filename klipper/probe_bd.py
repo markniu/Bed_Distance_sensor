@@ -112,9 +112,6 @@
             oneline_points.reverse()
         
         end_point = list(oneline_points[n_count-1])
-        #print(oneline_points)
-        #print(start_point)
-        #print(end_point)
         toolhead = self.printer.lookup_object('toolhead')
         if self.use_offsets:
             start_point[0] -= self.probe_offsets[0]
@@ -143,6 +140,9 @@
                 pos = toolhead.get_position()
                 pos[0] = oneline_points[x_index][0]
                 pos[1] = oneline_points[x_index][1]
+                if self.use_offsets:
+                    pos[0] -= self.probe_offsets[0]
+                    pos[1] -= self.probe_offsets[1]
                 #pr = probe.mcu_probe.I2C_BD_receive_cmd.send([probe.mcu_probe.oid, "32".encode('utf-8')])
                 #intd=int(pr['response'])
                 intd=probe.mcu_probe.BD_Sensor_Read(0)
