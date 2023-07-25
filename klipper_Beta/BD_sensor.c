@@ -33,7 +33,7 @@
 #define BD_setHigh(x) gpio_out_write(x,1)
 
 
-uint32_t sda_pin=0,scl_pin=0,delay_m=20,homing_pose=0;
+uint32_t sda_pin=0,scl_pin=0,delay_m=20,homing_pose=0,z_ofset=0;
 extern uint16_t BD_Data;
 //extern uint32_t timer_period_time;
 uint16_t BD_read_flag=1018,BD_read_lock=0;
@@ -111,11 +111,14 @@ uint16_t Get_Distane_data(void)
 
 }
 
-int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose)
+int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose,uint32_t z_offset)
 {
     sda_pin=_sda;
     scl_pin =_scl;
 	homing_pose = h_pose;
+	z_ofset = z_offset;
+	if (z_ofset > 500)
+		z_ofset = 0;
     if(delays>0)
         delay_m=delays;
     sda_gpio=gpio_out_setup(sda_pin, 1);
@@ -256,8 +259,10 @@ uint16_t BD_i2c_read(void)
         BD_setLow(scl_gpio);
     }
     BD_i2c_stop();
-    if (BD_Check_OddEven(b) && (b & 0x3FF) < 1020)
+    if (BD_Check_OddEven(b) && (b & 0x3FF) < 1020){
         b = (b & 0x3FF);
+		b = b + z_ofset;
+    }
 	else
 		b=1024;
     if(b>1024)
@@ -561,10 +566,10 @@ void
 command_config_I2C_BD(uint32_t *args)
 {
     oid_g = args[0];
-    BD_i2c_init(args[1],args[2],args[3],args[4]);
+    BD_i2c_init(args[1],args[2],args[3],args[4],args[5]);
 }
 DECL_COMMAND(command_config_I2C_BD,
-             "config_I2C_BD oid=%c sda_pin=%u scl_pin=%u delay=%u h_pos=%u");
+             "config_I2C_BD oid=%c sda_pin=%u scl_pin=%u delay=%u h_pos=%u z_offset=%u");
 
 
  void
