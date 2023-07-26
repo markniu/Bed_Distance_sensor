@@ -111,12 +111,12 @@ uint16_t Get_Distane_data(void)
 
 }
 
-int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose,uint32_t z_offset)
+int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose,uint32_t z_adjust)
 {
     sda_pin=_sda;
     scl_pin =_scl;
 	homing_pose = h_pose;
-	z_ofset = z_offset;
+	z_ofset = z_adjust;
 	if (z_ofset > 500)
 		z_ofset = 0;
     if(delays>0)
@@ -569,7 +569,7 @@ command_config_I2C_BD(uint32_t *args)
     BD_i2c_init(args[1],args[2],args[3],args[4],args[5]);
 }
 DECL_COMMAND(command_config_I2C_BD,
-             "config_I2C_BD oid=%c sda_pin=%u scl_pin=%u delay=%u h_pos=%u z_offset=%u");
+             "config_I2C_BD oid=%c sda_pin=%u scl_pin=%u delay=%u h_pos=%u z_adjust=%u");
 
 
  void

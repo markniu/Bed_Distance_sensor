@@ -9,7 +9,7 @@ try:
 except Exception as e:
     #print("%s"%str(e))
     pass
-if sys.argv[0].find("klipper_Beta") > 0:
+if sys.argv[0].find("klipper_Beta") >= 0:
     BD_type="klipper_Beta"
     print (BD_type)  
 

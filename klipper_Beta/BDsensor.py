@@ -32,14 +32,14 @@ def calc_move_time(dist, speed, accel):
 # devices connected to an MCU via an virtual i2c bus(2 any gpio)
 
 class MCU_I2C_BD:
-    def __init__(self,mcu,   sda_pin,scl_pin, delay_t,home_pose,z_offset):
+    def __init__(self,mcu,   sda_pin,scl_pin, delay_t,home_pose,z_adjust):
         self.mcu = mcu
         #print("MCU_I2C_BD:%s"%mcu)
         self.oid = self.mcu.create_oid()
         # Generate I2C bus config message
         self.config_fmt = (
-            "config_I2C_BD oid=%d sda_pin=%s scl_pin=%s delay=%s h_pos=%d z_offset=%d"
-            % (self.oid, sda_pin,scl_pin, delay_t,home_pose,z_offset))
+            "config_I2C_BD oid=%d sda_pin=%s scl_pin=%s delay=%s h_pos=%d z_adjust=%d"
+            % (self.oid, sda_pin,scl_pin, delay_t,home_pose,z_adjust))
         self.cmd_queue = mcu.alloc_command_queue()
         mcu.register_config_callback(self.build_config)
         self.mcu.add_config_cmd(self.config_fmt)
@@ -72,10 +72,11 @@ class BDsensorEndstopWrapper:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.config = config
-        self.z_offset = config.getfloat('z_offset',0., minval=0.,below=2)       
+        self.z_adjust = config.getfloat('z_adjust',0., minval=0.,below=2)  
+        self.z_offset = config.getfloat('z_offset',0., minval=0.,below=0.0001) 
         self.position_endstop = config.getfloat('position_endstop',0., minval=0.,below=2.5)
-        if self.z_offset > self.position_endstop :
-            raise self.printer.command_error("The 'z_offset' cannot be greater than 'position_endstop' in section [BDsensor]")
+        if self.z_adjust > self.position_endstop :
+            raise self.printer.command_error("The 'z_adjust' cannot be greater than 'position_endstop' in section [BDsensor]")
         self.stow_on_each_sample = config.getboolean(
             'deactivate_on_each_sample', True)
         gcode_macro = self.printer.load_object(config, 'gcode_macro')
@@ -139,8 +140,8 @@ class BDsensorEndstopWrapper:
         self.stepper_kinematics = ffi_main.gc(
             ffi_lib.cartesian_stepper_alloc(b'x'), ffi_lib.free)
         home_pos = self.position_endstop*100
-        z_offset = self.z_offset*100
-        self.bd_sensor=MCU_I2C_BD(mcu,sda_pin_num,scl_pin_num,config.get('delay'),home_pos,z_offset)
+        z_adjust = self.z_adjust*100
+        self.bd_sensor=MCU_I2C_BD(mcu,sda_pin_num,scl_pin_num,config.get('delay'),home_pos,z_adjust)
         #MCU_BD_I2C_from_config(self.mcu,config)
         self.distance=5;
         # Register M102 commands
@@ -704,6 +705,9 @@ class BDsensorEndstopWrapper:
     def multi_probe_end(self):
         print("BD multi_probe_end")
         self.bd_sensor.I2C_BD_send("1018")
+        self.toolhead = self.printer.lookup_object('toolhead')
+        start_pos = self.toolhead.get_position()
+        self.gcode.respond_info("get_position Z is %.3f mm"%start_pos[2])
         if self.homeing==1:           
             #time.sleep(0.004)
             self.bd_value=self.BD_Sensor_Read(0)
