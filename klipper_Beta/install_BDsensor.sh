@@ -19,7 +19,7 @@ if [ ! -d "$HOME_DIR" ] ; then
     echo "BDsensor path: "$BDDIR""
     echo ""
     echo "usage example:./install_BDsensor.sh /home/pi  or ./install_BDsensor.sh /home/mks "
-    echo ""
+    echo "Error!!"
     exit 1
 fi
 
