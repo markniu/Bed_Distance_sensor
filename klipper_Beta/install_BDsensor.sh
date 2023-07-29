@@ -48,6 +48,10 @@ if ! grep -q "src/BD_sensor.c" "${HOME_DIR}/.git/info/exclude"; then
     echo "src/BD_sensor.c" >> "${HOME_DIR}/.git/info/exclude"
 fi
 
+if ! grep -q "BD_sensor.c" "${HOME_DIR}/src/Makefile"; then
+    echo "src-y += BD_sensor.c  " >> "${HOME_DIR}/src/Makefile"
+fi
+
 echo ""
 echo "Install Bed Distance Sensor successful."
 echo ""
