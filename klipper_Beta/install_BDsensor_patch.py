@@ -78,26 +78,6 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
 
 
 
-##replace endstop.c    
-with open(BD_dir+'/endstop_bd.c', 'r') as file:
-    Bdata = file.read().rstrip()
-    
-    Bstart=Bdata.find("////replace endstop.c")
-    Bend=Bdata.find("////end replace",Bstart)
-    if Bend<0 :
-        Bend=len(Bdata)
-
-
-with open(home_dir+'/klipper/src/endstop.c', 'r') as file:
-    data = file.read().rstrip()
-    data=data.replace("gpio_in_read(e->pin)","read_endstop_pin(e)")
-    data=data.replace("gpio_in_setup(args[1], args[2]);","gpio_in_setup(args[1], args[2]);\n    e->type = args[2];")
-    start=data.find("struct endstop {\n    struct timer time;")
-    end=data.find("enum {",start)
-    if start > 0 :
-        with open(home_dir+'/klipper/src/endstop.c', "w") as text_file:
-            text_file.write("%s%s\n   %s" % (data[0:start],Bdata[Bstart:Bend],data[end:len(data)]))
-
 
 
 ##replace src/Makefile
@@ -114,6 +94,15 @@ with open(home_dir+'/klipper/klippy/extras/probe.py', 'r') as file:
     data=data.replace("import logging\nimport pins","import logging,time,copy\nimport pins")
     data=data.replace("import logging,time\nimport pins","import logging,time,copy\nimport pins")
     with open(home_dir+'/klipper/klippy/extras/probe.py', "w") as text_file:
+        text_file.write("%s" % (data))
+        
+##        
+with open(home_dir+'/klipper/.git/info/exclude', 'r') as file:
+    data = file.read().rstrip()
+    if "BDsensor.py" not in data:
+        data+="\nklippy/extras/BDsensor.py\nklippy/extras/probe.py\nsrc/BD_sensor.c\nsrc/endstop.c\n"
+    
+    with open(home_dir+'/klipper/.git/info/exclude', "w") as text_file:
         text_file.write("%s" % (data))
 
 print("Install Bed Distance Sensor into Klipper successfully\n")

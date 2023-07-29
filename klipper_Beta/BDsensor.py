@@ -4,11 +4,14 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import sched, time
 from threading import Timer
+from mcu import MCU, MCU_trsync
 
 import chelper
 import math
 from . import probe
 BD_TIMER = 0.600
+TRSYNC_TIMEOUT = 0.025
+TRSYNC_SINGLE_MCU_TIMEOUT = 0.250  
 
 
 # Calculate a move's accel_t, cruise_t, and cruise_v
@@ -87,16 +90,6 @@ class BDsensorEndstopWrapper:
         self.printer.register_event_handler('klippy:mcu_identify',
                                             self._handle_mcu_identify)
         # Create an "endstop" object to handle the probe pin
-        #ppins = self.printer.lookup_object('pins')
-       # pin = config.get('sda_pin')
-       # pin_params = ppins.lookup_pin(pin, can_invert=True, can_pullup=True)
-       # self.mcu_endstop = ppins.setup_pin('pwm', config.get('sda_pin'))
-        #self.mcu = pin_params['chip']
-        #print(self.mcu)
-        # set this type of sda_pin 2 as virtual endstop
-        #pin_params['pullup']=2
-        #self.mcu_endstop = self.mcu.setup_pin('endstop', pin_params)
-
         ppins = self.printer.lookup_object('pins')
         #self.mcu_pwm = ppins.setup_pin('pwm', config.get('scl_pin'))
 
@@ -105,6 +98,8 @@ class BDsensorEndstopWrapper:
         self.finish_home_complete = self.wait_trigger_complete = None
         # Create an "endstop" object to handle the sensor pin
         
+        #self._pin = pin_params['pin']
+        #self._pullup = pin_params['pullup']
         
         pin = config.get('sda_pin')
         pin_params = ppins.lookup_pin(pin, can_invert=True, can_pullup=True)
@@ -127,8 +122,9 @@ class BDsensorEndstopWrapper:
         mcu = pin_params['chip']
         scl_pin_num = pin_params['pin']
         #print("b3:%s"%mcu)
-        pin_params['pullup']=2
-        self.mcu_endstop = mcu.setup_pin('endstop', pin_params)
+        #pin_params['pullup']=2
+        #self.mcu_endstop = mcu.setup_pin('endstop', pin_params)
+        self._invert = pin_params['invert']
 
         self.oid = self.mcu.create_oid()
         self.cmd_queue = self.mcu.alloc_command_queue()
@@ -154,12 +150,6 @@ class BDsensorEndstopWrapper:
         self.gcode_move = self.printer.load_object(config, "gcode_move")
         self.gcode = self.printer.lookup_object('gcode')
         # Wrappers
-        self.get_mcu = self.mcu_endstop.get_mcu
-        self.add_stepper = self.mcu_endstop.add_stepper
-        self.get_steppers = self.mcu_endstop.get_steppers
-        #self.home_start = self.mcu_endstop.home_start
-        self.home_wait = self.mcu_endstop.home_wait
-        #self.query_endstop = self.mcu_endstop.query_endstop
         self.process_m102=0
         self.gcode_que=None
         self.zl=0
@@ -187,7 +177,14 @@ class BDsensorEndstopWrapper:
             status_dis=self.printer.lookup_object('display_status')
         except Exception as e:
             pass
-
+        self._rest_ticks = 0
+        ffi_main, ffi_lib = chelper.get_ffi()
+        self._trdispatch = ffi_main.gc(ffi_lib.trdispatch_alloc(), ffi_lib.free)
+        self._trsyncs = [MCU_trsync(mcu, self._trdispatch)]
+        self.ncont =0
+        
+    def get_mcu(self):
+        return self.mcu    
     def z_live_adjust(self):
         print ("z_live_adjust %d" % self.adjust_range)
         if self.adjust_range<=0 or self.adjust_range > 40:
@@ -269,6 +266,20 @@ class BDsensorEndstopWrapper:
                                     "BD_Update", self.bd_sensor.oid)
         self.mcu.register_response(self._handle_probe_Update,
                                     "X_probe_Update", self.bd_sensor.oid)
+        self.mcu.add_config_cmd(
+            "BDendstop_home oid=%d clock=0 sample_ticks=0 sample_count=0"
+            " rest_ticks=0 pin_value=0 trsync_oid=0 trigger_reason=0"
+            % (self.oid,), on_restart=True)
+        # Lookup commands
+        cmd_queue = self._trsyncs[0].get_command_queue()
+        self._home_cmd = self.mcu.lookup_command(
+            "BDendstop_home oid=%c clock=%u sample_ticks=%u sample_count=%c"
+            " rest_ticks=%u pin_value=%c trsync_oid=%c trigger_reason=%c",
+            cq=cmd_queue)
+        self._query_cmd = self.mcu.lookup_query_command(
+            "BDendstop_query_state oid=%c",
+            "BDendstop_state oid=%c homing=%c next_clock=%u pin_value=%c",
+            oid=self.oid, cq=cmd_queue)                                 
     def _handle_BD_Update(self, params):
         #print("_handle_BD_Update :%s " %params['distance_val'])
         try:
@@ -671,40 +682,87 @@ class BDsensorEndstopWrapper:
            params=0
         return params
 
+    def add_stepper(self, stepper):
+        trsyncs = {trsync.get_mcu(): trsync for trsync in self._trsyncs}
+        trsync = trsyncs.get(stepper.get_mcu())
+        if trsync is None:
+            trsync = MCU_trsync(stepper.get_mcu(), self._trdispatch)
+            self._trsyncs.append(trsync)
+        trsync.add_stepper(stepper)
+        # Check for unsupported multi-mcu shared stepper rails
+        sname = stepper.get_name()
+        if sname.startswith('stepper_'):
+            for ot in self._trsyncs:
+                for s in ot.get_steppers():
+                    if ot is not trsync and s.get_name().startswith(sname[:9]):
+                        cerror = self.mcu.get_printer().config_error
+                        raise cerror("Multi-mcu homing not supported on"
+                                     " multi-mcu shared axis")
+    def get_steppers(self):
+        return [s for trsync in self._trsyncs for s in trsync.get_steppers()]      
     def home_start(self, print_time, sample_time, sample_count, rest_time,
                    triggered=True):
-        print("BD home_start")
-        self.homeing=1
-        ENDSTOP_REST_TIME = .001
-        rest_time = min(rest_time, ENDSTOP_REST_TIME)
-        self.finish_home_complete = self.mcu_endstop.home_start(
-            print_time, sample_time, sample_count, rest_time, triggered)
-        # Schedule wait_for_trigger callback
-        r = self.printer.get_reactor()
-        self.wait_trigger_complete = r.register_callback(self.wait_for_trigger)   
-        return self.finish_home_complete
+        print("BD home_start")   
+        clock = self.mcu.print_time_to_clock(print_time)
+        rest_ticks = self.mcu.print_time_to_clock(print_time+rest_time) - clock
+        self._rest_ticks = rest_ticks
+        reactor = self.mcu.get_printer().get_reactor()
+        self.wait_trigger_complete = reactor.register_callback(self.wait_for_trigger)  
+        self.trigger_completion = reactor.completion()
+        expire_timeout = TRSYNC_TIMEOUT
+        if len(self._trsyncs) == 1:
+            expire_timeout = TRSYNC_SINGLE_MCU_TIMEOUT
+        for trsync in self._trsyncs:
+            trsync.start(print_time, self.trigger_completion, expire_timeout)
+        self.etrsync = self._trsyncs[0]
+        ffi_main, ffi_lib = chelper.get_ffi()
+        ffi_lib.trdispatch_start(self._trdispatch, self.etrsync.REASON_HOST_REQUEST)
+        #pr=self.Z_Move_Live_cmd.send([self.oid,
+        #        ("k 5\0").encode('utf-8')])
+         
+        self._home_cmd.send(
+            [self.oid, clock, self.mcu.seconds_to_clock(sample_time),
+             sample_count, rest_ticks, triggered ^ self._invert,
+             self.etrsync.get_oid(), self.etrsync.REASON_ENDSTOP_HIT], reqclock=clock) 
+        self.finish_home_complete = self.trigger_completion
+        return self.trigger_completion
 
-    def wait_for_trigger(self, eventtime):
-        #print("BD wait_for_trigger") 
+    def wait_for_trigger(self, eventtime): 
         self.BD_Sensor_Read(2)
-       # home_pos=self.position_endstop*100
-       # pr=self.Z_Move_Live_cmd.send([self.oid,
-       #         ("m %d\0" % home_pos).encode('utf-8')])
-        pr=self.Z_Move_Live_cmd.send([self.oid,
-                ("k 5\0").encode('utf-8')])
-        self.finish_home_complete.wait()
+        self.trigger_completion.wait()
         if self.multi == 'OFF':
             self.raise_probe()
+
+    def home_wait(self, home_end_time):
+        print("BD home_wait0")   
+        etrsync = self._trsyncs[0]
+        etrsync.set_home_end_time(home_end_time)
+        if self.mcu.is_fileoutput():
+            self.trigger_completion.complete(True)   
+        self.trigger_completion.wait()
+        self._home_cmd.send([self.oid, 0, 0, 0, 0, 0, 0, 0])
+        #pr=self.Z_Move_Live_cmd.send([self.oid,
+        #        ("k 100\0").encode('utf-8')])
+        ffi_main, ffi_lib = chelper.get_ffi()
+        ffi_lib.trdispatch_stop(self._trdispatch)
+        res = [trsync.stop() for trsync in self._trsyncs]
+        if any([r == etrsync.REASON_COMMS_TIMEOUT for r in res]):
+            return -1.
+        if res[0] != etrsync.REASON_ENDSTOP_HIT:
+            return 0.
+        if self.mcu.is_fileoutput():
+            return home_end_time   
+        return home_end_time
     def multi_probe_begin(self):
-        print("BD multi_probe_begin")
+        self.BD_Sensor_Read(2)
         #self.bd_sensor.I2C_BD_send("1022")
         if self.stow_on_each_sample:
             return
         self.multi = 'FIRST'
 
     def multi_probe_end(self):
-        print("BD multi_probe_end")
         self.bd_sensor.I2C_BD_send("1018")
+        
         self.toolhead = self.printer.lookup_object('toolhead')
         start_pos = self.toolhead.get_position()
         self.gcode.respond_info("get_position Z is %.3f mm"%start_pos[2])
@@ -714,32 +772,22 @@ class BDsensorEndstopWrapper:
             #self.toolhead = self.printer.lookup_object('toolhead')
             #self.toolhead.wait_moves()
             self.gcode.run_script_from_command("G92 Z%.3f" % self.bd_value)
-            #self.gcode.respond_info("The actually triggered position of Z is %.3f mm"%self.bd_value)
-            
-            
-        #else:#set x stepper oid=0 to recovery normal timer
-         #   pr=self.Z_Move_Live_cmd.send([self.oid,
-         #           ("j 0\0").encode('utf-8')])
+
         self.homeing=0
         if self.stow_on_each_sample:
             return
         self.raise_probe()
         self.multi = 'OFF'
     def probe_prepare(self, hmove):
-        print("BD probe_prepare")
         if self.multi == 'OFF' or self.multi == 'FIRST':
             self.lower_probe()
             if self.multi == 'FIRST':
                 self.multi = 'ON'
     def probe_finish(self, hmove):
-        print("BD probe_finish")
         self.bd_sensor.I2C_BD_send("1018")
         if self.multi == 'OFF':
             self.raise_probe()
-       # pr=self.Z_Move_Live_cmd.send([self.oid,
-        #            ("j 0\0").encode('utf-8')])   
-        pr=self.Z_Move_Live_cmd.send([self.oid,
-                ("k 100\0").encode('utf-8')])
+
     def get_position_endstop(self):
         #print("BD get_position_endstop")
         return self.position_endstop
