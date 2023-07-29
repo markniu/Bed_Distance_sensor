@@ -3,7 +3,8 @@
 
 if you like to test with this new code please run
 ```
-python ~/Bed_Distance_sensor/klipper_Beta/install_BDsensor_patch.py
+cd  ~/Bed_Distance_sensor/klipper_Beta/
+./install_BDsensor.sh
 ```
 instead of 
 ```
