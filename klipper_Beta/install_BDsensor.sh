@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HOME_DIR="${HOME}/klipper"
-#echo "$0"
+
 if [  -d "$1" ] ; then
     
 	echo "$1"
@@ -32,14 +32,19 @@ echo "linking BDsensor.py to klippy."
 if [ -e "${HOME_DIR}/klippy/extras/BDsensor.py" ]; then
     rm "${HOME_DIR}/klippy/extras/BDsensor.py"
 fi
+ln -s "${BDDIR}/BDsensor.py" "${HOME_DIR}/klippy/extras/BDsensor.py"
 
 echo "linking BD_sensor.c to klipper."
 
 if [ -e "${HOME_DIR}/src/BD_sensor.c" ]; then
     rm "${HOME_DIR}/src/BD_sensor.c"
 fi
-ln -s "${BDDIR}/BDsensor.py" "${HOME_DIR}/klippy/extras/BDsensor.py"
 ln -s "${BDDIR}/BD_sensor.c" "${HOME_DIR}/src/BD_sensor.c"
+
+if ! grep -q "BD_sensor.c" "${HOME_DIR}/src/Makefile"; then
+    echo "src-y += BD_sensor.c  " >> "${HOME_DIR}/src/Makefile"
+fi
+
 
 if ! grep -q "klippy/extras/BDsensor.py" "${HOME_DIR}/.git/info/exclude"; then
     echo "klippy/extras/BDsensor.py" >> "${HOME_DIR}/.git/info/exclude"
@@ -48,8 +53,8 @@ if ! grep -q "src/BD_sensor.c" "${HOME_DIR}/.git/info/exclude"; then
     echo "src/BD_sensor.c" >> "${HOME_DIR}/.git/info/exclude"
 fi
 
-if ! grep -q "BD_sensor.c" "${HOME_DIR}/src/Makefile"; then
-    echo "src-y += BD_sensor.c  " >> "${HOME_DIR}/src/Makefile"
+if ! grep -q "src/Makefile" "${HOME_DIR}/.git/info/exclude"; then
+    echo "src/Makefile" >> "${HOME_DIR}/.git/info/exclude"
 fi
 
 echo ""
