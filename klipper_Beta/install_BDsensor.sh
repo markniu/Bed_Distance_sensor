@@ -57,6 +57,8 @@ if ! grep -q "src/Makefile" "${HOME_DIR}/.git/info/exclude"; then
     echo "src/Makefile" >> "${HOME_DIR}/.git/info/exclude"
 fi
 
+sed 's/--dirty//g' "${HOME_DIR}/scripts/buildcommands.py" -i
+
 echo ""
 echo "Install Bed Distance Sensor successful."
 echo ""
