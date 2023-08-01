@@ -8,7 +8,8 @@ cd  ~/Bed_Distance_sensor/klipper_Beta/
 ```
 instead of 
 ```
-python ~/Bed_Distance_sensor/klipper/install_BDsensor_patch.py
+cd  ~/Bed_Distance_sensor/klipper/
+./install_BDsensor.sh
 ```
 
 in the installation step of Klipper
