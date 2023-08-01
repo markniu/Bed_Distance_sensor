@@ -250,12 +250,8 @@ class BDPrinterProbe:
                         positions = []
                     continue
             except Exception as e:
-                if "object has no attribute 'bd_sensor'" in str(e):
-                    pass
-                else:
-                    gcmd.respond_info("%s"%str(e))
-                #gcmd.respond_info("%s"%str(e))
-                #raise gcmd.error("%s"%str(e))
+                gcmd.respond_info("%s"%str(e))
+                raise gcmd.error("%s"%str(e))
                 #pass
             pos = self._probe(speed)
             positions.append(pos)
@@ -555,7 +551,7 @@ class BDProbePointsHelper:
             raise gcmd.error("horizontal_move_z can't be less than"
                              " probe's z_offset")
         probe.multi_probe_begin()
-        gcmd.respond_info("gcode:%s"%gcmd.get_command())
+        gcmd.respond_info("BDsensor:gcode %s"%gcmd.get_command())
         if "BED_MESH_CALIBRATE" in gcmd.get_command():
             try:
                 if probe.mcu_probe.no_stop_probe is not None:
@@ -563,11 +559,8 @@ class BDProbePointsHelper:
                     probe.multi_probe_end()
                     return
             except AttributeError as e:
-                if "object has no attribute 'no_stop_probe'" in str(e):
-                    pass
-                else:
-                    gcmd.respond_info("%s"%str(e))
-                # raise gcmd.error("%s"%str(e))
+                gcmd.respond_info("%s"%str(e))
+                raise gcmd.error("%s"%str(e))
                 #pass
 
         while 1:
@@ -597,9 +590,9 @@ class BDsensorEndstopWrapper:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.config = config
-        self.z_adjust = config.getfloat('z_adjust',0., minval=0.,below=2)  
-        self.z_offset = config.getfloat('z_offset',0., minval=0.,below=0.0001) 
-        self.position_endstop = config.getfloat('position_endstop',0., minval=0.,below=2.5)
+        self.z_adjust = config.getfloat('z_adjust',0., minval=0.,below=0.3)  
+        self.z_offset = config.getfloat('z_offset',0., minval=0.,maxval=0.0) 
+        self.position_endstop = config.getfloat('position_endstop',0., minval=0.,below=2)
         if self.z_adjust > self.position_endstop :
             raise self.printer.command_error("The 'z_adjust' cannot be greater than 'position_endstop' in section [BDsensor]")
         self.stow_on_each_sample = config.getboolean(
