@@ -600,14 +600,7 @@ DECL_COMMAND(command_config_I2C_BD,
     if(sda_pin==0||scl_pin==0)
         return;
     if(e.sample_count==0)
-		return;
-    if(endtime_adjust>(timer_read_time() + timer_from_us(timer_period_endstop*1000*2)))
-		endtime_adjust=timer_read_time() + timer_from_us(timer_period_endstop*1000);//us
-		
-	if(endtime_adjust>timer_read_time())
-	    return;
-	endtime_adjust=timer_read_time() + timer_from_us(timer_period_endstop*1000);//us
-    
+		return;    
     
     tm=BD_i2c_read();
     if(tm<1023)

@@ -1239,13 +1239,13 @@ class BDsensorEndstopWrapper:
         self.etrsync = self._trsyncs[0]
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_start(self._trdispatch, self.etrsync.REASON_HOST_REQUEST)
-        #pr=self.Z_Move_Live_cmd.send([self.oid,
-        #        ("k 5\0").encode('utf-8')])
+        self.homeing=1
          
         self._home_cmd.send(
             [self.oid, clock, self.mcu.seconds_to_clock(sample_time),
              sample_count, rest_ticks, triggered ^ self._invert,
              self.etrsync.get_oid(), self.etrsync.REASON_ENDSTOP_HIT], reqclock=clock) 
+    
         self.finish_home_complete = self.trigger_completion
         return self.trigger_completion
 
@@ -1263,8 +1263,6 @@ class BDsensorEndstopWrapper:
             self.trigger_completion.complete(True)   
         self.trigger_completion.wait()
         self._home_cmd.send([self.oid, 0, 0, 0, 0, 0, 0, 0])
-        #pr=self.Z_Move_Live_cmd.send([self.oid,
-        #        ("k 100\0").encode('utf-8')])
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_stop(self._trdispatch)
         res = [trsync.stop() for trsync in self._trsyncs]
@@ -1273,7 +1271,8 @@ class BDsensorEndstopWrapper:
         if res[0] != etrsync.REASON_ENDSTOP_HIT:
             return 0.
         if self.mcu.is_fileoutput():
-            return home_end_time   
+            return home_end_time
+        
         return home_end_time
     def multi_probe_begin(self):
         self.BD_Sensor_Read(2)
@@ -1287,13 +1286,15 @@ class BDsensorEndstopWrapper:
         
         self.toolhead = self.printer.lookup_object('toolhead')
         start_pos = self.toolhead.get_position()
-        self.gcode.respond_info("get_position Z is %.3f mm"%start_pos[2])
-        if self.homeing==1:           
-            #time.sleep(0.004)
-            self.bd_value=self.BD_Sensor_Read(0)
-            #self.toolhead = self.printer.lookup_object('toolhead')
-            #self.toolhead.wait_moves()
-            self.gcode.run_script_from_command("G92 Z%.3f" % self.bd_value)
+        #self.gcode.respond_info("get_position Z is %.3f mm"%start_pos[2])
+        if self.homeing==1:
+            self.toolhead = self.printer.lookup_object('toolhead')
+            time.sleep(0.1)
+            homepos = self.toolhead.get_position()
+            self.bd_value=self.BD_Sensor_Read(2)
+            homepos[2] = self.bd_value
+            self.toolhead.set_position(homepos)
+            self.gcode.respond_info(".set_position Z is %.3f mm"%homepos[2])
 
         self.homeing=0
         if self.stow_on_each_sample:
