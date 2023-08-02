@@ -35,7 +35,7 @@ Operating Range|4mm|None|None
 --- | --- |---  
 Real Time leveling |:heavy_check_mark:| No  
 Fast bed mesh |:heavy_check_mark:| :heavy_check_mark: 
-Fast bed mesh(No toolhead stop probe)|:heavy_check_mark: | :heavy_check_mark: 
+Fast bed mesh(No toolhead stop)|:heavy_check_mark: | :heavy_check_mark: 
 Distance display |:heavy_check_mark: | :heavy_check_mark: 
 Can bus toolhead|No | :heavy_check_mark: 
 standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark: 
