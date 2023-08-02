@@ -20,7 +20,7 @@ Faster leveling, realtime compensation, high accuracy.
 Sensor type |Distance Sensor| Proximity switch | Proximity switch
 Distance resolution |0.005~0.01mm| None | None
 Bed material |Metal| Unlimited | Metal
-Communication |I2C [Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/wiki/Data-Protocol)| PWM/Zendstop | Zendstop
+Communication | [SoftI2C](https://github.com/markniu/Bed_Distance_sensor/wiki/Data-Protocol)| PWM/Zendstop | Zendstop
 Operating Range|4mm|None|None
 
 
