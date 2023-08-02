@@ -22,23 +22,23 @@ Distance resolution |0.005~0.01mm| None | None
 Bed material |Metal| Unlimited | Metal
 Communication |I2C [Timing Diagram](https://github.com/markniu/Bed_Distance_sensor/wiki/Data-Protocol)| PWM/Zendstop | Zendstop
 Operating Range|4mm|None|None
-Accuracy video: [BDsensor VS  Dial gauge](https://youtu.be/SLDsKLupcrk)
+
 
 
 ### Hardware:
-Support any mainboard(8 bit or 32 bit) or Can bus module
-
-Wire: Compatible with the BLtouch	connector. 
-
+* Support all the mainboards
+* Easy to install: small and light, Compatible with the BLtouch	connector. 
+* Support Can bus module
 
 ### Software
  . | Marlin | Klipper
 --- | --- |---  
-Real Time leveling |Support| No  
-Fast bed mesh |Support| Support 
-Fast bed mesh(No toolhead stop probe)|Support | Support 
-Distance display |Support | Support 
-Can bus toolhead|No | Support 
+Real Time leveling |:heavy_check_mark:| No  
+Fast bed mesh |:heavy_check_mark:| :heavy_check_mark: 
+Fast bed mesh(No toolhead stop probe)|:heavy_check_mark: | :heavy_check_mark: 
+Distance display |:heavy_check_mark: | :heavy_check_mark: 
+Can bus toolhead|No | :heavy_check_mark: 
+standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark: 
 
 
 
