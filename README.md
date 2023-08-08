@@ -27,7 +27,9 @@ Operating Range|4mm|None|None
 
 ### Hardware:
 * Support all the mainboards
-* Easy to install: small and light, Compatible with the BLtouch	connector. 
+* Easy to install:
+
+  small and light; can be installed anywhere, even surrounding metal above;no need to open the mainboard as it is compatible with BLtouch connections.
 * Support Can bus module
 
 ### Software
