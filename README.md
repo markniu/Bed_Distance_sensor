@@ -13,17 +13,6 @@ Faster leveling, realtime compensation, high accuracy.
    
 3. Thanks for the distance value can be shown on the screen, you can do manual bed leveling more easily.
 
- [Example Video](https://www.youtube.com/watch?v=yx8pluEu0sg)
- . | BDsensor | BLtouch |superPINDA
---- | --- |--- |---
-Sensor type |Distance Sensor| Proximity switch | Proximity switch
-Distance resolution |0.005~0.01mm| None | None
-Bed material |Metal| Unlimited | Metal
-Communication | [SoftI2C](https://github.com/markniu/Bed_Distance_sensor/wiki/Data-Protocol)| PWM/Zendstop | Zendstop
-Operating Range|4mm|None|None
-
-
-
 ### Hardware:
 * Support all the mainboards
 * Easy to install:
@@ -46,7 +35,8 @@ standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark:
 ### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) , [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) 
 
 
-
+ [Example Video](https://www.youtube.com/watch?v=yx8pluEu0sg)
+ 
 Project status: https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
 
 **Where to buy**: [https://www.pandapi3d.com/bdsensor](https://www.pandapi3d.com/bdsensor) , if you are in China please purchase it here
