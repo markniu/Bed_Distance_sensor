@@ -17,7 +17,7 @@ Faster leveling, realtime compensation, high accuracy.
 * Support all the mainboards
 * Easy to install:
 
-  small and light; can be installed anywhere, even surrounding metal above;no need to open the mainboard as it is compatible with BLtouch connections.
+  small and light; can be installed anywhere, even surrounding metal above;no need to open the mainboard box as it is compatible with BLtouch connections.
 * Support Can bus module
 
 ### Software
