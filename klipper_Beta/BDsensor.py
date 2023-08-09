@@ -188,8 +188,14 @@ class BDPrinterProbe:
             if "Timeout during endstop homing" in reason:
                 reason += HINT_TIMEOUT
             raise self.printer.command_error(reason)
-        self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-                                % (epos[0], epos[1], epos[2]))
+        time.sleep(0.1)
+        b_value=self.mcu_probe.BD_Sensor_Read(2)
+        pos_new = toolhead.get_position()
+        epos[2] = epos[2]-b_value # epos[2]+(0.8-b_value)-0.8
+        #os_new[2] = b_value
+        toolhead.set_position(pos_new)        
+        self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f bd%.3f  pos_new:%.6f"
+                                % (epos[0], epos[1], epos[2],b_value, pos_new[2]))
         return epos[:3]
     def _move(self, coord, speed):
         self.printer.lookup_object('toolhead').manual_move(coord, speed)
