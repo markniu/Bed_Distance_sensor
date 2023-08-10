@@ -706,8 +706,8 @@ class BDsensorEndstopWrapper:
         self.bedmesh  = self.printer.lookup_object('bed_mesh', None)
         #self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
         #     self.bedmesh.bmc.config, bedmesh.bmc.probe_finalize, bedmesh.bmc._get_adjusted_points())
-        print("bedmesh:%s" %
-                        self.config.getsection('bed_mesh').get('probe_count'))
+       # print("bedmesh:%s" %
+       #                 self.config.getsection('bed_mesh').get('probe_count'))
     def get_mcu(self):
         return self.mcu    
     def z_live_adjust(self):
