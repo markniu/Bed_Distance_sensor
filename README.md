@@ -32,13 +32,13 @@ standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark:
 
 
 
-#### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) , [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) 
+#### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) , [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) , [Mount stl](https://www.thingiverse.com/thing:6098131)
 
-
- [Example Video](https://www.youtube.com/watch?v=yx8pluEu0sg)
+[Example Video 1 ](https://www.youtube.com/watch?v=yx8pluEu0sg) ; 
+[Example Video 2 ](https://www.youtube.com/clip/UgkxrPdIjlBsYOzUNraIL7HPizCh1WwQllYl)
  
-Project status: https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer
+[Project status](https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer)
 
-**Where to buy**: [https://www.pandapi3d.com/bdsensor](https://www.pandapi3d.com/bdsensor) , if you are in China please purchase it here
+[Where to buy](https://www.pandapi3d.com/bdsensor) , if you are in China please purchase it here
  [中国大陆淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
 
