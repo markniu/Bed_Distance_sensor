@@ -1,7 +1,7 @@
 ##  The Future of 3D printer Bed Leveling
 
 [BDsensor](https://www.pandapi3d.com/bdsensor) is the first distance sensor that can work with 3D printer and do fast bed leveling and adjust z axis in real time.
-it can measure the bed distance at any point in real time without moving the z axis up and down and measure the metal bed plate distance in 4mm with resoultion 0.01mm.
+it can measure the bed distance at any point in real time without moving the z axis up and down.
 
  <img src="https://raw.githubusercontent.com/markniu/Bed_Distance_sensor/new/doc/images/Connection1.jpg" width="600" /> 
 
@@ -12,6 +12,12 @@ Faster leveling, realtime compensation, high accuracy.
 2. You can do bed mesh leveling like a normal proximity sensor but much faster with this BDsensor.
    
 3. Thanks for the distance value can be shown on the screen, you can do manual bed leveling more easily.
+
+Sensor type: inductive, can only measure the metal plate.
+
+Range: 4mm
+
+Resolution:0.01mm
 
 ### Hardware:
 * Support all the mainboards
