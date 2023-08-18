@@ -60,5 +60,5 @@ fi
 sed 's/--dirty//g' "${HOME_DIR}/scripts/buildcommands.py" -i
 
 echo ""
-echo "Install Bed Distance Sensor successful."
+echo "Install Bed Distance Sensor successful :) "
 echo ""
