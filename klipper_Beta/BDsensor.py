@@ -437,7 +437,7 @@ class BDProbePointsHelper:
     def fast_probe_oneline(self, direction):
         
         probe = self.printer.lookup_object('probe', None)
-        
+        toolhead = self.printer.lookup_object('toolhead')
         oneline_points = []
         start_point = []
         if "backward" in  direction:
@@ -445,18 +445,23 @@ class BDProbePointsHelper:
         else:
             start_point=list(self.probe_points[len(self.results)])
         end_point = []
+        #probe.gcode.respond_info("start_point %.3f,%.3f  "
+        #                                % (start_point[0], start_point[1]))
         for point in self.probe_points:
-            if start_point[1] is point[1]:
+            if start_point[1] == point[1]:
                 oneline_points.append(point)
+                #probe.gcode.respond_info("point %.3f,%.3f  "
+                #                        % (point[0], point[1]))
         n_count=len(oneline_points)
-        if n_count<=1:
+
+        if n_count<1:
             raise self.printer.config_error(
                 "Seems the mesh direction is not X, points count on x is %d" % (n_count))
         if "backward" in  direction:        
             oneline_points.reverse()
         
         end_point = list(oneline_points[n_count-1])
-        toolhead = self.printer.lookup_object('toolhead')
+        
         if self.use_offsets:
             start_point[0] -= self.probe_offsets[0]
             start_point[1] -= self.probe_offsets[1]
@@ -464,6 +469,28 @@ class BDProbePointsHelper:
             end_point[1] -= self.probe_offsets[1]
         toolhead.manual_move(start_point, self.speed)
         toolhead.wait_moves()
+        if n_count == 1:
+            toolhead.wait_moves()
+            
+            pos = toolhead.get_position()
+            if self.use_offsets:
+                pos[0] -= self.probe_offsets[0]
+                pos[1] -= self.probe_offsets[1]
+            #pr = probe.mcu_probe.I2C_BD_receive_cmd.send([probe.mcu_probe.oid, "32".encode('utf-8')])
+            #intd=int(pr['response'])
+            intd=probe.mcu_probe.BD_Sensor_Read(0)
+            pos[2]=pos[2]-intd
+            #probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
+            #                        % (pos[0], pos[1], pos[2]))
+           # return pos[:3]
+           # pos = probe.run_probe(gcmd)
+            if "backward" in  direction:
+                self.results_1.append(pos)
+                self.results_copy.pop()
+            else:
+                self.results.append(pos)
+            return
+            
         toolhead.manual_move(end_point, self.speed)
         ####
         toolhead._flush_lookahead()
@@ -1078,6 +1105,10 @@ class BDsensorEndstopWrapper:
             #self.bd_sensor.I2C_BD_send("1015")#1015   read distance data
             #pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
             #self.bd_value=int(pr['response'])/100.00
+ 
+            self.bedmesh = self.printer.lookup_object('bed_mesh', None)
+            self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
+                 self.config.getsection('bed_mesh'), self.bedmesh.bmc.probe_finalize, self.bedmesh.bmc._get_adjusted_points())
             self.bd_value=self.BD_Sensor_Read(1)
             strd=str(self.bd_value)+"mm"
             if self.bd_value == 10.24:
