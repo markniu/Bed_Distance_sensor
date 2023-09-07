@@ -78,6 +78,7 @@ class BDPrinterProbe:
     def __init__(self, config, mcu_probe):
         self.printer = config.get_printer()
         self.name = config.get_name()
+        self.config = config
         self.mcu_probe = mcu_probe
         self.speed = config.getfloat('speed', 5.0, above=0.)
         self.lift_speed = config.getfloat('lift_speed', self.speed, above=0.)
@@ -143,6 +144,10 @@ class BDPrinterProbe:
             self.mcu_probe.probe_finish(hmove)
     def _handle_home_rails_begin(self, homing_state, rails):
         endstops = [es for rail in rails for es, name in rail.get_endstops()]
+        self.bedmesh = self.printer.lookup_object('bed_mesh', None)
+        self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
+             self.config.getsection('bed_mesh'), self.bedmesh.bmc.probe_finalize, self.bedmesh.bmc._get_adjusted_points())
+        self.gcode.respond_info("2_handle_home_rails_begin")
         if self.mcu_probe in endstops:
             self.multi_probe_begin()
     def _handle_home_rails_end(self, homing_state, rails):
@@ -1105,10 +1110,6 @@ class BDsensorEndstopWrapper:
             #self.bd_sensor.I2C_BD_send("1015")#1015   read distance data
             #pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
             #self.bd_value=int(pr['response'])/100.00
- 
-            self.bedmesh = self.printer.lookup_object('bed_mesh', None)
-            self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
-                 self.config.getsection('bed_mesh'), self.bedmesh.bmc.probe_finalize, self.bedmesh.bmc._get_adjusted_points())
             self.bd_value=self.BD_Sensor_Read(1)
             strd=str(self.bd_value)+"mm"
             if self.bd_value == 10.24:
