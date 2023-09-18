@@ -147,7 +147,7 @@ class BDPrinterProbe:
         self.bedmesh = self.printer.lookup_object('bed_mesh', None)
         self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
              self.config.getsection('bed_mesh'), self.bedmesh.bmc.probe_finalize, self.bedmesh.bmc._get_adjusted_points())
-        self.gcode.respond_info("3_handle_home_rails_begin")
+        #self.gcode.respond_info("3_handle_home_rails_begin")
         if self.mcu_probe in endstops:
             self.multi_probe_begin()
     def _handle_home_rails_end(self, homing_state, rails):
@@ -1032,7 +1032,7 @@ class BDsensorEndstopWrapper:
         return [s for trsync in self._trsyncs for s in trsync.get_steppers()]      
     def home_start(self, print_time, sample_time, sample_count, rest_time,
                    triggered=True):
-        print("BD home_start")   
+       # print("BD home_start")   
        # self.bedmesh = self.printer.lookup_object('bed_mesh', None)
         #self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
          #    self.config.getsection('bed_mesh'), self.bedmesh.bmc.probe_finalize, self.bedmesh.bmc._get_adjusted_points())
