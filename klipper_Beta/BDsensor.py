@@ -351,7 +351,7 @@ class BDPrinterProbe:
             "The SAVE_CONFIG command will update the printer config file\n"
             "with the above and restart the printer." % (self.name, z_offset))
         configfile = self.printer.lookup_object('configfile')
-        configfile.set(self.name, 'z_offset', "%.3f" % (z_offset,))
+        #configfile.set(self.name, 'z_offset', "%.3f" % (z_offset,))
     cmd_PROBE_CALIBRATE_help = "Calibrate the probe's z_offset"
     def cmd_PROBE_CALIBRATE(self, gcmd):
         manual_probe.verify_no_manual_probe(self.printer)
@@ -381,7 +381,7 @@ class BDPrinterProbe:
                 "The SAVE_CONFIG command will update the printer config file\n"
                 "with the above and restart the printer."
                 % (self.name, new_calibrate))
-            configfile.set(self.name, 'z_offset', "%.3f" % (new_calibrate,))
+            #configfile.set(self.name, 'z_offset', "%.3f" % (new_calibrate,))
     cmd_Z_OFFSET_APPLY_PROBE_help = "Adjust the probe's z_offset"
 
 # Helper code that can probe a series of points and report the
