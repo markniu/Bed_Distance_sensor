@@ -628,7 +628,7 @@ class BDsensorEndstopWrapper:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.config = config
-        self.z_adjust = config.getfloat('z_adjust',0., minval=0.,below=0.3)  
+        self.z_adjust = config.getfloat('z_adjust',0., minval=-0.3,below=0.3)  
         self.z_offset = config.getfloat('z_offset',0., minval=0.,maxval=0.0) 
         self.position_endstop = config.getfloat('position_endstop',0., minval=0.,below=2)
         if self.z_adjust > self.position_endstop :

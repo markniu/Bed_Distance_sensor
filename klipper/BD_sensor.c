@@ -33,7 +33,8 @@
 #define BD_setHigh(x) gpio_out_write(x,1)
 
 
-uint32_t sda_pin=0,scl_pin=0,delay_m=20,homing_pose=0,z_ofset=0;
+uint32_t sda_pin=0,scl_pin=0,delay_m=20,homing_pose=0;
+int z_ofset=0;
 uint16_t BD_Data;
 //extern uint32_t timer_period_time;
 uint16_t BD_read_flag=1018,BD_read_lock=0;
@@ -126,7 +127,7 @@ uint16_t Get_Distane_data(void)
 
 }
 
-int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose,uint32_t z_adjust)
+int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose,int z_adjust)
 {
     sda_pin=_sda;
     scl_pin =_scl;
