@@ -38,7 +38,7 @@ standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark:
 
 
 
-#### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) , [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) , [Mount stl](https://www.thingiverse.com/thing:6098131), [Mount_stl_VzBoT](https://discord.com/.../8298287655121.../1163237892957671424)
+#### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) , [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) , [Mount stl](https://www.thingiverse.com/thing:6098131), [Mount_stl_VzBoT](https://discord.com/channels/829828765512106054/1163237892957671424)
 
 [Example Video 1 ](https://www.youtube.com/watch?v=yx8pluEu0sg) ; 
 [Example Video 2 ](https://www.youtube.com/clip/UgkxrPdIjlBsYOzUNraIL7HPizCh1WwQllYl)
