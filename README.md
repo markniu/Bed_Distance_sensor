@@ -48,6 +48,6 @@ standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark:
 #### Where to buy:
 [pandapi3d.com](https://www.pandapi3d.com/bdsensor) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
 
-[Mellow Aliexpress](https://www.aliexpress.com/item/1005006169022237.html),[Mellow 淘宝店](https://item.taobao.com/item.htm?spm=a21dvs.23580594.0.0.1d293d0d4RZocS&ft=t&id=745115506113)
+Reseller: [Mellow Aliexpress](https://www.aliexpress.com/item/1005006169022237.html),[Mellow 淘宝店](https://item.taobao.com/item.htm?spm=a21dvs.23580594.0.0.1d293d0d4RZocS&ft=t&id=745115506113)
  
 
