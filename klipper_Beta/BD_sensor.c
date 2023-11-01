@@ -22,8 +22,8 @@
 #include "board/irq.h" // irq_disable
 #include "board/misc.h" // timer_is_before
 #include "command.h" // DECL_COMMAND
-//#include "sched.h" // struct timer
-//#include "stepper.h" // stepper_event
+#include "sched.h" // struct timer
+#include "stepper.h" // stepper_event
 #include "trsync.h" // trsync_add_signal
 
 
@@ -374,6 +374,156 @@ stepper_get_position(struct stepper *s);
 extern   struct stepper *
 stepper_oid_lookup(uint8_t oid);
 
+void adust_Z_live(uint16_t sensor_z)
+{
+   // BD_Data
+    if(step_adj[0].zoid==0)
+       return;
+    struct stepper *s = stepper_oid_lookup(step_adj[0].zoid);
+    uint32_t cur_stp=stepper_get_position(s);
+    output("Z_Move_L mcuoid=%c diff_stp=%c",
+        oid_g,(cur_stp-step_adj[0].steps_at_zero));
+    if((step_adj[0].adj_z_range*step_adj[0].steps_per_mm/10)
+        <=(cur_stp-step_adj[0].steps_at_zero))
+        return;
+    if(sensor_z>=390)
+        return;//out of range
+    int diff_step=sensor_z*step_adj[0].steps_per_mm/100
+        -(cur_stp-step_adj[0].steps_at_zero);
+    int dir=0;
+    int old_dir=gpio_output_data_read(s->dir_pin);
+    if(diff_step<0)
+    {
+        diff_step=-diff_step;
+        dir=1;
+    }
+    output("Z_Move_L mcuoid=%c diff_step=%c", oid_g,diff_step);
+    if(step_adj[0].invert_dir==1)
+        dir=~dir;
+    if(dir==0)
+        gpio_out_write(s->dir_pin, 1);
+    else
+        gpio_out_write(s->dir_pin, 0);
+/*
+    for(int ii=0;ii<diff_step;ii++)
+    {
+        int nn=0;
+        if(ii<diff_step/2)
+            nn= diff_step/2-ii;
+        else
+            nn=ii-diff_step/2;
+        gpio_out_write(s->step_pin, 1);
+        ndelay_bd(step_adj[0].step_time*100000*nn);
+        gpio_out_write(s->step_pin, 0);
+        ndelay_bd(step_adj[0].step_time*100000*nn);
+    }
+    gpio_out_write(s->dir_pin, old_dir);
+    */
+    s->count=diff_step;
+}
+
+
+
+void
+command_Z_Move_Live(uint32_t *args)
+{
+    //uint32_t position = stepper_get_position(s)- POSITION_BIAS;
+    int i=0,j=0;
+    //int adj_z_range;
+    //char data[30];
+    char *tmp;
+    uint8_t oid = args[0];
+    tmp=(char *)args[2];
+    j=atoi(tmp+2);
+    if(tmp[0]=='1')
+        step_adj[0].steps_at_zero=j;
+    else if(tmp[0]=='2')
+        step_adj[0].adj_z_range=j;
+    else if(tmp[0]=='3')
+        step_adj[0].invert_dir=j;
+    else if(tmp[0]=='4')
+    {
+        step_adj[0].steps_per_mm=j;
+    }
+    else if(tmp[0]=='5')
+        step_adj[0].step_time=j;
+    else if(tmp[0]=='6')
+    {
+        struct stepper *s = stepper_oid_lookup(j);
+        uint32_t cur_stp=stepper_get_position(s);
+        step_adj[0].zoid=j;
+        step_adj[0].steps_at_zero=
+            cur_stp-(step_adj[0].steps_at_zero*step_adj[0].steps_per_mm)/1000;
+//        output("Z_Move_L mcuoid=%c zero=%c", oid,step_adj[0].steps_at_zero);
+    }
+//for debug  report postion when the motor
+    else if(tmp[0]=='7')
+    {
+        stepx_probe.min_x=j;
+    }
+    else if(tmp[0]=='8')
+    {
+        stepx_probe.max_x=j;
+    }
+
+    else if(tmp[0]=='9')
+    {
+        stepx_probe.points=j;
+    }
+    else if(tmp[0]=='a')
+    {
+        stepx_probe.steps_at_zero=j;
+    }
+    else if(tmp[0]=='b')
+    {
+        stepx_probe.steps_per_mm=j;
+    }
+    else if(tmp[0]=='c')
+    {
+        stepx_probe.xoid=j;
+        struct stepper *s = stepper_oid_lookup(j);
+        uint32_t cur_stp=stepper_get_position(s);
+        stepx_probe.steps_at_zero=cur_stp-
+            (stepx_probe.steps_at_zero*stepx_probe.steps_per_mm)/1000;
+        stepx_probe.min_x=stepx_probe.min_x*stepx_probe.steps_per_mm
+            +stepx_probe.steps_per_mm;
+        stepx_probe.max_x=stepx_probe.max_x*stepx_probe.steps_per_mm
+            -stepx_probe.steps_per_mm;
+      //  output("Z_Move_L mcuoid=%c zero=%c", oid,stepx_probe.max_x);
+        stepx_probe.x_count=0;
+    }
+    else if(tmp[0]=='d')
+    {
+        stepx_probe.x_count=j;
+    }
+    else if(tmp[0]=='e')
+    {
+        stepx_probe.kinematics=j;
+    }
+    ///////////////////// motor y
+    else if(tmp[0]=='f')
+    {
+        stepx_probe.y_steps_at_zero=j;
+    }
+    else if(tmp[0]=='g')
+    {
+        stepx_probe.y_steps_per_mm=j;
+    }
+    else if(tmp[0]=='h')
+    {
+        stepx_probe.y_oid=j;
+        struct stepper *s = stepper_oid_lookup(j);
+        uint32_t cur_stp=stepper_get_position(s);
+        stepx_probe.y_steps_at_zero=cur_stp-
+            (stepx_probe.y_steps_at_zero*stepx_probe.y_steps_per_mm)/1000;
+    }
+
+   output("Z_Move_L mcuoid=%c j=%c", oid,j);
+
+    sendf("Z_Move_Live_response oid=%c return_set=%*s", oid,i,(char *)args[2]);
+}
+DECL_COMMAND(command_Z_Move_Live, "Z_Move_Live oid=%c data=%*s");
+
 //for gcode command
 void
 command_I2C_BD_receive(uint32_t *args)
@@ -484,6 +634,7 @@ DECL_COMMAND(command_config_I2C_BD,
     if(tm<1023)
     {
         BD_Data=tm;
+		///adust_Z_live(tm);
     }
 	else
 		BD_Data=0;
