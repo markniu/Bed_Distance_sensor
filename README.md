@@ -46,8 +46,7 @@ standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark:
 [Project status](https://hackaday.io/project/185096-0006mm-distance-resolution-sensor-for-3d-printer)
 
 #### Where to buy:
-Official: [pandapi3d.com](https://www.pandapi3d.com/bdsensor) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
+ [pandapi3d.com](https://www.pandapi3d.com/bdsensor) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
 
-Reseller: [Mellow Aliexpress](https://www.aliexpress.com/item/1005006169022237.html)
  
 
