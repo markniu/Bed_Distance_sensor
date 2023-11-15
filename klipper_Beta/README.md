@@ -15,3 +15,20 @@ cd  ~/Bed_Distance_sensor/klipper/
 in the installation step of Klipper
 
 https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
+
+
+
+#### update:
+November 15, 2023
+
+1, add new command:
+```
+BDSENSOR_VERSION                   //replace M102 S-1
+BDSENSOR_CALIBRATE                //replace M102 S6 
+BDSENSOR_READ_CALIBRATION  //replace M102 S-5 
+BDSENSOR_DISTANCE                 //replace M102 S-2 
+BDSENSOR_SET                           // set value, now only for setting z_adjust, for example BDSENSOR_SET z_adjust=0.1
+
+```
+2, invert z_adjust direction as z_offset
+
