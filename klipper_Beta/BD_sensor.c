@@ -22,8 +22,8 @@
 #include "board/irq.h" // irq_disable
 #include "board/misc.h" // timer_is_before
 #include "command.h" // DECL_COMMAND
-#include "sched.h" // struct timer
-#include "stepper.h" // stepper_event
+//#include "sched.h" // struct timer
+//#include "stepper.h" // stepper_event
 #include "trsync.h" // trsync_add_signal
 
 
@@ -66,14 +66,6 @@ struct endstop e ;
 
 uint16_t BD_i2c_read(void);
 enum { POSITION_BIAS=0x40000000 };
-
-struct stepper_move {
-    struct move_node node;
-    uint32_t interval;
-    int16_t add;
-    uint16_t count;
-    uint8_t flags;
-};
 
 struct stepper {
     struct timer time;
@@ -286,7 +278,11 @@ uint16_t BD_i2c_read(void)
     if (BD_Check_OddEven(b) && (b & 0x3FF) < 1020){
         b = (b & 0x3FF);
 		if(BD_read_flag==1018&&(b<1000)){
-			b = b + z_ofset;
+			b = b - z_ofset;
+			if(b>1024)
+				b=0;
+			else if(b<0)
+				b=0;
 		}
 
     }
@@ -376,259 +372,11 @@ uint32_t INT_to_String(uint32_t BD_z1,uint8_t*data)
     return len;
 }
 
-enum {
-    SF_LAST_DIR=1<<0, SF_NEXT_DIR=1<<1, SF_INVERT_STEP=1<<2, SF_NEED_RESET=1<<3,
-    SF_SINGLE_SCHED=1<<4, SF_HAVE_ADD=1<<5
-};
-	enum { MF_DIR=1<<0 };
 
 extern   uint32_t
 stepper_get_position(struct stepper *s);
 extern   struct stepper *
 stepper_oid_lookup(uint8_t oid);
-#if CONFIG_INLINE_STEPPER_HACK && CONFIG_HAVE_STEPPER_BOTH_EDGE
- #define HAVE_SINGLE_SCHEDULE 1
- #define HAVE_EDGE_OPTIMIZATION 1
- #define HAVE_AVR_OPTIMIZATION 0
- DECL_CONSTANT("STEPPER_BOTH_EDGE", 1);
-#elif CONFIG_INLINE_STEPPER_HACK && CONFIG_MACH_AVR
- #define HAVE_SINGLE_SCHEDULE 1
- #define HAVE_EDGE_OPTIMIZATION 0
- #define HAVE_AVR_OPTIMIZATION 1
-#else
- #define HAVE_SINGLE_SCHEDULE 0
- #define HAVE_EDGE_OPTIMIZATION 0
- #define HAVE_AVR_OPTIMIZATION 0
-#endif
-
-void stepper_load_next_1(struct stepper *s)
-{
-    if (move_queue_empty(&s->mq)) {
-        // There is no next move - the queue is empty
-        s->count = 0;
-        return SF_DONE;
-    }
-
-    // Load next 'struct stepper_move' into 'struct stepper'
-    struct move_node *mn = move_queue_pop(&s->mq);
-    struct stepper_move *m = container_of(mn, struct stepper_move, node);
-    s->add = m->add;
-    s->interval = m->interval + m->add;
-	output("stepper_load mcuoid=%c flag0=%c", oid_g,s->flags);
-    if (HAVE_SINGLE_SCHEDULE && s->flags & SF_SINGLE_SCHED) {
-        s->time.waketime += m->interval;
-        if (HAVE_AVR_OPTIMIZATION)
-            s->flags = m->add ? s->flags|SF_HAVE_ADD : s->flags & ~SF_HAVE_ADD;
-        s->count = m->count;
-		output("stepper_load mcuoid=%c flag=%c", oid_g,s->flags);
-    } else {
-        // It is necessary to schedule unstep events and so there are
-        // twice as many events.
-         
-		s->next_step_time += m->interval;
-		if(s->next_step_time<timer_read_time()+m->interval)	
-        	s->next_step_time = timer_read_time()+m->interval;
-        s->time.waketime = s->next_step_time;
-        s->count = (uint32_t)m->count;// * 2;
-		output("stepper_load_else mcuoid=%c count=%c", oid_g,s->count);
-    }
-    // Add all steps to s->position (stepper_get_position() can calc mid-move)
-    if (m->flags & MF_DIR) {
-        s->position = -s->position + m->count;
-        gpio_out_toggle_noirq(s->dir_pin);
-    } else {
-        s->position += m->count;
-    }
-
-    move_free(m);
-    return SF_RESCHEDULE;
-}
-
-
-void adust_Z_live(uint16_t sensor_z)
-{
-   // BD_Data
-    if(step_adj[0].zoid==0)
-       return;
-	sensor_z=BD_i2c_read();
-    struct stepper *s = stepper_oid_lookup(step_adj[0].zoid);
-    uint32_t cur_stp=stepper_get_position(s);
-    output("Z_Move_L mcuoid=%c cur_step=%c",
-        oid_g,(cur_stp-step_adj[0].steps_at_zero));
-   /// if((step_adj[0].adj_z_range*step_adj[0].steps_per_mm/10)
-    ///    <=(cur_stp-step_adj[0].steps_at_zero))
-    ///    return;
-    if(sensor_z>=390)
-        return;//out of range
-    int diff_step=sensor_z*step_adj[0].steps_per_mm/100
-        -(cur_stp-step_adj[0].steps_at_zero);
-    int dir=0;
-   // int old_dir=gpio_output_data_read(s->dir_pin);
-    if(diff_step<0)
-    {
-        diff_step=-diff_step;
-        dir=1;
-    }
-    output("Z_Move_L mcuoid=%c diff_step=%c sensor_z=%c", oid_g,diff_step,sensor_z);
-
-/*
-    for(int ii=0;ii<diff_step;ii++)
-    {
-        int nn=0;
-        if(ii<diff_step/2)
-            nn= diff_step/2-ii;
-        else
-            nn=ii-diff_step/2;
-        gpio_out_write(s->step_pin, 1);
-        ndelay_bd(step_adj[0].step_time*100000*nn);
-        gpio_out_write(s->step_pin, 0);
-        ndelay_bd(step_adj[0].step_time*100000*nn);
-    }
-    gpio_out_write(s->dir_pin, old_dir);
-    */
-   // s->count=diff_step;
-    if(s->count)
-		 return;
-	
-	struct stepper_move *m = move_alloc();
-    m->interval = 100000;//args[1];
-    m->count = diff_step;//args[2];
-    if (!m->count)
-		return;
-	
-    if(step_adj[0].invert_dir==1)
-        dir=~dir;
-    
-	
-    m->add = 0;//args[3];
-    m->flags  = 0;
-    if(dir==1)
-        //gpio_out_write(s->dir_pin, 1);
-        m->flags |=MF_DIR;
-
-    irq_disable();
-    uint8_t flags = s->flags;
-    if (!!(flags & SF_LAST_DIR) != !!(flags & SF_NEXT_DIR)) {
-        flags ^= SF_LAST_DIR;
-        m->flags |= MF_DIR;
-    }
-    if (flags & SF_NEED_RESET) {
-		output("Z_Move0 mcuoid=%c FLAGES=%c", oid_g,flags);
-        move_free(m);
-    } else {
-		output("Z_Move1 mcuoid=%c else=%c", oid_g,s->flags);
-        s->flags = flags;
-		//s->time.waketime=timer_read_time()+100000;
-        move_queue_push(&m->node, &s->mq);
-		s->time.waketime=timer_read_time()+100000;
-        stepper_load_next_1(s);
-		//s->time.waketime=timer_read_time()+100000;
-        sched_add_timer(&s->time);
-    }
-    irq_enable();
-}
-
-
-
-void
-command_Z_Move_Live(uint32_t *args)
-{
-    //uint32_t position = stepper_get_position(s)- POSITION_BIAS;
-    int i=0,j=0;
-    //int adj_z_range;
-    //char data[30];
-    char *tmp;
-    uint8_t oid = args[0];
-    tmp=(char *)args[2];
-    j=atoi(tmp+2);
-    if(tmp[0]=='1')
-        step_adj[0].steps_at_zero=j;
-    else if(tmp[0]=='2')
-        step_adj[0].adj_z_range=j;
-    else if(tmp[0]=='3')
-        step_adj[0].invert_dir=j;
-    else if(tmp[0]=='4')
-    {
-        step_adj[0].steps_per_mm=j;
-    }
-    else if(tmp[0]=='5')
-        step_adj[0].step_time=j;
-    else if(tmp[0]=='6')
-    {
-        struct stepper *s = stepper_oid_lookup(j);
-        uint32_t cur_stp=stepper_get_position(s);
-        step_adj[0].zoid=j;
-        step_adj[0].steps_at_zero=
-            cur_stp-(step_adj[0].steps_at_zero*step_adj[0].steps_per_mm)/1000;
-        output("Z_Move_L mcuoid=%c zero=%c", oid,step_adj[0].steps_at_zero);
-    }
-//for debug  report postion when the motor
-    else if(tmp[0]=='7')
-    {
-        stepx_probe.min_x=j;
-    }
-    else if(tmp[0]=='8')
-    {
-        stepx_probe.max_x=j;
-    }
-
-    else if(tmp[0]=='9')
-    {
-        stepx_probe.points=j;
-    }
-    else if(tmp[0]=='a')
-    {
-        stepx_probe.steps_at_zero=j;
-    }
-    else if(tmp[0]=='b')
-    {
-        stepx_probe.steps_per_mm=j;
-    }
-    else if(tmp[0]=='c')
-    {
-        stepx_probe.xoid=j;
-        struct stepper *s = stepper_oid_lookup(j);
-        uint32_t cur_stp=stepper_get_position(s);
-        stepx_probe.steps_at_zero=cur_stp-
-            (stepx_probe.steps_at_zero*stepx_probe.steps_per_mm)/1000;
-        stepx_probe.min_x=stepx_probe.min_x*stepx_probe.steps_per_mm
-            +stepx_probe.steps_per_mm;
-        stepx_probe.max_x=stepx_probe.max_x*stepx_probe.steps_per_mm
-            -stepx_probe.steps_per_mm;
-      //  output("Z_Move_L mcuoid=%c zero=%c", oid,stepx_probe.max_x);
-        stepx_probe.x_count=0;
-    }
-    else if(tmp[0]=='d')
-    {
-        stepx_probe.x_count=j;
-    }
-    else if(tmp[0]=='e')
-    {
-        stepx_probe.kinematics=j;
-    }
-    ///////////////////// motor y
-    else if(tmp[0]=='f')
-    {
-        stepx_probe.y_steps_at_zero=j;
-    }
-    else if(tmp[0]=='g')
-    {
-        stepx_probe.y_steps_per_mm=j;
-    }
-    else if(tmp[0]=='h')
-    {
-        stepx_probe.y_oid=j;
-        struct stepper *s = stepper_oid_lookup(j);
-        uint32_t cur_stp=stepper_get_position(s);
-        stepx_probe.y_steps_at_zero=cur_stp-
-            (stepx_probe.y_steps_at_zero*stepx_probe.y_steps_per_mm)/1000;
-    }
-
-   output("Z_Move_L mcuoid=%c j=%c", oid,j);
-
-    sendf("Z_Move_Live_response oid=%c return_set=%*s", oid,i,(char *)args[2]);
-}
-DECL_COMMAND(command_Z_Move_Live, "Z_Move_Live oid=%c data=%*s");
 
 //for gcode command
 void
@@ -726,8 +474,6 @@ DECL_COMMAND(command_config_I2C_BD,
 
     //uint32_t len=0;
     uint16_t tm;
-	static unsigned int ky=0,time_next=0;
-	ky++;
 
 
     if(BD_read_flag!=1018)
@@ -735,21 +481,13 @@ DECL_COMMAND(command_config_I2C_BD,
 
     if(sda_pin==0||scl_pin==0)
         return;
-   // if(e.sample_count==0)
-	//	return;    
+    if(e.sample_count==0)
+		return;    
     
     tm=BD_i2c_read();
     if(tm<1023)
     {
         BD_Data=tm;
-		uint32_t now = timer_read_time();
-    	if(now > time_next)
-    	{
-			time_next=now + 1000000;
-			if(tm>10)
-			  adust_Z_live(tm);
-		}
-
     }
 	else
 		BD_Data=0;
