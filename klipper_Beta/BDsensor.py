@@ -563,8 +563,9 @@ class BDProbePointsHelper:
         #print("results_1_1:",self.results_1)
         for index in range(len(self.results)):
             self.results[index][2] =  (self.results[index][2] + self.results_1[index][2])/2
-            #probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-            #                            % (self.results[index][0], self.results[index][1], self.results[index][2]))
+            if index < 50:
+                probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
+                                        % (self.results[index][0], self.results[index][1], self.results[index][2]))
         res = self.finalize_callback(self.probe_offsets, self.results)
         #print("results:",self.results)
        
@@ -649,6 +650,8 @@ class BDsensorEndstopWrapper:
             config, 'deactivate_gcode', '')
         self.printer.register_event_handler('klippy:mcu_identify',
                                             self._handle_mcu_identify)
+        self.printer.register_event_handler("stepper_enable:motor_off",
+                                            self.event_motor_off)                                    
         # Create an "endstop" object to handle the probe pin
         ppins = self.printer.lookup_object('pins')
         #self.mcu_pwm = ppins.setup_pin('pwm', config.get('scl_pin'))
@@ -739,9 +742,9 @@ class BDsensorEndstopWrapper:
         #bd_scheduler.run()
         #Timer(2, self.BD_loop, ()).start()
         self.reactor = self.printer.get_reactor()
-        #self.bd_update_timer = self.reactor.register_timer(
-        #    self.bd_update_event)
-        #self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
+        self.bd_update_timer = self.reactor.register_timer(
+            self.bd_update_event)
+        self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
         self.status_dis = None
         try:
             status_dis=self.printer.lookup_object('display_status')
@@ -753,6 +756,7 @@ class BDsensorEndstopWrapper:
         self._trsyncs = [MCU_trsync(mcu, self._trdispatch)]
         self.ncont =0
         self.bedmesh  = self.printer.lookup_object('bed_mesh', None)
+        self.z_last= 0
         #self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
         #     self.bedmesh.bmc.config, bedmesh.bmc.probe_finalize, bedmesh.bmc._get_adjusted_points())
        # print("bedmesh:%s" %
@@ -770,6 +774,10 @@ class BDsensorEndstopWrapper:
         #    "I2C_BD_receive2 oid=%c data=%*s",
         #    "I2C_BD_receive2_response oid=%c response=%*s",
          #   oid=self.oid, cq=self.cmd_queue)
+        self.Z_Move_Live_cmd = self.mcu.lookup_query_command(
+                    "Z_Move_Live oid=%c data=%*s",
+                    "Z_Move_Live_response oid=%c return_set=%*s",
+                    oid=self.oid, cq=self.cmd_queue)
 
         self.mcu.register_response(self._handle_BD_Update,
                                     "BD_Update", self.bd_sensor.oid)
@@ -843,22 +851,60 @@ class BDsensorEndstopWrapper:
         return was_enable
 
     def manual_move(self, stepper, dist, speed, accel=0.):
-         self.toolhead = self.printer.lookup_object('toolhead')
-         self.toolhead.flush_step_generation()
-         prev_sk = stepper.set_stepper_kinematics(self.stepper_kinematics)
-         prev_trapq = stepper.set_trapq(self.trapq)
-         stepper.set_position((0., 0., 0.))
-         axis_r, accel_t,cruise_t,cruise_v=calc_move_time(dist, speed, accel)
-         print_time = self.toolhead.get_last_move_time()
-         self.trapq_append(self.trapq, print_time, accel_t, cruise_t, accel_t,
-                           0., 0., 0., axis_r, 0., 0., 0., cruise_v, accel)
-         print_time = print_time + accel_t + cruise_t + accel_t
-         stepper.generate_steps(print_time)
-         self.trapq_finalize_moves(self.trapq, print_time + 99999.9)
-         stepper.set_trapq(prev_trapq)
-         stepper.set_stepper_kinematics(prev_sk)
-         self.toolhead.note_kinematic_activity(print_time)
-         self.toolhead.dwell(accel_t + cruise_t + accel_t)
+        self.toolhead = self.printer.lookup_object('toolhead')
+        self.toolhead.flush_step_generation()
+        prev_sk = stepper.set_stepper_kinematics(self.stepper_kinematics)
+        prev_trapq = stepper.set_trapq(self.trapq)
+        stepper.set_position((0., 0., 0.))
+        axis_r, accel_t,cruise_t,cruise_v=calc_move_time(dist, speed, accel)
+        print_time = self.toolhead.get_last_move_time()
+        self.trapq_append(self.trapq, print_time, accel_t, cruise_t, accel_t,
+                          0., 0., 0., axis_r, 0., 0., 0., cruise_v, accel)
+        print_time = print_time + accel_t + cruise_t + accel_t
+        stepper.generate_steps(print_time)
+        self.trapq_finalize_moves(self.trapq, print_time + 99999.9)
+        stepper.set_trapq(prev_trapq)
+        stepper.set_stepper_kinematics(prev_sk)
+        self.toolhead.note_kinematic_activity(print_time)
+        self.toolhead.dwell(accel_t + cruise_t + accel_t)
+
+
+    def bd_set_aj_len(self, hgt):
+        hgt=hgt*1000 
+        pr=self.Z_Move_Live_cmd.send([self.oid, ("1 %d\0"
+                    % hgt).encode('utf-8')])
+
+    def event_motor_off(self,print_time):
+        self.BD_real_time(0)
+        #self.gcode.respond_info("event_motor_off")
+    def bd_update_event(self, eventtime):
+        if self.gcode_que is not None:
+            self.process_M102(self.gcode_que)
+            self.gcode_que=None
+   #     strd=str(self.bd_value)+"mm"
+  #      status_dis=self.printer.lookup_object('display_status')
+  #      if status_dis is not None:
+  #          if self.bd_value == 10.24:
+   #             strd="BDs:ConnectErr"
+   #         if self.bd_value == 3.9:
+   #             strd="BDs:Out Range"
+   #         status_dis.message=strd
+        z=self.gcode_move.last_position[2]
+        if self.z_last != z  and self.homeing==0:
+            self.z_last = z 
+            #self.bd_sensor.I2C_BD_send("1022")
+            step_time=100
+            self.toolhead = self.printer.lookup_object('toolhead')
+            kin = self.toolhead.get_kinematics()
+            z_index = 0
+            for stepper in kin.get_steppers():
+                if stepper.is_active_axis('z'):
+                    z=self.gcode_move.last_position[2]
+                    #stepper._query_mcu_position()
+                    self.bd_set_aj_len(z)
+                    break
+            #self.bd_sensor.I2C_BD_send("1018")
+        return eventtime + BD_TIMER
 
     def cmd_M102(self, gcmd, wait=False):
          #self.gcode_que=gcmd
@@ -962,7 +1008,7 @@ class BDsensorEndstopWrapper:
             intd=int(pr['response'])
             strd=str(intd)
             gcmd.respond_raw(strd)
-            if ncount1 <= 3 and intd > 450 :
+            if ncount1 <= 3 and intd > 500 :
                 if intd>=1015:
                     gcmd.respond_raw("BDSensor mounted too close or too high!  0.4mm to 2.4mm from BED at zero position is recommended")
                     raise self.printer.command_error("BDSensor mounted too close or too high!" % intd)
@@ -1008,9 +1054,51 @@ class BDsensorEndstopWrapper:
             gcmd.respond_info("The SAVE_CONFIG command will update the printer config")
         except Exception as e:
             pass
+
+        CMD_BD = gcmd.get_float('REAL_TIME_HEIGHT', None)
+        try:
+            self.BD_real_time(CMD_BD)
+        except Exception as e:
+            pass
   
-      
+    def BD_real_time(self, BD_height): 
         
+        if BD_height >= 3.0:
+            BD_height = 3
+        elif BD_height < 0.0:
+            BD_height = 0
+        self.adjust_range = int(BD_height*1000)
+        self.bd_sensor.I2C_BD_send("1022")
+       # step_time=100
+        self.toolhead = self.printer.lookup_object('toolhead')
+        kin = self.toolhead.get_kinematics()
+        z_index = 0
+        for stepper in kin.get_steppers():
+         if stepper.is_active_axis('z'):
+             steps_per_mm = 1.0/stepper.get_step_dist()
+             z=self.gcode_move.last_position[2]
+             stepper._query_mcu_position()
+             invert_dir, orig_invert_dir = stepper.get_dir_inverted()
+             z=int(z*1000)
+             #print("z step_at_zero:%d"% z)
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("0 %d\0"
+                 % z_index).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("1 %d\0"
+                 % z).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("2 %u\0"
+                 % self.adjust_range).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("3 %u\0"
+                 % orig_invert_dir).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("4 %u\0"
+                 % steps_per_mm).encode('utf-8')])
+             #pr=self.Z_Move_Live_cmd.send([self.oid, ("5 %u\0"
+             #    % step_time).encode('utf-8')])
+             pr=self.Z_Move_Live_cmd.send([self.oid, ("6 %u\0"
+                 % stepper.get_oid()).encode('utf-8')])
+             z_index = z_index + 1
+             #print("get:%s " %pr['return_set'])
+             #print(cmd_fmt)
+        self.bd_sensor.I2C_BD_send("1018")#1018// finish reading   
     def process_M102(self, gcmd):
         self.process_m102=1
         #print(gcmd)
@@ -1035,7 +1123,8 @@ class BDsensorEndstopWrapper:
             self.bd_sensor.I2C_BD_send("1022") #reboot sensor
             self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
             self.bd_sensor.I2C_BD_send("1018")
-
+        elif CMD_BD >=0:
+            self.BD_real_time(CMD_BD)
         #self.process_m102=0
     def _handle_mcu_identify(self):
         #print("BD _handle_mcu_identify")
@@ -1094,10 +1183,8 @@ class BDsensorEndstopWrapper:
         return [s for trsync in self._trsyncs for s in trsync.get_steppers()]      
     def home_start(self, print_time, sample_time, sample_count, rest_time,
                    triggered=True):
-       # print("BD home_start")   
-       # self.bedmesh = self.printer.lookup_object('bed_mesh', None)
-        #self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
-         #    self.config.getsection('bed_mesh'), self.bedmesh.bmc.probe_finalize, self.bedmesh.bmc._get_adjusted_points())
+ 
+        
         clock = self.mcu.print_time_to_clock(print_time)
         rest_ticks = self.mcu.print_time_to_clock(print_time+rest_time) - clock
         self._rest_ticks = rest_ticks
@@ -1113,7 +1200,7 @@ class BDsensorEndstopWrapper:
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_start(self._trdispatch, self.etrsync.REASON_HOST_REQUEST)
         self.homeing=1
-         
+        #self.gcode.respond_info("home_start count %d  "%sample_count) 
         self._home_cmd.send(
             [self.oid, clock, self.mcu.seconds_to_clock(sample_time),
              sample_count, rest_ticks, triggered ^ self._invert,
@@ -1129,7 +1216,6 @@ class BDsensorEndstopWrapper:
             self.raise_probe()
 
     def home_wait(self, home_end_time):
-        print("BD home_wait0")   
         etrsync = self._trsyncs[0]
         etrsync.set_home_end_time(home_end_time)
         if self.mcu.is_fileoutput():
@@ -1159,7 +1245,7 @@ class BDsensorEndstopWrapper:
         
         self.toolhead = self.printer.lookup_object('toolhead')
         start_pos = self.toolhead.get_position()
-        #self.gcode.respond_info("get_position Z is %.3f mm"%start_pos[2])
+        #
         if self.homeing==1:
             self.toolhead = self.printer.lookup_object('toolhead')
             time.sleep(0.1)
