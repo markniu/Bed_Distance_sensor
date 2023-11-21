@@ -40,11 +40,11 @@ November 21, 2023
 
 How to run?   
 
-remove the auto bed leveling command  BED_MESH_CALIBRATE and add M102 Sxx below the G28, here xx is the first layer height that will do real time leveling, for example, set the first layer height to 0.3mm
+remove the auto bed leveling command  `BED_MESH_CALIBRATE` and add `BDSENSOR_SET REAL_TIME_HEIGHT=xx` below the G28, here xx is the first layer height that will do real time leveling, for example, set the first layer height to 0.32mm
 
 ```
 G28
-M102 S0.3
+BDSENSOR_SET REAL_TIME_HEIGHT=0.32
 
 ```
 
