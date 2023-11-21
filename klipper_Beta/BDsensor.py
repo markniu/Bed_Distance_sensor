@@ -1068,7 +1068,7 @@ class BDsensorEndstopWrapper:
         elif BD_height < 0.0:
             BD_height = 0
         self.gcode.respond_info("Real time leveling height:%f  "%BD_height)      
-        self.adjust_range = int(BD_height*1000)
+        self.adjust_range = int((BD_height+0.01)*1000)
         self.bd_sensor.I2C_BD_send("1022")
        # step_time=100
         self.toolhead = self.printer.lookup_object('toolhead')
