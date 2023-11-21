@@ -34,12 +34,13 @@ BDSENSOR_SET                           // set value, now only for setting z_adju
 
 
 
-#### update: Add real time leveling. 
+#### update: 
+#### Add real time leveling. 
 November 21, 2023
 
-How to test?   
+How to run?   
 
-remove the auto bed leveling command  BED_MESH_CALIBRATE and add M102 Sxx below the G28, here xx is the first layer height that will do real time leveling, for example, set the first layer height is 0.3mm
+remove the auto bed leveling command  BED_MESH_CALIBRATE and add M102 Sxx below the G28, here xx is the first layer height that will do real time leveling, for example, set the first layer height to 0.3mm
 
 ```
 G28
