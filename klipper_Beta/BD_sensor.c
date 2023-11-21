@@ -461,11 +461,11 @@ static uint_fast8_t bd_event(struct timer *t)
 			uint16_t tm=BD_i2c_read();
 			if(tm<1023){
 				BD_Data=tm;
+				if(BD_Data<1010)
+					adust_Z_live(BD_Data);
 			}
 			else
-				BD_Data=0;
-		    if(BD_Data)
-				adust_Z_live(BD_Data);
+				BD_Data=0;				
 			
 			if(BD_Data<=homing_pose){
 				BD_Data=0;				
