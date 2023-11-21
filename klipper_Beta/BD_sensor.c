@@ -454,7 +454,7 @@ static uint_fast8_t bd_event(struct timer *t)
 	        if(step_adj[0].zoid){
            		struct stepper *s = stepper_oid_lookup_bd(step_adj[0].zoid);
 				if(s->count){
-					bd_tim.time.waketime =timer_read_time() + timer_from_us(10000);
+					bd_tim.time.waketime =timer_read_time() + timer_from_us(20000);
 					return SF_RESCHEDULE;
 				}
 	        }
@@ -474,9 +474,9 @@ static uint_fast8_t bd_event(struct timer *t)
 	 }
 	 
 
-	 bd_tim.time.waketime =timer_read_time() + timer_from_us(10000);
+	 bd_tim.time.waketime =timer_read_time() + timer_from_us(20000);
 	 if(diff_step) 	
-	 	bd_tim.time.waketime =timer_read_time()+timer_from_us(1000);
+	 	bd_tim.time.waketime =timer_read_time()+timer_from_us(500);
 	//irq_enable(); 
    return SF_RESCHEDULE;
 }

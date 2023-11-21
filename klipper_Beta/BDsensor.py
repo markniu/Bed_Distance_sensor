@@ -878,9 +878,9 @@ class BDsensorEndstopWrapper:
         self.BD_real_time(0)
         #self.gcode.respond_info("event_motor_off")
     def bd_update_event(self, eventtime):
-        if self.gcode_que is not None:
-            self.process_M102(self.gcode_que)
-            self.gcode_que=None
+      #  if self.gcode_que is not None:
+     #       self.process_M102(self.gcode_que)
+     #       self.gcode_que=None
    #     strd=str(self.bd_value)+"mm"
   #      status_dis=self.printer.lookup_object('display_status')
   #      if status_dis is not None:
@@ -893,10 +893,10 @@ class BDsensorEndstopWrapper:
         if self.z_last != z  and self.homeing==0:
             self.z_last = z 
             #self.bd_sensor.I2C_BD_send("1022")
-            step_time=100
+            #step_time=100
             self.toolhead = self.printer.lookup_object('toolhead')
             kin = self.toolhead.get_kinematics()
-            z_index = 0
+            #z_index = 0
             for stepper in kin.get_steppers():
                 if stepper.is_active_axis('z'):
                     z=self.gcode_move.last_position[2]
