@@ -29,7 +29,7 @@ Resolution:0.01mm
 ### Software
  . | Marlin | Klipper
 --- | --- |---  
-Real Time leveling |:heavy_check_mark:| No  
+Real Time leveling |:heavy_check_mark:| :heavy_check_mark:  
 Fast bed mesh |:heavy_check_mark:| :heavy_check_mark: 
 Fast bed mesh(No toolhead stop)|:heavy_check_mark: | :heavy_check_mark: 
 Distance display |:heavy_check_mark: | :heavy_check_mark: 
