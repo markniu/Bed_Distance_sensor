@@ -40,12 +40,20 @@ November 21, 2023
 
 How to run?   
 
-remove the auto bed leveling command  `BED_MESH_CALIBRATE` and add `BDSENSOR_SET REAL_TIME_HEIGHT=xx` under the G28, here xx is the first layer height that will do real time leveling, for example, set the first layer height to 0.32mm
+1. update the files in ~/Bed_Distance_sensor/klipper_Beta
+2. go into the folder `cd ~/Bed_Distance_sensor/klipper_Beta`  and run` ./install_BDsensor.sh`
+3. compile and flash the klipper.bin firmware again
 
+4. Edit the start gcode in your slicer:
+remove the auto bed leveling command `BED_MESH_CALIBRATE` and add `BDSENSOR_SET REAL_TIME_HEIGHT=`xx under the G28,
+also z_tilt or gantry level is recommended. 
+xx is the max z axis height that will do real time leveling automatically, here we just let this value the same as the first layer height in slicer setting.for example 0.3mm
 ```
 G28
-BDSENSOR_SET REAL_TIME_HEIGHT=0.32
-
+QUAD_GANTRY_LEVEL
+G28
+BDSENSOR_SET REAL_TIME_HEIGHT=0.3
 ```
-note: this feature works only with the BDsensor and Z motors are connected in the same MCU.
+
+note: this real time leveling works only with the BDsensor and Z motors are connected in the same MCU.
 
