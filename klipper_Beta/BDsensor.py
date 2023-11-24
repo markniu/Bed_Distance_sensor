@@ -889,7 +889,7 @@ class BDsensorEndstopWrapper:
    #         if self.bd_value == 3.9:
    #             strd="BDs:Out Range"
    #         status_dis.message=strd
-        z=self.gcode_move.last_position[2]
+        z=self.gcode_move.last_position[2] - self.gcode_move.base_position[2]
         if self.z_last != z  and self.homeing==0:
             self.z_last = z 
             #self.bd_sensor.I2C_BD_send("1022")
@@ -899,15 +899,17 @@ class BDsensorEndstopWrapper:
             #z_index = 0
             for stepper in kin.get_steppers():
                 if stepper.is_active_axis('z'):
-                    z=self.gcode_move.last_position[2]
+                    #z=self.gcode_move.last_position[2]
                     #stepper._query_mcu_position()
                     self.bd_set_aj_len(z)
+                    #self.gcode.respond_info("current z:%f" % z)
                     break
             #self.bd_sensor.I2C_BD_send("1018")
         return eventtime + BD_TIMER
 
     def cmd_M102(self, gcmd, wait=False):
          #self.gcode_que=gcmd
+         #self.gcode.respond_info("current z:%f base:%f home:%f" % (self.gcode_move.last_position[2],self.gcode_move.base_position[2],self.gcode_move.homing_position[2]))
          self.process_M102(gcmd)
     def BD_Sensor_Read(self,fore_r):
         if fore_r > 0:
