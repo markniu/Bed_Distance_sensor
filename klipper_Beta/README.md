@@ -17,23 +17,6 @@ in the installation step of Klipper
 https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper
 
 
-
-#### update:
-November 15, 2023
-
-1, add new command:
-```
-BDSENSOR_VERSION                   //replace M102 S-1
-BDSENSOR_CALIBRATE                //replace M102 S6 
-BDSENSOR_READ_CALIBRATION  //replace M102 S-5 
-BDSENSOR_DISTANCE                 //replace M102 S-2 
-BDSENSOR_SET                           // set value, now only for setting z_adjust, for example BDSENSOR_SET z_adjust=0.1
-
-```
-2, invert z_adjust direction as z_offset
-
-
-
 #### update: 
 #### Add real time leveling. 
 November 21, 2023
@@ -55,5 +38,28 @@ G28
 BDSENSOR_SET REAL_TIME_HEIGHT=0.3
 ```
 
-note: this real time leveling works only with the BDsensor and Z motors are connected in the same MCU.
+note: this real time leveling works only with the BDsensor and Z motors are connected in the same MCU. 
+
+And install the sensor coil as close to the nozzle as possible.
+
+if you find the nozzle is too close or too far away the bed while printing, please do the calibration again.
+
+
+#### update:
+November 15, 2023
+
+1, add new command:
+```
+BDSENSOR_VERSION                   //replace M102 S-1
+BDSENSOR_CALIBRATE                //replace M102 S6 
+BDSENSOR_READ_CALIBRATION  //replace M102 S-5 
+BDSENSOR_DISTANCE                 //replace M102 S-2 
+BDSENSOR_SET                           // set value, now only for setting z_adjust, for example BDSENSOR_SET z_adjust=0.1
+
+```
+2, invert z_adjust direction as z_offset
+
+
+
+
 
