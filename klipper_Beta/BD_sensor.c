@@ -448,9 +448,9 @@ static uint_fast8_t bd_event(struct timer *t)
  //irq_disable();
     uint32_t timer_ilde=0;
  	if(CONFIG_CLOCK_FREQ>100000000)
-		timer_ilde= timer_from_us(10000);
+		timer_ilde= timer_from_us(11000);
 	else if(CONFIG_CLOCK_FREQ>60000000)
-		timer_ilde= timer_from_us(15000);
+		timer_ilde= timer_from_us(16000);
 	else //if(CONFIG_CLOCK_FREQ>60000000)
 		timer_ilde= timer_from_us(19000);
      if(diff_step)
