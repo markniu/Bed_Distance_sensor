@@ -338,7 +338,7 @@ uint16_t BD_i2c_read(void)
 	else
 		b=1024;
 
-#if 1
+#if 0
     sda_gpio_in=gpio_in_setup(sda_pin, 1);
 	b=0;
     b=gpio_in_read(sda_gpio_in)*300+1;
