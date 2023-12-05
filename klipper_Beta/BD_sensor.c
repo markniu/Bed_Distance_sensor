@@ -52,16 +52,17 @@ struct timer time_bd;
 #include "autoconf.h"
 struct endstop {
     struct timer time;
-    uint32_t rest_time, sample_time, nextwake;
+    uint32_t rest_time, sample_time, nextwake,pin_num;
     struct trsync *ts;
     uint8_t flags, sample_count, trigger_count, trigger_reason;
+	struct gpio_in pin;
+	
 };
 
-#define read_endstop_pin() BD_Data?0:1
 
 enum { ESF_PIN_HIGH=1<<0, ESF_HOMING=1<<1 };
 static uint_fast8_t endstop_oversample_event(struct timer *t);
-struct endstop e ;
+static struct endstop e ;
 ///////////////
 
 int z_index=0;
@@ -91,7 +92,7 @@ struct stepper {
 };
 
 struct step_adjust{
-    uint32_t steps_at_zero;
+    uint32_t cur_z;
     int adj_z_range;
     int invert_dir;
     int steps_per_mm;
@@ -188,8 +189,9 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose,int 
     gpio_out_write(sda_gpio, 1);
     gpio_out_write(scl_gpio, 1);
 	for (i=0;i<NUM_Z_MOTOR;i++){
-        step_adj[i].steps_at_zero=0;
+        step_adj[i].cur_z=0;
     	step_adj[i].zoid=0;
+		step_adj[i].adj_z_range=0;
 	}
     stepx_probe.xoid=0;
     stepx_probe.y_oid=0;
@@ -336,7 +338,7 @@ uint16_t BD_i2c_read(void)
 	else
 		b=1024;
 
-#if 0
+#if 1
     sda_gpio_in=gpio_in_setup(sda_pin, 1);
 	b=0;
     b=gpio_in_read(sda_gpio_in)*300+1;
@@ -457,8 +459,8 @@ static uint_fast8_t bd_event(struct timer *t)
 		adust_Z_live(0);
 	 else {
 		 if(BD_read_flag==1018&&sda_pin&&scl_pin&&
-		 	((step_adj[0].zoid&&(step_adj[0].steps_at_zero<step_adj[0].adj_z_range))||e.sample_count)){
-	        if(step_adj[0].zoid){
+		 	((step_adj[0].zoid&&(step_adj[0].cur_z<step_adj[0].adj_z_range))||e.sample_count)){
+	        if(step_adj[0].zoid && (e.sample_count == 0)){
            		struct stepper *s = stepper_oid_lookup_bd(step_adj[0].zoid);
 				if(s->count){
 					bd_tim.time.waketime =timer_read_time() + timer_ilde;
@@ -474,7 +476,7 @@ static uint_fast8_t bd_event(struct timer *t)
 			else
 				BD_Data=0;				
 			
-			if(BD_Data<=homing_pose){
+			if(BD_Data<=homing_pose && e.sample_count){
 				BD_Data=0;				
 			}
 		 }
@@ -546,7 +548,7 @@ void adust_Z_live(uint16_t sensor_z)
    // BD_Data
     int i=0;
     if(step_adj[0].zoid==0 || step_adj[0].adj_z_range<=0 
-		|| (step_adj[0].steps_at_zero>step_adj[0].adj_z_range)
+		|| (step_adj[0].cur_z>step_adj[0].adj_z_range)
 		|| (sensor_z>=300)||BD_read_flag!=1018){
 
 		diff_step = 0;
@@ -589,8 +591,8 @@ void adust_Z_live(uint16_t sensor_z)
    //     return;//out of range
  //   }
    // diff_step=sensor_z*step_adj[0].steps_per_mm/100
-     //   -(cur_stp-step_adj[0].steps_at_zero);
-    diff_step = sensor_z*step_adj[0].steps_per_mm/100 - step_adj[0].steps_at_zero*step_adj[0].steps_per_mm/1000;
+     //   -(cur_stp-step_adj[0].cur_z);
+    diff_step = sensor_z*step_adj[0].steps_per_mm/100 - step_adj[0].cur_z*step_adj[0].steps_per_mm/1000;
     int dir=0;
     
 	for(i=0;i<NUM_Z_MOTOR;i++){
@@ -617,7 +619,7 @@ void adust_Z_live(uint16_t sensor_z)
 		//gpio_out_write(s->dir_pin, s->flags ^= SF_LAST_DIR);
 	}
 	
-   // output("Z_Move_L mcuoid=%c diff_step=%c sen_z=%c dir=%c cur_z=%c", oid_g,diff_step>0?diff_step:-diff_step,sensor_z,dir,step_adj[0].steps_at_zero);
+   // output("Z_Move_L mcuoid=%c diff_step=%c sen_z=%c dir=%c cur_z=%c", oid_g,diff_step>0?diff_step:-diff_step,sensor_z,dir,step_adj[0].cur_z);
 	////////////////////////
 	return;
 
@@ -635,7 +637,7 @@ command_Z_Move_Live(uint32_t *args)
     if(tmp[0]=='0')
         z_index=j;
     else if(tmp[0]=='1'){
-        step_adj[0].steps_at_zero=j;
+        step_adj[0].cur_z=j;
 		diff_step = 0;
     }
     else if(tmp[0]=='2')
@@ -781,15 +783,20 @@ DECL_COMMAND(command_config_I2C_BD,
  }
  DECL_TASK(bd_sensor_task);
 
+#define read_endstop_pin() BD_Data?0:1
 
 // Timer callback for an end stop
 static uint_fast8_t
 endstop_event(struct timer *t)
 {
  //   struct endstop *e = container_of(t, struct endstop, time);
-    uint8_t val = read_endstop_pin();
+    uint8_t val =0;
+	if(e.pin_num!=sda_pin)
+		val = gpio_in_read(e.pin);
+	else
+		val = read_endstop_pin();
     uint32_t nextwake = e.time.waketime + e.rest_time;
-	step_adj[0].zoid=0;
+	//step_adj[0].zoid=0;
     if ((val ? ~e.flags : e.flags) & ESF_PIN_HIGH) {
         // No match - reschedule for the next attempt
         e.time.waketime = nextwake;
@@ -804,8 +811,13 @@ endstop_event(struct timer *t)
 static uint_fast8_t
 endstop_oversample_event(struct timer *t)
 {
-   // struct endstop *e = container_of(t, struct endstop, time);
-    uint8_t val = read_endstop_pin();
+
+    //struct endstop *e = container_of(t, struct endstop, time);
+    uint8_t val =0;
+	if(e.pin_num!=sda_pin)
+		val = gpio_in_read(e.pin);
+	else
+		val = read_endstop_pin();
     if ((val ? ~e.flags : e.flags) & ESF_PIN_HIGH) {
         // No longer matching - reschedule for the next attempt
         e.time.func = endstop_event;
@@ -817,7 +829,7 @@ endstop_oversample_event(struct timer *t)
     if (!count) {
         trsync_do_trigger(e.ts, e.trigger_reason);
 		//step_adj[0].zoid=0;
-	    step_adj[0].steps_at_zero=0;
+	    step_adj[0].adj_z_range=0;
         return SF_DONE;
     }
     e.trigger_count = count;
@@ -848,8 +860,10 @@ command_BDendstop_home(uint32_t *args)
     e.flags = ESF_HOMING | (args[5] ? ESF_PIN_HIGH : 0);
     e.ts = trsync_oid_lookup(args[6]);
     e.trigger_reason = args[7];
+	e.pin_num = args[8];
+	e.pin =  gpio_in_setup(args[8], 1);
     sched_add_timer(&e.time);
 }
 DECL_COMMAND(command_BDendstop_home,
              "BDendstop_home oid=%c clock=%u sample_ticks=%u sample_count=%c"
-             " rest_ticks=%u pin_value=%c trsync_oid=%c trigger_reason=%c");
+             " rest_ticks=%u pin_value=%c trsync_oid=%c trigger_reason=%c endstop_pin=%c");

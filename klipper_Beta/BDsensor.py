@@ -196,7 +196,7 @@ class BDPrinterProbe:
         time.sleep(0.1)
         b_value=self.mcu_probe.BD_Sensor_Read(2)
         pos_new = toolhead.get_position()
-        epos[2] = epos[2]-b_value # epos[2]+(0.8-b_value)-0.8
+        epos[2] = epos[2]-b_value + self.mcu_probe.endstop_bdsensor_offset
         #os_new[2] = b_value
         toolhead.set_position(pos_new)        
         self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f bd%.3f  pos_new:%.6f"
@@ -246,7 +246,7 @@ class BDPrinterProbe:
                     time.sleep(0.004)
                     pos = toolhead.get_position()
                     intd=self.mcu_probe.BD_Sensor_Read(0)
-                    pos[2]=pos[2]-intd
+                    pos[2]=pos[2]-intd + self.mcu_probe.endstop_bdsensor_offset
                     self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                             % (pos[0], pos[1], pos[2]))
                     #return pos[:3]
@@ -562,8 +562,8 @@ class BDProbePointsHelper:
         self.results_1.reverse()
         #print("results_1_1:",self.results_1)
         for index in range(len(self.results)):
-            self.results[index][2] =  (self.results[index][2] + self.results_1[index][2])/2
-            if index < 50:
+            self.results[index][2] =  (self.results[index][2] + self.results_1[index][2])/2 + self.mcu_probe.endstop_bdsensor_offset
+            if index < 1000:
                 probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                         % (self.results[index][0], self.results[index][1], self.results[index][2]))
         res = self.finalize_callback(self.probe_offsets, self.results)
@@ -665,7 +665,7 @@ class BDsensorEndstopWrapper:
         #self._pullup = pin_params['pullup']
         
         pin = config.get('sda_pin')
-        pin_params = ppins.lookup_pin(pin, can_invert=True, can_pullup=True)
+        pin_params = ppins.lookup_pin(pin, can_invert=False, can_pullup=True)
         mcu = pin_params['chip']
         sda_pin_num = pin_params['pin']
         self.mcu = mcu
@@ -681,15 +681,35 @@ class BDsensorEndstopWrapper:
                
             pass
             
-        pin_params = ppins.lookup_pin(pin_s, can_invert=True, can_pullup=True)
+        pin_params = ppins.lookup_pin(pin_s, can_invert=False, can_pullup=True)
         mcu = pin_params['chip']
         scl_pin_num = pin_params['pin']
         #print("b3:%s"%mcu)
         #pin_params['pullup']=2
         #self.mcu_endstop = mcu.setup_pin('endstop', pin_params)
+        
         self._invert = pin_params['invert']
-
         self.oid = self.mcu.create_oid()
+
+        self.mcu_endstop = self.mcu
+        self._invert_endstop =  self._invert
+        self.oid_endstop = self.oid
+        self.endstop_pin_num = sda_pin_num
+        self.endstop_bdsensor_offset = 0
+        try:
+            pin = config.get('endstop_pin')
+            pin_params = ppins.lookup_pin(pin, can_invert=True, can_pullup=True)
+            self.endstop_pin_num = pin_params['pin']
+            self.mcu_endstop = pin_params['chip']
+            self._invert_endstop =  pin_params['invert']
+            if self.mcu_endstop is not self.mcu:
+                self.oid_endstop = self.mcu_endstop.create_oid()
+        except Exception as e:        
+            pass
+                
+        #if self.mcu_endstop is not self.mcu:
+        
+        
         self.cmd_queue = self.mcu.alloc_command_queue()
         # Setup iterative solver
         ffi_main, ffi_lib = chelper.get_ffi()
@@ -753,7 +773,7 @@ class BDsensorEndstopWrapper:
         self._rest_ticks = 0
         ffi_main, ffi_lib = chelper.get_ffi()
         self._trdispatch = ffi_main.gc(ffi_lib.trdispatch_alloc(), ffi_lib.free)
-        self._trsyncs = [MCU_trsync(mcu, self._trdispatch)]
+        self._trsyncs = [MCU_trsync(self.mcu_endstop, self._trdispatch)]
         self.ncont =0
         self.bedmesh  = self.printer.lookup_object('bed_mesh', None)
         self.z_last= 0
@@ -783,15 +803,15 @@ class BDsensorEndstopWrapper:
                                     "BD_Update", self.bd_sensor.oid)
         self.mcu.register_response(self._handle_probe_Update,
                                     "X_probe_Update", self.bd_sensor.oid)
-        self.mcu.add_config_cmd(
+        self.mcu_endstop.add_config_cmd(
             "BDendstop_home oid=%d clock=0 sample_ticks=0 sample_count=0"
-            " rest_ticks=0 pin_value=0 trsync_oid=0 trigger_reason=0"
-            % (self.oid,), on_restart=True)
+            " rest_ticks=0 pin_value=0 trsync_oid=0 trigger_reason=0 endstop_pin=0"
+            % (self.oid_endstop,), on_restart=True)
         # Lookup commands
         cmd_queue = self._trsyncs[0].get_command_queue()
-        self._home_cmd = self.mcu.lookup_command(
+        self._home_cmd = self.mcu_endstop.lookup_command(
             "BDendstop_home oid=%c clock=%u sample_ticks=%u sample_count=%c"
-            " rest_ticks=%u pin_value=%c trsync_oid=%c trigger_reason=%c",
+            " rest_ticks=%u pin_value=%c trsync_oid=%c trigger_reason=%c endstop_pin=%c",
             cq=cmd_queue)
     def _handle_BD_Update(self, params):
         #print("_handle_BD_Update :%s " %params['distance_val'])
@@ -902,7 +922,7 @@ class BDsensorEndstopWrapper:
                     #z=self.gcode_move.last_position[2]
                     #stepper._query_mcu_position()
                     self.bd_set_aj_len(z)
-                    #self.gcode.respond_info("current z:%f" % z)
+                    self.gcode.respond_info("current z:%f" % z)
                     break
             #self.bd_sensor.I2C_BD_send("1018")
         return eventtime + BD_TIMER
@@ -1054,6 +1074,7 @@ class BDsensorEndstopWrapper:
             configfile = self.printer.lookup_object('configfile')
             configfile.set(self.name, 'z_adjust', "%.3f" % (CMD_BD))
             gcmd.respond_info("The SAVE_CONFIG command will update the printer config")
+            return
         except Exception as e:
             pass
 
@@ -1062,7 +1083,16 @@ class BDsensorEndstopWrapper:
             self.BD_real_time(CMD_BD)
         except Exception as e:
             pass
+
   
+        CMD_BD = gcmd.get_int('NO_STOP_PROBE', None)
+        try:
+            configfile = self.printer.lookup_object('configfile')
+            configfile.set(self.name, 'no_stop_probe', "%d" % (CMD_BD))
+            gcmd.respond_info("no_stop_probe is setted:%d The SAVE_CONFIG command will update the printer config",CMD_BD)
+        except Exception as e:
+            pass
+        
     def BD_real_time(self, BD_height): 
         
         if BD_height >= 3.0:
@@ -1187,11 +1217,12 @@ class BDsensorEndstopWrapper:
     def home_start(self, print_time, sample_time, sample_count, rest_time,
                    triggered=True):
  
-        
-        clock = self.mcu.print_time_to_clock(print_time)
-        rest_ticks = self.mcu.print_time_to_clock(print_time+rest_time) - clock
+        #if self.mcu_endstop is not self.mcu: 
+        #self.gcode.respond_info(" self.endstop_pin_num %s  "%(self.endstop_pin_num) )
+        clock = self.mcu_endstop.print_time_to_clock(print_time)
+        rest_ticks = self.mcu_endstop.print_time_to_clock(print_time+rest_time) - clock
         self._rest_ticks = rest_ticks
-        reactor = self.mcu.get_printer().get_reactor()
+        reactor = self.mcu_endstop.get_printer().get_reactor()
         self.wait_trigger_complete = reactor.register_callback(self.wait_for_trigger)  
         self.trigger_completion = reactor.completion()
         expire_timeout = TRSYNC_TIMEOUT
@@ -1203,11 +1234,10 @@ class BDsensorEndstopWrapper:
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_start(self._trdispatch, self.etrsync.REASON_HOST_REQUEST)
         self.homeing=1
-        #self.gcode.respond_info("home_start count %d  "%sample_count) 
         self._home_cmd.send(
-            [self.oid, clock, self.mcu.seconds_to_clock(sample_time),
-             sample_count, rest_ticks, triggered ^ self._invert,
-             self.etrsync.get_oid(), self.etrsync.REASON_ENDSTOP_HIT], reqclock=clock) 
+            [self.oid_endstop, clock, self.mcu_endstop.seconds_to_clock(sample_time),
+             sample_count, rest_ticks, triggered ^ self._invert_endstop,
+             self.etrsync.get_oid(), self.etrsync.REASON_ENDSTOP_HIT,self.endstop_pin_num], reqclock=clock) 
     
         self.finish_home_complete = self.trigger_completion
         return self.trigger_completion
@@ -1221,10 +1251,10 @@ class BDsensorEndstopWrapper:
     def home_wait(self, home_end_time):
         etrsync = self._trsyncs[0]
         etrsync.set_home_end_time(home_end_time)
-        if self.mcu.is_fileoutput():
+        if self.mcu_endstop.is_fileoutput():
             self.trigger_completion.complete(True)   
         self.trigger_completion.wait()
-        self._home_cmd.send([self.oid, 0, 0, 0, 0, 0, 0, 0])
+        self._home_cmd.send([self.oid_endstop, 0, 0, 0, 0, 0, 0, 0,self.endstop_pin_num])
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_stop(self._trdispatch)
         res = [trsync.stop() for trsync in self._trsyncs]
@@ -1232,7 +1262,7 @@ class BDsensorEndstopWrapper:
             return -1.
         if res[0] != etrsync.REASON_ENDSTOP_HIT:
             return 0.
-        if self.mcu.is_fileoutput():
+        if self.mcu_endstop.is_fileoutput():
             return home_end_time
         
         return home_end_time
@@ -1247,15 +1277,19 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1018")
         
         self.toolhead = self.printer.lookup_object('toolhead')
-        start_pos = self.toolhead.get_position()
+        
         #
         if self.homeing==1:
             self.toolhead = self.printer.lookup_object('toolhead')
-            time.sleep(0.1)
+            time.sleep(0.3)
             homepos = self.toolhead.get_position()
             self.bd_value=self.BD_Sensor_Read(2)
-            homepos[2] = self.bd_value
-            self.toolhead.set_position(homepos)
+            self.endstop_bdsensor_offset = 0
+            if self.mcu_endstop is not self.mcu:                
+                self.endstop_bdsensor_offset = homepos[2]-self.bd_value 
+            else:    
+                homepos[2] = self.bd_value
+                self.toolhead.set_position(homepos)
             #self.gcode.respond_info(".set_position Z is %.3f mm"%homepos[2])
 
         self.homeing=0
