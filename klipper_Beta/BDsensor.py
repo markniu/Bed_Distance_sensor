@@ -992,6 +992,7 @@ class BDsensorEndstopWrapper:
             self.toolhead.wait_moves()
         ncount=0
         gcmd.respond_info("Please Wait... ")
+        self.gcode.run_script_from_command("SET_KINEMATIC_POSITION Z=0")   
         self.toolhead.dwell(0.8)
         while 1:
             self.bd_sensor.I2C_BD_send(str(ncount))
@@ -999,14 +1000,17 @@ class BDsensorEndstopWrapper:
             self.bd_sensor.I2C_BD_send(str(ncount))
             self.bd_sensor.I2C_BD_send(str(ncount))
             self.toolhead.dwell(0.2)
-            for stepper in kin.get_steppers():
-                if stepper.is_active_axis('z'):
-                   # self._force_enable(stepper)
-                    self.manual_move(stepper, self.distance, speed,accel)
+            #for stepper in kin.get_steppers():
+            #    if stepper.is_active_axis('z'):
+            #        self.manual_move(stepper, self.distance, speed,accel)
+
+            self.gcode.run_script_from_command("G91")   
+            self.gcode.run_script_from_command("G1 Z+0.1 F1500")
+            self.gcode.run_script_from_command("G90")
+            
             self.toolhead.wait_moves()
             self.toolhead.dwell(0.2)
             ncount=ncount+1
-                
             if ncount>=40:
                 self.bd_sensor.I2C_BD_send("1021")
                 self.toolhead.dwell(1)
