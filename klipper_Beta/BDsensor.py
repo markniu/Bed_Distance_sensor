@@ -562,7 +562,7 @@ class BDProbePointsHelper:
         self.results_1.reverse()
         #print("results_1_1:",self.results_1)
         for index in range(len(self.results)):
-            self.results[index][2] =  (self.results[index][2] + self.results_1[index][2])/2 + self.mcu_probe.endstop_bdsensor_offset
+            self.results[index][2] =  (self.results[index][2] + self.results_1[index][2])/2 + probe.mcu_probe.endstop_bdsensor_offset
             if index < 1000:
                 probe.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                         % (self.results[index][0], self.results[index][1], self.results[index][2]))
