@@ -1,0 +1,11 @@
+{
+    "name": "Bed Distance Sensor",
+    "version": "1.2.0",
+    "decription": "bd sensor",
+    "author": {
+        "name": "mark"
+    },
+    "scripts": {
+        "build": "~/Bed_Distance_sensor/klipper/install_BDsensor.sh",
+    }
+}
