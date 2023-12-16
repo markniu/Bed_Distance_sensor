@@ -667,7 +667,7 @@ class BDsensorEndstopWrapper:
         pin = config.get('sda_pin')
         pin_params = ppins.lookup_pin(pin, can_invert=False, can_pullup=True)
         mcu = pin_params['chip']
-        sda_pin_num = pin_params['pin']
+        self.sda_pin_num = pin_params['pin']
         self.mcu = mcu
         #print("b2:%s"%mcu)
         pin_s = []
@@ -687,14 +687,14 @@ class BDsensorEndstopWrapper:
         #print("b3:%s"%mcu)
         #pin_params['pullup']=2
         #self.mcu_endstop = mcu.setup_pin('endstop', pin_params)
-        
         self._invert = pin_params['invert']
+
         self.oid = self.mcu.create_oid()
 
         self.mcu_endstop = self.mcu
         self._invert_endstop =  self._invert
         self.oid_endstop = self.oid
-        self.endstop_pin_num = sda_pin_num
+        self.endstop_pin_num = self.sda_pin_num
         self.endstop_bdsensor_offset = 0
         try:
             pin = config.get('endstop_pin')
@@ -720,7 +720,7 @@ class BDsensorEndstopWrapper:
             ffi_lib.cartesian_stepper_alloc(b'x'), ffi_lib.free)
         home_pos = self.position_endstop*100
         z_adjust = self.z_adjust*100
-        self.bd_sensor=MCU_I2C_BD(mcu,sda_pin_num,scl_pin_num,config.get('delay'),home_pos,z_adjust)
+        self.bd_sensor=MCU_I2C_BD(mcu,self.sda_pin_num,scl_pin_num,config.get('delay'),home_pos,z_adjust)
         #MCU_BD_I2C_from_config(self.mcu,config)
         self.distance=5;
         # Register M102 commands
@@ -805,8 +805,8 @@ class BDsensorEndstopWrapper:
                                     "X_probe_Update", self.bd_sensor.oid)
         self.mcu_endstop.add_config_cmd(
             "BDendstop_home oid=%d clock=0 sample_ticks=0 sample_count=0"
-            " rest_ticks=0 pin_value=0 trsync_oid=0 trigger_reason=0 endstop_pin=0"
-            % (self.oid_endstop,), on_restart=True)
+            " rest_ticks=0 pin_value=0 trsync_oid=0 trigger_reason=0 endstop_pin=%s"
+            % (self.oid_endstop,self.endstop_pin_num), on_restart=True)
         # Lookup commands
         cmd_queue = self._trsyncs[0].get_command_queue()
         self._home_cmd = self.mcu_endstop.lookup_command(
@@ -1289,8 +1289,9 @@ class BDsensorEndstopWrapper:
             homepos = self.toolhead.get_position()
             self.bd_value=self.BD_Sensor_Read(2)
             self.endstop_bdsensor_offset = 0
-            if self.mcu_endstop is not self.mcu:                
-                self.endstop_bdsensor_offset = homepos[2]-self.bd_value 
+            if self.sda_pin_num is not self.endstop_pin_num:                
+                self.endstop_bdsensor_offset = homepos[2]-self.bd_value
+                self.gcode.respond_info("offset of endstop to bdsensor  %.3f mm"%self.endstop_bdsensor_offset)
             else:    
                 homepos[2] = self.bd_value
                 self.toolhead.set_position(homepos)

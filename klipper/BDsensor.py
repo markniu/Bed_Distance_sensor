@@ -799,8 +799,8 @@ class BDsensorEndstopWrapper:
                                     "X_probe_Update", self.bd_sensor.oid)
         self.mcu_endstop.add_config_cmd(
             "BDendstop_home oid=%d clock=0 sample_ticks=0 sample_count=0"
-            " rest_ticks=0 pin_value=0 trsync_oid=0 trigger_reason=0 endstop_pin=0"
-            % (self.oid_endstop,), on_restart=True)
+            " rest_ticks=0 pin_value=0 trsync_oid=0 trigger_reason=0 endstop_pin=%s"
+            % (self.oid_endstop,self.endstop_pin_num), on_restart=True)
         # Lookup commands
         cmd_queue = self._trsyncs[0].get_command_queue()
         self._home_cmd = self.mcu_endstop.lookup_command(
