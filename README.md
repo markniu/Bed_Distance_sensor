@@ -35,7 +35,7 @@ Fast bed mesh(No toolhead stop)|:heavy_check_mark: | :heavy_check_mark:
 Distance display |:heavy_check_mark: | :heavy_check_mark: 
 Can bus toolhead|No | :heavy_check_mark: 
 standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark: 
-
+[KAMP](https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging) Adaptive Meshing & Purging |No | :heavy_check_mark: 
 
 
 #### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) | [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) 
