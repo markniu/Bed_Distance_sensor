@@ -989,12 +989,12 @@ class BDsensorEndstopWrapper:
             strd=str(intd)
             gcmd.respond_raw(strd)
             if ncount1 <= 3 and intd > 500 :
-                if intd>=1015:
-                    gcmd.respond_raw("BDSensor mounted too close or too high!  0.4mm to 2.4mm from BED at zero position is recommended")
-                    raise self.printer.command_error("BDSensor mounted too close or too high!" % intd)
-                    break
+                #if intd>=1015:
+                #    gcmd.respond_raw("BDSensor mounted too close or too high!  0.4mm to 2.4mm from BED at zero position is recommended")
+                #    raise self.printer.command_error("BDSensor mounted too close or too high!" % intd)
+                #    break
                 gcmd.respond_raw("BDSensor mounted too high!  0.4mm to 2.4mm from BED at zero position is recommended")
-                break
+                #break
             if intd < 45 :
                 gcmd.respond_raw("BDSensor mounted too close! please mount the BDsensor 0.2~0.4mm higher")
                # break
