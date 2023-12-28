@@ -50,10 +50,10 @@ November 15, 2023
 
 1, add new command:
 ```
-BDSENSOR_VERSION                   //replace M102 S-1
-BDSENSOR_CALIBRATE                //replace M102 S6 
-BDSENSOR_READ_CALIBRATION  //replace M102 S-5 
-BDSENSOR_DISTANCE                 //replace M102 S-2 
+BDSENSOR_VERSION                   //equals M102 S-1
+BDSENSOR_CALIBRATE                //equals M102 S-6 
+BDSENSOR_READ_CALIBRATION         //equals M102 S-5 
+BDSENSOR_DISTANCE                 //equals M102 S-2 
 BDSENSOR_SET                           // set value, now only for setting z_adjust, for example BDSENSOR_SET z_adjust=0.1
 
 ```
