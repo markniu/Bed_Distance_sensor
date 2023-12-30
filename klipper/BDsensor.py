@@ -406,7 +406,7 @@ class BDProbePointsHelper:
         def_move_z = config.getfloat('horizontal_move_z', 5.)
         self.default_horizontal_move_z = def_move_z
         self.speed = config.getfloat('speed', 50., above=0.)
-        self.use_offsets = False
+        self.use_offsets = True#False
         # Internal probing state
         self.lift_speed = self.speed
         self.probe_offsets = (0., 0., 0.)
