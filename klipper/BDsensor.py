@@ -1192,9 +1192,11 @@ class BDsensorEndstopWrapper:
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_start(self._trdispatch, self.etrsync.REASON_HOST_REQUEST)
         self.homeing=1
+        sample_time =.03
+        sample_count =1
         self._home_cmd.send(
             [self.oid_endstop, clock, self.mcu_endstop.seconds_to_clock(sample_time),
-             sample_count, rest_ticks, triggered ^ self._invert_endstop,
+             sample_count, self.mcu_endstop.seconds_to_clock(sample_time), triggered ^ self._invert_endstop,
              self.etrsync.get_oid(), self.etrsync.REASON_ENDSTOP_HIT,self.endstop_pin_num], reqclock=clock) 
     
         self.finish_home_complete = self.trigger_completion
@@ -1239,9 +1241,10 @@ class BDsensorEndstopWrapper:
         #
         if self.homeing==1:
             self.toolhead = self.printer.lookup_object('toolhead')
-            time.sleep(0.3)
+            time.sleep(0.4)
             homepos = self.toolhead.get_position()
             self.bd_value=self.BD_Sensor_Read(2)
+            time.sleep(0.4)
             self.endstop_bdsensor_offset = 0
             if self.sda_pin_num is not self.endstop_pin_num:                
                 self.endstop_bdsensor_offset = homepos[2]-self.bd_value
@@ -1249,7 +1252,8 @@ class BDsensorEndstopWrapper:
             else:    
                 homepos[2] = self.bd_value
                 self.toolhead.set_position(homepos)
-            #self.gcode.respond_info(".set_position Z is %.3f mm"%homepos[2])
+            time.sleep(0.4)
+            self.gcode.respond_info(".set_position Z is %.3f mm"%homepos[2])
 
         self.homeing=0
         if self.stow_on_each_sample:
