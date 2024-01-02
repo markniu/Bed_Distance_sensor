@@ -725,12 +725,13 @@ class BDsensorEndstopWrapper:
         self.distance=5;
         # Register M102 commands
         self.gcode = self.printer.lookup_object('gcode')
-        self.gcode.register_command('M102', self.cmd_M102)
-        self.gcode.register_command('BDSENSOR_VERSION', self.BD_version)
-        self.gcode.register_command('BDSENSOR_CALIBRATE', self.BD_calibrate)
-        self.gcode.register_command('BDSENSOR_READ_CALIBRATION', self.BD_read_calibration)
-        self.gcode.register_command('BDSENSOR_DISTANCE', self.BD_distance)
-        self.gcode.register_command('BDSENSOR_SET', self.BD_set) #BDSENSOR_SET z_adjust=0.33
+        
+        self.gcode.register_command('M102', self.cmd_M102, desc=self.cmd_M102_help)
+        self.gcode.register_command('BDSENSOR_VERSION', self.BD_version, desc=self.cmd_BD_BD_version_help)
+        self.gcode.register_command('BDSENSOR_CALIBRATE', self.BD_calibrate, desc=self.cmd_BD_calibrate_help)
+        self.gcode.register_command('BDSENSOR_READ_CALIBRATION', self.BD_read_calibration, desc=self.cmd_BD_read_calibration_help)
+        self.gcode.register_command('BDSENSOR_DISTANCE', self.BD_distance, desc=self.cmd_BD_distance_help)
+        self.gcode.register_command('BDSENSOR_SET', self.BD_set, desc=self.cmd_BD_set_help) #BDSENSOR_SET z_adjust=0.33
         #self.gcode.register_command('BDSENSOR_REAL_TIME_HEIGHT', self.BD_real_time_height)
 
 
@@ -931,6 +932,7 @@ class BDsensorEndstopWrapper:
          #self.gcode_que=gcmd
          #self.gcode.respond_info("current z:%f base:%f home:%f" % (self.gcode_move.last_position[2],self.gcode_move.base_position[2],self.gcode_move.homing_position[2]))
          self.process_M102(gcmd)
+    cmd_M102_help = "Bed sensor commands: M102 S-1     # Read sensor information\r\nM102 S-2 # Read one distance value\r\nM102 S-5 # Show raw calibration data\r\nM102 S-6 # Calibrate sensor"
     def BD_Sensor_Read(self,fore_r):
         if fore_r > 0:
             self.bd_sensor.I2C_BD_send("1018")#1015   read distance data
@@ -975,7 +977,8 @@ class BDsensorEndstopWrapper:
                 break
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
-        
+    cmd_BD_BD_version_help = "Show bed distance sensor hardware version"
+
     def BD_calibrate(self, gcmd):
         gcmd.respond_info("Calibrating, don't power off the printer")
         self.toolhead = self.printer.lookup_object('toolhead')
@@ -1023,6 +1026,7 @@ class BDsensorEndstopWrapper:
                 break
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
+    cmd_BD_calibrate_help = "Calibrate bed distance sensor"
 
     def BD_read_calibration(self, gcmd):
         self.bd_sensor.I2C_BD_send("1017")#tart read raw calibrate data
@@ -1050,6 +1054,7 @@ class BDsensorEndstopWrapper:
                 break
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
+    cmd_BD_read_calibration_help = "Read bed distance sensor calibration data"
 
     def BD_distance(self, gcmd):
         self.bd_value=self.BD_Sensor_Read(1)
@@ -1062,6 +1067,7 @@ class BDsensorEndstopWrapper:
 
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
+    cmd_BD_distance_help = "Get bed distance"
 
     def BD_set(self, gcmd):
         CMD_BD=0.0
@@ -1096,7 +1102,8 @@ class BDsensorEndstopWrapper:
             gcmd.respond_info("no_stop_probe is setted:%d The SAVE_CONFIG command will update the printer config",CMD_BD)
         except Exception as e:
             pass
-        
+    cmd_BD_set_help = "set value, now only for setting z_adjust, for example BDSENSOR_SET z_adjust=0.1"
+
     def BD_real_time(self, BD_height): 
         
         if BD_height >= 3.0:
