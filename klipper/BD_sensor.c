@@ -33,8 +33,8 @@
 #define BD_setHigh(x) gpio_out_write(x,1)
 
 
-uint32_t sda_pin=0,scl_pin=0,delay_m=20,homing_pose=0;
-int z_ofset=0;
+uint32_t delay_m = 20, homing_pose = 0;
+int sda_pin = -1, scl_pin = -1, z_ofset = 0;
 uint16_t BD_Data;
 //extern uint32_t timer_period_time;
 uint16_t BD_read_flag=1018,BD_read_lock=0;
@@ -492,8 +492,8 @@ DECL_COMMAND(command_config_I2C_BD,
     if(BD_read_flag!=1018)
         return;
 
-    if(sda_pin==0||scl_pin==0)
-        return;
+    if (sda_pin < 0 || scl_pin < 0)
+      return;
     if(e.sample_count==0)
 		return;    
     
