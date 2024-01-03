@@ -33,8 +33,8 @@
 #define BD_setHigh(x) gpio_out_write(x,1)
 
 
-uint32_t sda_pin=0,scl_pin=0,delay_m=20,homing_pose=0;
-int z_ofset=0;
+uint32_t delay_m = 20, homing_pose = 0;
+int sda_pin = -1, scl_pin = -0, z_ofset = 0;
 uint16_t BD_Data;
 //extern uint32_t timer_period_time;
 uint16_t BD_read_flag=1018,BD_read_lock=0;
@@ -458,7 +458,7 @@ static uint_fast8_t bd_event(struct timer *t)
      if(diff_step)
 		adust_Z_live(0);
 	 else {
-		 if(BD_read_flag==1018&&sda_pin&&scl_pin&&
+		if (BD_read_flag == 1018 && (sda_pin >= 0) && (scl_pin >= 0) &&
 		 	((step_adj[0].zoid&&(step_adj[0].cur_z<step_adj[0].adj_z_range))||e.sample_count)){
 	        if(step_adj[0].zoid && (e.sample_count == 0)){
            		struct stepper *s = stepper_oid_lookup_bd(step_adj[0].zoid);
@@ -761,8 +761,8 @@ DECL_COMMAND(command_config_I2C_BD,
     if(BD_read_flag!=1018)
         return;
 
-    if(sda_pin==0||scl_pin==0)
-        return;
+    if (sda_pin < 0 || scl_pin < 0)
+      return;
     if(e.sample_count==0)
 		return;    
     
