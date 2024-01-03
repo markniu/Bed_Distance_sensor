@@ -485,37 +485,30 @@ DECL_COMMAND(command_config_I2C_BD,
  bd_sensor_task(void)
  {
 
-    //uint32_t len=0;
-    uint16_t tm;
 
-
-    if(BD_read_flag!=1018)
-        return;
-
-    if (sda_pin < 0 || scl_pin < 0)
-      return;
-    if(e.sample_count==0)
-		return;    
-    
-    tm=BD_i2c_read();
-    if(tm<1023)
-    {
-        BD_Data=tm;
-    }
-	else
-		BD_Data=0;
-
-    if(BD_Data<=homing_pose)
-    {
-		BD_Data=0;
-		
-    }
 
  }
  DECL_TASK(bd_sensor_task);
 
-#define read_endstop_pin() BD_Data?0:1
+int  read_endstop_pin(void)
+{
+	uint16_t tm;
+	tm=BD_i2c_read();
+	if(tm<1023)
+	{
+		BD_Data=tm;
+	}
+	else
+		BD_Data=0;
+	
+	if(BD_Data<=homing_pose)
+	{
+		BD_Data=0;
+		
+	}
 
+	return BD_Data?0:1;
+}
 // Timer callback for an end stop
 static uint_fast8_t
 endstop_event(struct timer *t)
@@ -547,7 +540,9 @@ endstop_oversample_event(struct timer *t)
 	if(e.pin_num!=sda_pin)
 		val = gpio_in_read(e.pin);
 	else
-		val = read_endstop_pin();
+	{
+		val = BD_Data?0:1;//read_endstop_pin();
+	}
     if ((val ? ~e.flags : e.flags) & ESF_PIN_HIGH) {
         // No longer matching - reschedule for the next attempt
         e.time.func = endstop_event;
