@@ -25,6 +25,12 @@ Resolution:0.01mm
 
   small and light; can be installed anywhere, even surrounding metal above;no need to open the mainboard box as it is compatible with BLtouch connections.
 * Support Can bus module
+### Hardware Version
+ . | hardware | firmware
+--- | --- |---  
+2022.6 | BDsensor VA, V1.0 | V1.0  
+2023.4 | BDsensor VB, V1.1, changed the connector | V1.1, support self reboot
+2023.11 | BDsensor VB, V1.3, changed the MCU inside to stm32 | V1.2, firmware for stm32
 
 ### Software
  . | Marlin | Klipper
