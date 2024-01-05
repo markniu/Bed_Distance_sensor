@@ -59,6 +59,10 @@ fi
 
 sed 's/--dirty//g' "${HOME_DIR}/scripts/buildcommands.py" -i
 
+if ! grep -q "scripts/buildcommands.py" "${HOME_DIR}/.git/info/exclude"; then
+    echo "scripts/buildcommands.py" >> "${HOME_DIR}/.git/info/exclude"
+fi
+
 echo ""
 echo "Install Bed Distance Sensor successful :) "
 echo ""
