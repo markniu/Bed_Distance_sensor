@@ -1244,6 +1244,12 @@ class BDsensorEndstopWrapper:
             time.sleep(0.4)
             homepos = self.toolhead.get_position()
             self.bd_value=self.BD_Sensor_Read(2)
+            if self.bd_value > (self.position_endstop + 0.8):
+                time.sleep(0.1)
+                self.gcode.respond_info("triggered at %.3f mm !" % (self.bd_value))
+                self.bd_value=self.BD_Sensor_Read(2)
+                if self.bd_value > (self.position_endstop + 0.8):
+                    raise self.printer.command_error("Home z failed! the triggered z position is %.3f mm" % (self.bd_value))
             time.sleep(0.4)
             self.endstop_bdsensor_offset = 0
             if self.sda_pin_num is not self.endstop_pin_num:                
@@ -1253,7 +1259,7 @@ class BDsensorEndstopWrapper:
                 homepos[2] = self.bd_value
                 self.toolhead.set_position(homepos)
             time.sleep(0.4)
-            self.gcode.respond_info(".set_position Z is %.3f mm"%homepos[2])
+            self.gcode.respond_info("Z axis triggered at %.3f mm " % (self.bd_value))
 
         self.homeing=0
         if self.stow_on_each_sample:
