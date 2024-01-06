@@ -1009,9 +1009,9 @@ class BDsensorEndstopWrapper:
         self.bd_value=self.BD_Sensor_Read(1)
         strd=str(self.bd_value)+"mm"
         if self.bd_value == 10.24:
-            strd="BDsensor:Connection Error"
+            strd+=" BDsensor:Connection Error or not calibrated"
         elif self.bd_value >= 3.9:
-            strd="BDsensor:Out of measure Range or too close to the bed"
+            strd+=" BDsensor:Out of measure Range or too close to the bed"
         gcmd.respond_raw(strd)
 
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
@@ -1244,12 +1244,15 @@ class BDsensorEndstopWrapper:
             time.sleep(0.4)
             homepos = self.toolhead.get_position()
             self.bd_value=self.BD_Sensor_Read(2)
-            if self.bd_value > (self.position_endstop + 0.8):
-                time.sleep(0.1)
+            if self.bd_value > (self.position_endstop + 0.7):
                 self.gcode.respond_info("triggered at %.3f mm !" % (self.bd_value))
+                self.bd_sensor.I2C_BD_send("1022") #reboot bdsensor
+                time.sleep(0.9)
                 self.bd_value=self.BD_Sensor_Read(2)
-                if self.bd_value > (self.position_endstop + 0.8):
+                if self.bd_value > (self.position_endstop + 0.7):
                     raise self.printer.command_error("Home z failed! the triggered z position is %.3f mm" % (self.bd_value))
+            if self.bd_value <=0:
+                self.gcode.respond_info("warning:triggered at 0mm, Please slow down the homing z speed and the position_endstop in BDsensor >=0.5 ")
             time.sleep(0.4)
             self.endstop_bdsensor_offset = 0
             if self.sda_pin_num is not self.endstop_pin_num:                
