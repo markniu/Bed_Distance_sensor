@@ -1186,8 +1186,12 @@ class BDsensorEndstopWrapper:
         expire_timeout = TRSYNC_TIMEOUT
         if len(self._trsyncs) == 1:
             expire_timeout = TRSYNC_SINGLE_MCU_TIMEOUT
-        for trsync in self._trsyncs:
-            trsync.start(print_time, self.trigger_completion, expire_timeout)
+        for i, trsync in enumerate(self._trsyncs):
+            report_offset = float(i) / len(self._trsyncs)
+            trsync.start(print_time, report_offset,
+                         self.trigger_completion, expire_timeout)
+       # for trsync in self._trsyncs:
+       #     trsync.start(print_time, self.trigger_completion, expire_timeout)
         self.etrsync = self._trsyncs[0]
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_start(self._trdispatch, self.etrsync.REASON_HOST_REQUEST)
