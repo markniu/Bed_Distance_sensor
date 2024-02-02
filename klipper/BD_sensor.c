@@ -38,12 +38,11 @@ int sda_pin = -1, scl_pin = -1, z_ofset = 0;
 uint16_t BD_Data;
 //extern uint32_t timer_period_time;
 uint16_t BD_read_flag=1018,BD_read_lock=0;
-
+int switch_mode = 0; //1:in switch mode
 struct gpio_out sda_gpio, scl_gpio;
 struct gpio_in sda_gpio_in;
 uint8_t oid_g,etrsync_oid,endstop_reason=0;
 uint8_t z_oid[4];
-uint32_t endtime_adjust=0;
 uint32_t endtime_debug=0;
 uint32_t timer_period_endstop=100;
 
@@ -130,14 +129,6 @@ struct _step_probe stepx_probe;
 void BD_i2c_write(unsigned int addr);
 uint16_t BD_i2c_read(void);
 
-
-uint16_t Get_Distane_data(void)
-{
-    BD_read_flag=1018;
-    return BD_Data;
-
-}
-
 int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose,int z_adjust)
 {
     int i=0;
@@ -161,7 +152,6 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,uint32_t delays,uint32_t h_pose,int 
 	}
     stepx_probe.xoid=0;
     stepx_probe.y_oid=0;
-	endtime_adjust=0;
 	//output("BD_i2c_init mcuoid=%c sda:%c scl:%c dy:%c h_p:%c", oid_g,sda_pin,scl_pin,delay_m,homing_pose);
 	BD_i2c_write(1022); //reset BDsensor
     return 1;
@@ -453,6 +443,16 @@ command_I2C_BD_send(uint32_t *args)
     if(addr==1015)
         return;
     BD_i2c_write(addr);
+	if (addr==1023)
+		switch_mode=1;
+	else if(addr>1015)
+		switch_mode=0;
+	else if(switch_mode==1){//write switch value
+		sda_gpio_in=gpio_in_setup(sda_pin, 1);
+		BD_setLow(scl_gpio);
+
+	}
+		
 
 }
 
@@ -517,6 +517,10 @@ endstop_event(struct timer *t)
     uint8_t val =0;
 	if(e.pin_num!=sda_pin)
 		val = gpio_in_read(e.pin);
+	else if (switch_mode == 1)
+	{
+        val = gpio_in_read(sda_gpio_in);
+	}
 	else
 		val = read_endstop_pin();
     uint32_t nextwake = e.time.waketime + e.rest_time;
@@ -539,6 +543,10 @@ endstop_oversample_event(struct timer *t)
     uint8_t val =0;
 	if(e.pin_num!=sda_pin)
 		val = gpio_in_read(e.pin);
+	else if (switch_mode == 1)
+	{
+        val = gpio_in_read(sda_gpio_in);
+	}
 	else
 	{
 		val = BD_Data?0:1;//read_endstop_pin();
@@ -567,8 +575,8 @@ endstop_oversample_event(struct timer *t)
 void
 command_BDendstop_home(uint32_t *args)
 {
-    //struct endstop *e = oid_lookup(args[0], command_config_BDendstop);
-    endtime_adjust=0;
+	
+	
     sched_del_timer(&e.time);
     e.time.waketime = args[1];
     e.sample_time = args[2];
@@ -587,6 +595,7 @@ command_BDendstop_home(uint32_t *args)
     e.trigger_reason = args[7];
 	e.pin_num = args[8];
 	e.pin =  gpio_in_setup(args[8], 1);
+	
     sched_add_timer(&e.time);
 }
 DECL_COMMAND(command_BDendstop_home,

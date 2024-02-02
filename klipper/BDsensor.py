@@ -653,7 +653,7 @@ class BDsensorEndstopWrapper:
         # Create an "endstop" object to handle the probe pin
         ppins = self.printer.lookup_object('pins')
         #self.mcu_pwm = ppins.setup_pin('pwm', config.get('scl_pin'))
-
+        self.bdversion = ''
         # Command timing
         self.next_cmd_time = self.action_end_time = 0.
         self.finish_home_complete = self.wait_trigger_complete = None
@@ -920,12 +920,13 @@ class BDsensorEndstopWrapper:
             if intd<0x20:
                 intd=0x20
             x.append(intd)
-            self.toolhead.dwell(0.1)
+           # self.toolhead.dwell(0.1)
             ncount1=ncount1+1
             if ncount1>=20:
                 self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
                 res = ''.join(map(chr, x))
-                gcmd.respond_raw(res)
+                self.bdversion = res
+                self.gcode.respond_info(self.bdversion)
                 break
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
@@ -1112,6 +1113,11 @@ class BDsensorEndstopWrapper:
         
         elif  CMD_BD ==-8:
             self.bd_sensor.I2C_BD_send("1022") #reboot sensor
+        elif  CMD_BD ==-9:
+            self.bd_sensor.I2C_BD_send("1023") #reboot sensor  
+            self.bd_sensor.I2C_BD_send(str(int(self.position_endstop*100)))
+            self.gcode.respond_info("in switch mode, the endstop position is %.3f mm"%(self.position_endstop))
+            return
         else:
             return
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
@@ -1143,7 +1149,7 @@ class BDsensorEndstopWrapper:
                 "Toolhead moved during probe deactivate_gcode script")
 
     def query_endstop(self, print_time):
-        print("query Z endstop")
+        #print("query Z endstop")
         #params = self.mcu_endstop.query_endstop(print_time)
         #print(params)
         #self.bd_sensor.I2C_BD_send("1018")#1015   read distance data
@@ -1196,8 +1202,18 @@ class BDsensorEndstopWrapper:
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_start(self._trdispatch, self.etrsync.REASON_HOST_REQUEST)
         self.homeing=1
-        sample_time =.03
-        sample_count =1
+        self.BD_Sensor_Read(2)
+        if "V1." not in self.bdversion:
+            self.BD_version(self.gcode)
+        if "V1.1b" in self.bdversion or "V1.2b" in self.bdversion:#switch mode
+            self.bd_sensor.I2C_BD_send("1023")  
+           # sample_time =.003
+            #sample_count =1
+            self.bd_sensor.I2C_BD_send(str(int(self.position_endstop*100)))
+            #self.gcode.respond_info("position_endstop  %0.3f sample time %f "%( self.position_endstop ,sample_time))
+        else:
+            sample_time =.03
+            sample_count =1
         self._home_cmd.send(
             [self.oid_endstop, clock, self.mcu_endstop.seconds_to_clock(sample_time),
              sample_count, self.mcu_endstop.seconds_to_clock(sample_time), triggered ^ self._invert_endstop,
@@ -1207,7 +1223,7 @@ class BDsensorEndstopWrapper:
         return self.trigger_completion
 
     def wait_for_trigger(self, eventtime): 
-        self.BD_Sensor_Read(2)
+       
         self.trigger_completion.wait()
         if self.multi == 'OFF':
             self.raise_probe()
@@ -1245,6 +1261,7 @@ class BDsensorEndstopWrapper:
         #
         if self.homeing==1:
             self.toolhead = self.printer.lookup_object('toolhead')
+            self.bd_sensor.I2C_BD_send("1018")
             time.sleep(0.4)
             homepos = self.toolhead.get_position()
             self.bd_value=self.BD_Sensor_Read(2)
