@@ -460,13 +460,7 @@ DECL_COMMAND(command_I2C_BD_send, "I2C_BD_send oid=%c data=%*s");
 
 //"Z_Move_Live oid=%c z_oid=%c dir=%u step=%u delay=%u"
 
-void
-command_config_BDendstop(uint32_t *args)
-{
-    struct endstop *e = oid_alloc(args[0], command_config_BDendstop, sizeof(*e));
-   // e.pin = gpio_in_setup(args[1], args[2]);
-   // e.type = args[2];
-}
+
 
 
 
@@ -475,7 +469,7 @@ command_config_I2C_BD(uint32_t *args)
 {
     oid_g = args[0];
     BD_i2c_init(args[1],args[2],args[3],args[4],args[5]);
-	command_config_BDendstop(args);
+	//command_config_BDendstop(args);
 }
 DECL_COMMAND(command_config_I2C_BD,
              "config_I2C_BD oid=%c sda_pin=%u scl_pin=%u delay=%u h_pos=%u z_adjust=%u");

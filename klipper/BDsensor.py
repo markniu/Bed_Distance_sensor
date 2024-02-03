@@ -10,7 +10,7 @@ from . import manual_probe
 import chelper
 import math
 from . import probe
-BD_TIMER = 0.600
+
 TRSYNC_TIMEOUT = 0.025
 TRSYNC_SINGLE_MCU_TIMEOUT = 0.250  
 
@@ -834,23 +834,6 @@ class BDsensorEndstopWrapper:
             self.results.append(int(params['distance_val'].split(b' ')[0]))
         except ValueError as e:
             pass
-    def manual_move2(self, stepper, dist, speed, accel=0.):
-         self.toolhead = self.printer.lookup_object('toolhead')
-         self.toolhead.flush_step_generation()
-         prev_sk = stepper.set_stepper_kinematics(self.stepper_kinematics)
-         prev_trapq = stepper.set_trapq(self.trapq)
-         stepper.set_position((0., 0., 0.))
-         axis_r, accel_t,cruise_t,cruise_v=calc_move_time(dist, speed, accel)
-         print_time = self.toolhead.get_last_move_time()
-         self.trapq_append(self.trapq, print_time, accel_t, cruise_t, accel_t,
-                           0., 0., 0., axis_r, 0., 0., 0., cruise_v, accel)
-         print_time = print_time + accel_t + cruise_t + accel_t
-         stepper.generate_steps(print_time)
-         self.trapq_finalize_moves(self.trapq, print_time + 99999.9)
-         stepper.set_trapq(prev_trapq)
-         stepper.set_stepper_kinematics(prev_sk)
-         self.toolhead.note_kinematic_activity(print_time)
-         #self.toolhead.dwell(accel_t + cruise_t + accel_t)
 
     def _force_enable(self,stepper):
         self.toolhead = self.printer.lookup_object('toolhead')
@@ -1183,6 +1166,9 @@ class BDsensorEndstopWrapper:
  
         #if self.mcu_endstop is not self.mcu: 
         #self.gcode.respond_info(" self.endstop_pin_num %s  "%(self.endstop_pin_num) )
+        self.BD_Sensor_Read(2)
+        if "V1." not in self.bdversion:
+            self.BD_version(self.gcode)
         clock = self.mcu_endstop.print_time_to_clock(print_time)
         rest_ticks = self.mcu_endstop.print_time_to_clock(print_time+rest_time) - clock
         self._rest_ticks = rest_ticks
@@ -1202,23 +1188,21 @@ class BDsensorEndstopWrapper:
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_start(self._trdispatch, self.etrsync.REASON_HOST_REQUEST)
         self.homeing=1
-        self.BD_Sensor_Read(2)
-        if "V1." not in self.bdversion:
-            self.BD_version(self.gcode)
         if "V1.1b" in self.bdversion or "V1.2b" in self.bdversion:#switch mode
             self.bd_sensor.I2C_BD_send("1023")  
-           # sample_time =.003
-            #sample_count =1
+            #sample_time =.0003
+            sample_count =2
             self.bd_sensor.I2C_BD_send(str(int(self.position_endstop*100)))
-            #self.gcode.respond_info("position_endstop  %0.3f sample time %f "%( self.position_endstop ,sample_time))
+            #self.gcode.respond_info("position_endstop  %0.3f sample time %f  %f"%( self.position_endstop ,sample_time,self.mcu_endstop.clock_to_print_time(rest_ticks)))
+
         else:
             sample_time =.03
             sample_count =1
         self._home_cmd.send(
-            [self.oid_endstop, clock, self.mcu_endstop.seconds_to_clock(sample_time),
+             [self.oid_endstop, clock, self.mcu_endstop.seconds_to_clock(sample_time),
              sample_count, self.mcu_endstop.seconds_to_clock(sample_time), triggered ^ self._invert_endstop,
              self.etrsync.get_oid(), self.etrsync.REASON_ENDSTOP_HIT,self.endstop_pin_num], reqclock=clock) 
-    
+
         self.finish_home_complete = self.trigger_completion
         return self.trigger_completion
 
@@ -1262,7 +1246,7 @@ class BDsensorEndstopWrapper:
         if self.homeing==1:
             self.toolhead = self.printer.lookup_object('toolhead')
             self.bd_sensor.I2C_BD_send("1018")
-            time.sleep(0.4)
+            time.sleep(0.1)
             homepos = self.toolhead.get_position()
             self.bd_value=self.BD_Sensor_Read(2)
             if self.bd_value > (self.position_endstop + 0.7):
@@ -1274,7 +1258,7 @@ class BDsensorEndstopWrapper:
                     raise self.printer.command_error("Home z failed! the triggered z position is %.3f mm" % (self.bd_value))
             if self.bd_value <=0:
                 self.gcode.respond_info("warning:triggered at 0mm, Please slow down the homing z speed and the position_endstop in BDsensor >=0.5 ")
-            time.sleep(0.4)
+            #time.sleep(0.1)
             self.endstop_bdsensor_offset = 0
             if self.sda_pin_num is not self.endstop_pin_num:                
                 self.endstop_bdsensor_offset = homepos[2]-self.bd_value
@@ -1282,7 +1266,7 @@ class BDsensorEndstopWrapper:
             else:    
                 homepos[2] = self.bd_value
                 self.toolhead.set_position(homepos)
-            time.sleep(0.4)
+            #time.sleep(0.1)
             self.gcode.respond_info("Z axis triggered at %.3f mm " % (self.bd_value))
 
         self.homeing=0
