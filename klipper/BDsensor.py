@@ -1190,10 +1190,10 @@ class BDsensorEndstopWrapper:
         self.homeing=1
         if "V1.1b" in self.bdversion or "V1.2b" in self.bdversion or "V1.2c" in self.bdversion:#switch mode
             self.bd_sensor.I2C_BD_send("1023")  
-            #sample_time =.0003
+            sample_time =.005
             sample_count =2
             self.bd_sensor.I2C_BD_send(str(int(self.position_endstop*100)))
-            self.gcode.respond_info("position_endstop  %0.3f sample time %f  %f"%( self.position_endstop ,sample_time,self.mcu_endstop.clock_to_print_time(rest_ticks)))
+            #self.gcode.respond_info("position_endstop  %0.3f sample time %f  %f"%( self.position_endstop ,sample_time,self.mcu_endstop.clock_to_print_time(rest_ticks)))
 
         else:
             sample_time =.03
