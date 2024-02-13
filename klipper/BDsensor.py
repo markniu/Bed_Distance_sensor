@@ -1209,7 +1209,7 @@ class BDsensorEndstopWrapper:
     def multi_probe_end(self):
         self.toolhead = self.printer.lookup_object('toolhead')
         homepos = self.toolhead.get_position()
-        if self.switch_mode==1 and self.homeing==1
+        if self.switch_mode==1 and self.homeing==1 \
                      and self.collision_homing == 1:
             self.bd_sensor.I2C_BD_send("1020")
             pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
