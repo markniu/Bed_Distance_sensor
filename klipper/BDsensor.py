@@ -1214,7 +1214,8 @@ class BDsensorEndstopWrapper:
             self.bd_sensor.I2C_BD_send("1020")
             pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
             intr = int(pr['response'])
-            self.gcode.respond_info("Z axis triggered at 0 %d mm " %(intr))
+            intr_old=intr
+            pos_old=homepos[2]
             while 1:
                 homepos[2] +=0.04
                 self.toolhead.manual_move([None, None, homepos[2]],50)
@@ -1222,9 +1223,10 @@ class BDsensorEndstopWrapper:
                 pr = self.I2C_BD_receive_cmd.send([self.oid,
                                                   "32".encode('utf-8')])
                 raw_d = int(pr['response'])
-                self.gcode.respond_info("auto adjust Z axis %.2f  %.1f mm "
-                                        %(homepos[2],raw_d))
                 if (raw_d - intr)>5:
+                    self.gcode.respond_info("auto adjust Z axis +%.2fmm,"
+                                            "Raw data from %.1f to %.1f"
+                                        %(homepos[2]-pos_old,intr_old,raw_d))
                     homepos[2]=0
                     self.toolhead.set_position(homepos)
                     break;
