@@ -77,8 +77,8 @@ void ndelay_bd_c(uint32_t nsecs)
     if (CONFIG_MACH_AVR)
         return;
     uint32_t end = timer_read_time() + nsecs_to_ticks_bd(nsecs);
-    while (timer_is_before(timer_read_time(), end))
-        irq_poll();
+    while (timer_is_before(timer_read_time(), end));
+       // irq_poll();
 }
 
 void ndelay_bd(uint32_t nsecs)
