@@ -29,8 +29,9 @@ Resolution:0.01mm
  . | hardware | firmware
 --- | --- |---  
 2022.6 | BDsensor VA, V1.0 | V1.0  
-2023.4 | BDsensor VB, V1.1, changed the connector | V1.1, support self reboot
-2023.11 | BDsensor VB, V1.3, changed the MCU inside to stm32 | V1.2, firmware for stm32
+2023.4 | BDsensor VB, V1.1, the connector is changed | V1.1, support self reboot
+2023.11 | BDsensor VB, V1.3, the mcu is changed from stc to stm32 | V1.2, firmware for stm32
+2024.2  |              |adding nozzle collision sensing(V1.2c for hardware v1.3, V1.1b for hardware v1.1)
 
 ### Software
  . | Marlin | Klipper
