@@ -1234,6 +1234,7 @@ class BDsensorEndstopWrapper:
                                                   "32".encode('utf-8')])
                 raw_d = int(pr['response'])
                 if (raw_d - intr)>=6:
+                    pos_old_1 = homepos[2]
                     homepos[2] -=(steps + 0.02)
                     self.toolhead.manual_move([None, None, homepos[2]],50)
                     self.toolhead.wait_moves()
@@ -1246,7 +1247,7 @@ class BDsensorEndstopWrapper:
                                                   "32".encode('utf-8')])
                         raw_d = int(pr['response'])
                         homepos_n = self.toolhead.get_position()
-                        if (raw_d - intr)>=2:
+                        if (raw_d - intr)>=2 or homepos[2] >= pos_old_1 :
                             self.gcode.respond_info("pos:%.2f new:%.2f  auto adjust Z axis +%.2fmm,"
                                             "Raw data from %.1f to %.1f"
                                         %(pos_old,homepos_n[2],homepos[2]-pos_old,intr_old,raw_d))
