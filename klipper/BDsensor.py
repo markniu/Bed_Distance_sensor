@@ -197,11 +197,20 @@ class BDPrinterProbe:
             if "Timeout during endstop homing" in reason:
                 reason += HINT_TIMEOUT
             raise self.printer.command_error(reason)
+        #self.mcu_probe.adjust_probe()
         time.sleep(0.1)
         b_value=self.mcu_probe.BD_Sensor_Read(2)
         pos_new = toolhead.get_position()
-        epos[2] = epos[2]-b_value + self.mcu_probe.endstop_bdsensor_offset
+        epos[2] = pos_new[2]-b_value + self.mcu_probe.endstop_bdsensor_offset
        # toolhead.set_position(pos_new)
+        axis_twist_compensation = self.printer.lookup_object(
+            'axis_twist_compensation', None)
+        z_compensation = 0
+        if axis_twist_compensation is not None:
+            z_compensation = (
+                axis_twist_compensation.get_z_compensation_value(pos))
+        # add z compensation to probe position
+        epos[2] += z_compensation
         self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                 "  (pos:%.6f - bd:%.3f) "
                                 % (epos[0], epos[1], epos[2],
@@ -845,7 +854,7 @@ class BDsensorEndstopWrapper:
                                "out of range.:%.2f " % (self.bd_value))
         elif fore_r == 2:
             if self.bd_value >= 10.24:
-                raise self.printer.command_error("Bed Distance Sensor"
+                raise self.printer.command_error("Bed Distance Sensor "
                                  "data error:%.2f" % (self.bd_value))
 
         return self.bd_value
@@ -875,9 +884,10 @@ class BDsensorEndstopWrapper:
                 break
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
-        if "V1.1b" in self.bdversion or "V1.2b" in self.bdversion \
-                             or "V1.2c" in self.bdversion:#switch mode
-            self.switch_mode = 1
+        self.switch_mode = 1
+        if "V1.0 " in self.bdversion or "V1.1 " in self.bdversion\
+                          or "V1.2 " in self.bdversion:
+            self.switch_mode = 0
         if "andapi" in self.bdversion:
             self.gcode.respond_info("BDsensorVer:%s,switch_mode=%d,"
                                     "collision_homing=%d"
@@ -1205,33 +1215,54 @@ class BDsensorEndstopWrapper:
         if self.stow_on_each_sample:
             return
         self.multi = 'FIRST'
-
-    def multi_probe_end(self):
+    def adjust_probe(self):
         self.toolhead = self.printer.lookup_object('toolhead')
         homepos = self.toolhead.get_position()
-        if self.switch_mode==1 and self.homeing==1 \
+        if self.switch_mode==1 \
                      and self.collision_homing == 1:
             self.bd_sensor.I2C_BD_send("1020")
             pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
             intr = int(pr['response'])
             intr_old=intr
             pos_old=homepos[2]
+            steps = 0.06
             while 1:
-                homepos[2] +=0.04
+                homepos[2] +=steps
                 self.toolhead.manual_move([None, None, homepos[2]],50)
                 self.toolhead.wait_moves()
                 pr = self.I2C_BD_receive_cmd.send([self.oid,
                                                   "32".encode('utf-8')])
                 raw_d = int(pr['response'])
-                if (raw_d - intr)>5:
-                    self.gcode.respond_info("auto adjust Z axis +%.2fmm,"
+                if (raw_d - intr)>=6:
+                    homepos[2] -=(steps + 0.02)
+                    self.toolhead.manual_move([None, None, homepos[2]],50)
+                    self.toolhead.wait_moves()
+                    steps = 0.03
+                    while 1:
+                        homepos[2] +=steps
+                        self.toolhead.manual_move([None, None, homepos[2]],50)
+                        self.toolhead.wait_moves()
+                        pr = self.I2C_BD_receive_cmd.send([self.oid,
+                                                  "32".encode('utf-8')])
+                        raw_d = int(pr['response'])
+                        homepos_n = self.toolhead.get_position()
+                        if (raw_d - intr)>=2:
+                            self.gcode.respond_info("pos:%.2f new:%.2f  auto adjust Z axis +%.2fmm,"
                                             "Raw data from %.1f to %.1f"
-                                        %(homepos[2]-pos_old,intr_old,raw_d))
-                    homepos[2]=0
-                    self.toolhead.set_position(homepos)
-                    break;
+                                        %(pos_old,homepos_n[2],homepos[2]-pos_old,intr_old,raw_d))
+                            break;
+                    break;    
                 intr = raw_d
             self.bd_sensor.I2C_BD_send("1018")
+            
+    def multi_probe_end(self):
+        self.toolhead = self.printer.lookup_object('toolhead')
+        homepos = self.toolhead.get_position()
+        if self.switch_mode==1 and self.homeing==1 \
+                     and self.collision_homing == 1:
+            self.adjust_probe()
+            homepos[2]=0
+            self.toolhead.set_position(homepos)
         elif self.homeing==1:
             self.bd_sensor.I2C_BD_send("1018")
             time.sleep(0.1)
