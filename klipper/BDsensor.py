@@ -1221,6 +1221,7 @@ class BDsensorEndstopWrapper:
         if self.switch_mode==1 \
                      and self.collision_homing == 1:
             self.bd_sensor.I2C_BD_send("1020")
+            self.bd_sensor.I2C_BD_send("1020")
             pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
             intr = int(pr['response'])
             intr_old=intr
