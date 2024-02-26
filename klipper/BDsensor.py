@@ -920,18 +920,21 @@ class BDsensorEndstopWrapper:
         ncount=0
         gcmd.respond_info("Please Wait... ")
         self.gcode.run_script_from_command("SET_KINEMATIC_POSITION Z=0")
-        self.toolhead.dwell(0.8)
+        self.toolhead.dwell(0.1)
+        z_pos = 0
         while 1:
+            z_pos +=0.1
             self.bd_sensor.I2C_BD_send(str(ncount))
             self.bd_sensor.I2C_BD_send(str(ncount))
             self.bd_sensor.I2C_BD_send(str(ncount))
             self.bd_sensor.I2C_BD_send(str(ncount))
             self.toolhead.dwell(0.2)
-            self.gcode.run_script_from_command("G91")
-            self.gcode.run_script_from_command("G1 Z+0.1 F1500")
-            self.gcode.run_script_from_command("G90")
+            #self.gcode.run_script_from_command("G91")
+            #self.gcode.run_script_from_command("G1 Z+0.1 F1500")
+            #self.gcode.run_script_from_command("G90")
+            self.toolhead.manual_move([None, None, z_pos],100)
             self.toolhead.wait_moves()
-            self.toolhead.dwell(0.2)
+            self.toolhead.dwell(0.1)
             ncount=ncount+1
             if ncount>=40:
                 self.bd_sensor.I2C_BD_send("1021")
@@ -1236,7 +1239,7 @@ class BDsensorEndstopWrapper:
                 raw_d = int(pr['response'])
                 if (raw_d - intr)>=6:
                     pos_old_1 = homepos[2]
-                    homepos[2] -=(steps + 0.02)
+                    homepos[2] -=(steps + 0.01)
                     self.toolhead.manual_move([None, None, homepos[2]],50)
                     self.toolhead.wait_moves()
                     steps = 0.03
@@ -1249,10 +1252,11 @@ class BDsensorEndstopWrapper:
                         raw_d = int(pr['response'])
                         homepos_n = self.toolhead.get_position()
                         if (raw_d - intr)>=2 or homepos[2] >= pos_old_1 :
-                            self.gcode.respond_info("pos:%.2f new:%.2f  auto adjust Z axis +%.2fmm,"
+                            self.gcode.respond_info("auto adjust Z axis +%.2fmm,"
                                             "Raw data from %.1f to %.1f"
-                                        %(pos_old,homepos_n[2],homepos[2]-pos_old,intr_old,raw_d))
+                                        %(homepos[2]-pos_old,intr_old,raw_d))
                             break;
+                        intr = raw_d
                     break;    
                 intr = raw_d
             self.bd_sensor.I2C_BD_send("1018")

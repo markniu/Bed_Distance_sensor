@@ -313,7 +313,7 @@ DECL_COMMAND(command_I2C_BD_receive, "I2C_BD_receive oid=%c data=%*s");
 void
 command_I2C_BD_send(uint32_t *args)
 {
-    int addr=atoi((char *)args[2]);
+    int addr=atoi(command_decode_ptr(args[2]));
     BD_read_flag=addr;
     if(addr==1015)
         return;
