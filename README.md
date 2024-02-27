@@ -15,7 +15,7 @@ Faster leveling, realtime compensation, high accuracy.
 
 Sensor type: inductive, can only measure the metal plate.
 
-Range: 4mm
+Range: 4mm (for different metal the range should be different, the normal pei steel plate is 4mm, but aluminum is about 2mm)
 
 Resolution:0.01mm
 
