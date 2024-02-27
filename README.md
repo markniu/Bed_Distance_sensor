@@ -11,7 +11,7 @@ Faster leveling, realtime compensation, high accuracy.
  
 2. You can do bed mesh leveling like a normal proximity sensor but much faster with this BDsensor.
    
-3. Thanks for the distance value can be shown on the screen, you can do manual bed leveling more easily.
+3. Easy manual bed level adjustment thanks to ability to display the live sensor distance measurement on your screen.
 
 Sensor type: inductive, can only measure the metal plate.
 
@@ -20,7 +20,7 @@ Range: 4mm
 Resolution:0.01mm
 
 ### Hardware:
-* Support all the mainboards
+* Supported on all mainboards
 * Easy to install:
 
   small and light; can be installed anywhere, even surrounding metal above;no need to open the mainboard box as it is compatible with BLtouch connections.
