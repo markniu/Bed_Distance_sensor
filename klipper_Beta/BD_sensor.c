@@ -632,7 +632,7 @@ command_Z_Move_Live(uint32_t *args)
     int i=0,j=0;
     char *tmp;
     uint8_t oid = args[0];
-    tmp=(char *)args[2];
+    tmp=command_decode_ptr(args[2]);
     j=atoi(tmp+2);
     if(tmp[0]=='0')
         z_index=j;
@@ -655,7 +655,7 @@ command_Z_Move_Live(uint32_t *args)
 
    //output("Z_Move_L mcuoid=%c j=%c", oid,j);
 
-    sendf("Z_Move_Live_response oid=%c return_set=%*s", oid,i,(char *)args[2]);
+    sendf("Z_Move_Live_response oid=%c return_set=%*s", oid,i,tmp);
 }
 DECL_COMMAND(command_Z_Move_Live, "Z_Move_Live oid=%c data=%*s");
 
