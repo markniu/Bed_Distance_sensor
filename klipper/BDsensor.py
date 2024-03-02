@@ -334,20 +334,20 @@ class BDPrinterProbe:
                              sample_count, sample_retract_dist,
                              speed, lift_speed))
         # Probe bed sample_count times
-        #self.multi_probe_begin()
-        toolhead.manual_move([None, None, pos[2]], speed)
-        toolhead.wait_moves()
+        self.multi_probe_begin()
+        #toolhead.manual_move([None, None, pos[2]], speed)
+        #toolhead.wait_moves()
         positions = []
         while len(positions) < sample_count:
-            time.sleep(0.3)
-            pos[2]=self.mcu_probe.BD_Sensor_Read(2)
+            #time.sleep(0.3)
+            #pos[2]=self.mcu_probe.BD_Sensor_Read(2)
             ## Probe position
-            #pos = self._probe(speed)
+            pos = self._probe(speed)
             positions.append(pos)
             ## Retract
-            #liftpos = [None, None, pos[2] + sample_retract_dist]
-            #self._move(liftpos, lift_speed)
-        #self.multi_probe_end()
+            liftpos = [None, None, pos[2] + sample_retract_dist]
+            self._move(liftpos, lift_speed)
+        self.multi_probe_end()
         # Calculate maximum, minimum and average values
         max_value = max([p[2] for p in positions])
         min_value = min([p[2] for p in positions])
@@ -739,10 +739,10 @@ class BDsensorEndstopWrapper:
         self.homeing=0
         self.reactor = self.printer.get_reactor()
         self.status_dis = None
-        try:
-            status_dis=self.printer.lookup_object('display_status')
-        except Exception as e:
-            pass
+        #try:
+        #self.status_dis=self.printer.lookup_object('display_status')
+        #except Exception as e:
+        #    pass
         self._rest_ticks = 0
         ffi_main, ffi_lib = chelper.get_ffi()
         self._trdispatch = ffi_main.gc(ffi_lib.trdispatch_alloc(),ffi_lib.free)
@@ -979,11 +979,15 @@ class BDsensorEndstopWrapper:
         self.bd_value=self.BD_Sensor_Read(1)
         strd=str(self.bd_value)+"mm"
         if self.bd_value == 10.24:
-            strd+=" BDsensor:Connection Error or not calibrated"
+            strd="BDsensor:Connection Error or not calibrated"
         elif self.bd_value >= 3.9:
-            strd+=" BDsensor:Out of measure Range or too close to the bed"
+            strd="BDsensor:Out of measure Range or too close to the bed"
         gcmd.respond_raw(strd)
-
+        try:
+            self.status_dis=self.printer.lookup_object('display_status')
+            self.status_dis.message=strd
+        except Exception as e:
+            pass
         self.bd_sensor.I2C_BD_send("1018")#1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
 
@@ -1175,6 +1179,7 @@ class BDsensorEndstopWrapper:
                 self.bd_sensor.I2C_BD_send(str(1))
             else:
                 self.bd_sensor.I2C_BD_send(str(int(self.position_endstop*100)))
+            time.sleep(0.01)
         else:
             sample_time =.03
             sample_count =1
@@ -1297,7 +1302,7 @@ class BDsensorEndstopWrapper:
                 homepos[2] = self.bd_value
                 self.toolhead.set_position(homepos)
             #time.sleep(0.1)
-            self.gcode.respond_info("Z axis triggered at %.3f mm "
+            self.gcode.respond_info("Z axis triggered at %.3f mm,auto adjusted by BDsensor. "
                 %(self.bd_value))
         self.homeing=0
         if self.stow_on_each_sample:
