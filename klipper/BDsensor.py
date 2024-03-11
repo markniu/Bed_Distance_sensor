@@ -373,7 +373,7 @@ class BDPrinterProbe:
             "The SAVE_CONFIG command will update the printer config file\n"
             "with the above and restart the printer." % (self.name, z_offset))
         configfile = self.printer.lookup_object('configfile')
-        #configfile.set(self.name, 'z_offset', "%.3f" % (z_offset,))
+        configfile.set(self.name, 'z_offset', "%.3f" % (z_offset,))
     cmd_PROBE_CALIBRATE_help = "Calibrate the probe's z_offset"
     def cmd_PROBE_CALIBRATE(self, gcmd):
         manual_probe.verify_no_manual_probe(self.printer)
@@ -403,7 +403,7 @@ class BDPrinterProbe:
                 "The SAVE_CONFIG command will update the printer config file\n"
                 "with the above and restart the printer."
                 % (self.name, new_calibrate))
-            #configfile.set(self.name, 'z_offset', "%.3f" % (new_calibrate,))
+            configfile.set(self.name, 'z_offset', "%.3f" % (new_calibrate,))
     cmd_Z_OFFSET_APPLY_PROBE_help = "Adjust the probe's z_offset"
 
 # Helper code that can probe a series of points and report the
@@ -630,11 +630,14 @@ class BDsensorEndstopWrapper:
         self.config = config
         self.name = config.get_name()
         self.z_adjust = config.getfloat('z_adjust',0., minval=-0.3,below=0.3)
-        self.z_offset = config.getfloat('z_offset',0., minval=0.,maxval=0.0)
+        self.z_offset = config.getfloat('z_offset',0., minval=-0.6,maxval=0.6)
         self.position_endstop = config.getfloat('position_endstop',0.,
                                                 minval=0.,below=2)
         if self.z_adjust > self.position_endstop :
             raise self.printer.command_error("The 'z_adjust' cannot be greater"
+            " than 'position_endstop' in section [BDsensor]")
+        if self.z_offset > self.position_endstop :
+            raise self.printer.command_error("The 'z_offset' cannot be greater"
             " than 'position_endstop' in section [BDsensor]")
         self.stow_on_each_sample = config.getboolean(
             'deactivate_on_each_sample', True)
@@ -859,7 +862,7 @@ class BDsensorEndstopWrapper:
                 raise self.printer.command_error("Bed Distance Sensor "
                                  "data error:%.2f" % (self.bd_value))
 
-        return self.bd_value
+        return self.bd_value + self.z_offset
 
     def BD_version(self, gcmd):
         self.bd_sensor.I2C_BD_send("1016")#1016 // // read sensor version
@@ -1264,19 +1267,19 @@ class BDsensorEndstopWrapper:
                     if (raw_d - intr)>=6 or homepos[2] >= pos_old_1 :
                         self.bd_value=self.BD_Sensor_Read(2)
                         self.gcode.respond_info("auto adjust Z axis +%.2fmm,"
-                                        "Raw data from %.1f to %.1f,H:%.2fmm"
-                                    %(homepos[2]-pos_old,intr_old,raw_d,self.bd_value))
+                                        "Raw data from %.1f to %.1f"
+                                    %(homepos[2]-pos_old,intr_old,raw_d))
                         break;
                     intr = raw_d
-                break;    
+                break;
             intr = raw_d
         self.bd_sensor.I2C_BD_send("1018")
-            
+
     def multi_probe_end(self):
         self.toolhead = self.printer.lookup_object('toolhead')
         homepos = self.toolhead.get_position()
         if self.switch_mode==1 and self.homeing==1 \
-                     and (self.collision_homing == 1 
+                     and (self.collision_homing == 1
                      or self.collision_calibrating == 1):
             self.adjust_probe()
             homepos[2]=0
@@ -1309,7 +1312,7 @@ class BDsensorEndstopWrapper:
                 homepos[2] = self.bd_value
                 self.toolhead.set_position(homepos)
             #time.sleep(0.1)
-            self.gcode.respond_info("Z axis triggered at %.3f mm,auto adjusted by BDsensor. "
+            self.gcode.respond_info("Z triggered at %.3f mm,auto adjusted."
                 %(self.bd_value))
         self.homeing=0
         if self.stow_on_each_sample:
