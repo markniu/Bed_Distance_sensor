@@ -181,8 +181,7 @@ class BDPrinterProbe:
 
     def setup_pin(self, pin_type, pin_params):
         if pin_type != 'endstop' or pin_params['pin'] != 'z_virtual_endstop':
-            raise pins.error("Probe virtual endstop only"
-                             "useful as endstop pin")
+            raise pins.error("Probe virtual endstop only useful as endstop pin")
         if pin_params['invert'] or pin_params['pullup']:
             raise pins.error("Can not pullup/invert probe virtual endstop")
         return self.mcu_probe
@@ -223,7 +222,7 @@ class BDPrinterProbe:
         # add z compensation to probe position
         epos[2] += z_compensation
         self.gcode.respond_info(
-            "probe at %.3f,%.3f is z=%.6f (pos:%.6f - bd:%.3f) "
+            "probe at %.3f,%.3f is z=%.6f (pos:%.6f - bd:%.3f)"
             % (epos[0], epos[1], epos[2], pos_new[2], b_value)
         )
         self.mcu_probe.homeing = 0
@@ -339,17 +338,14 @@ class BDPrinterProbe:
         speed = gcmd.get_float("PROBE_SPEED", self.speed, above=0.)
         lift_speed = self.get_lift_speed(gcmd)
         sample_count = gcmd.get_int("SAMPLES", 10, minval=1)
-        sample_retract_dist = gcmd.get_float("SAMPLE_RETRACT_DIST",
-                                             self.sample_retract_dist, above=0.)
+        sample_retract_dist = gcmd.get_float("SAMPLE_RETRACT_DIST", self.sample_retract_dist, above=0.)
         toolhead = self.printer.lookup_object('toolhead')
         pos = toolhead.get_position()
         pos[2] = 1.0
-        gcmd.respond_info("PROBE_ACCURACY at X:%.3f Y:%.3f Z:%.3f"
-                          " (samples=%d retract=%.3f"
-                          " speed=%.1f lift_speed=%.1f)\n"
-                          % (pos[0], pos[1], pos[2],
-                             sample_count, sample_retract_dist,
-                             speed, lift_speed))
+        gcmd.respond_info(
+            "PROBE_ACCURACY at X:%.3f Y:%.3f Z:%.3f (samples=%d retract=%.3f speed=%.1f lift_speed=%.1f)"
+            % (pos[0], pos[1], pos[2], sample_count, sample_retract_dist, speed, lift_speed)
+        )
         # Probe bed sample_count times
         self.multi_probe_begin()
         # toolhead.manual_move([None, None, pos[2]], speed)
@@ -379,19 +375,22 @@ class BDPrinterProbe:
         # Show information
         gcmd.respond_info(
             "probe accuracy results: maximum %.6f, minimum %.6f, range %.6f, "
-            "average %.6f, median %.6f, standard deviation %.6f" % (
-                max_value, min_value, range_value, avg_value, median, sigma))
+            "average %.6f, median %.6f, standard deviation %.6f"
+            % (max_value, min_value, range_value, avg_value, median, sigma)
+        )
 
     def probe_calibrate_finalize(self, kin_pos):
         if kin_pos is None:
             return
+
         z_offset = self.probe_calibrate_z - kin_pos[2]
         self.gcode.respond_info(
             "%s: z_offset: %.3f\n"
             "The SAVE_CONFIG command will update the printer config file\n"
-            "with the above and restart the printer." % (self.name, z_offset))
+            "with the above and restart the printer." % (self.name, z_offset)
+        )
         configfile = self.printer.lookup_object('configfile')
-        configfile.set(self.name, 'z_offset', "%.3f" % (z_offset,))
+        configfile.set(self.name, 'z_offset', "%.3f" % z_offset)
 
     cmd_PROBE_CALIBRATE_help = "Calibrate the probe's z_offset"
 
