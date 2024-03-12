@@ -105,11 +105,15 @@ class BDPrinterProbe:
         else:
             pconfig = config.getsection('printer')
             self.z_position = pconfig.getfloat('minimum_z_position', 0., note_valid=False)
+
         # Multi-sample support (for improved accuracy)
         self.sample_count = config.getint('samples', 1, minval=1)
         self.sample_retract_dist = config.getfloat('sample_retract_dist', 2., above=0.)
-        atypes = {'median': 'median', 'average': 'average'}
-        self.samples_result = config.getchoice('samples_result', atypes, 'average')
+        self.samples_result = config.getchoice(
+            'samples_result',
+            {'median': 'median', 'average': 'average'},
+            'average'
+        )
         self.samples_tolerance = config.getfloat('samples_tolerance', 0.100, minval=0.)
         self.samples_retries = config.getint('samples_tolerance_retries', 0, minval=0)
 
@@ -273,18 +277,15 @@ class BDPrinterProbe:
                     pos = toolhead.get_position()
                     intd = self.mcu_probe.BD_Sensor_Read(0)
                     pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset
-                    self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-                                            % (pos[0], pos[1], pos[2]))
+                    self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f" % (pos[0], pos[1], pos[2]))
                     # return pos[:3]
                     positions.append(pos[:3])
                     # Check samples tolerance
                     z_positions = [p[2] for p in positions]
                     if max(z_positions) - min(z_positions) > samples_tolerance:
                         if retries >= samples_retries:
-                            raise gcmd.error("Probe samples "
-                                             "exceed samples_tolerance")
-                        gcmd.respond_info("Probe samples exceed tolerance."
-                                          "Retrying...")
+                            raise gcmd.error("Probe samples exceed samples_tolerance")
+                        gcmd.respond_info("Probe samples exceed tolerance. Retrying...")
                         retries += 1
                         positions = []
                     continue
@@ -428,8 +429,7 @@ class BDPrinterProbe:
             configfile.set(self.name, 'z_offset', "%.3f" % (new_calibrate,))
 
 
-# Helper code that can probe a series of points and report the
-# position at each point.
+# Helper code that can probe a series of points and report the position at each point
 class BDProbePointsHelper:
     def __init__(self, config, finalize_callback, default_points=None):
         self.printer = config.get_printer()
@@ -743,7 +743,7 @@ class BDsensorEndstopWrapper:
         )
         # MCU_BD_I2C_from_config(self.mcu,config)
 
-        # Register M102 commands
+        # Register commands
         self.gcode = self.printer.lookup_object('gcode')
         self.gcode.register_command('M102', self.cmd_M102)
         self.gcode.register_command('BDSENSOR_VERSION', self.BD_version)
@@ -787,7 +787,9 @@ class BDsensorEndstopWrapper:
         self.I2C_BD_receive_cmd = self.mcu.lookup_query_command(
             "I2C_BD_receive oid=%c data=%*s",
             "I2C_BD_receive_response oid=%c response=%*s",
-            oid=self.oid, cq=self.cmd_queue)
+            oid=self.oid,
+            cq=self.cmd_queue
+        )
         self.mcu.register_response(self._handle_BD_Update, "BD_Update", self.bd_sensor.oid)
         self.mcu.register_response(self._handle_probe_Update, "X_probe_Update", self.bd_sensor.oid)
         self.mcu_endstop.add_config_cmd(
@@ -1288,8 +1290,7 @@ class BDsensorEndstopWrapper:
                     homepos[2] += steps
                     self.toolhead.manual_move([None, None, homepos[2]], 50)
                     self.toolhead.wait_moves()
-                    pr = self.I2C_BD_receive_cmd.send([self.oid,
-                                                       "32".encode('utf-8')])
+                    pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
                     raw_d = int(pr['response'])
                     homepos_n = self.toolhead.get_position()
                     if (raw_d - intr) >= 6 or homepos[2] >= pos_old_1:
