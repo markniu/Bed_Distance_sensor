@@ -153,7 +153,8 @@ class BDPrinterProbe:
         self.bedmesh.bmc.probe_helper = BDProbePointsHelper(
             self.config.getsection('bed_mesh'),
             self.bedmesh.bmc.probe_finalize,
-            self.bedmesh.bmc._get_adjusted_points())
+            self.bedmesh.bmc._get_adjusted_points()
+        )
         # self.gcode.respond_info("3_handle_home_rails_begin")
         if self.mcu_probe in endstops:
             self.multi_probe_begin()
@@ -215,18 +216,16 @@ class BDPrinterProbe:
         pos_new = toolhead.get_position()
         epos[2] = pos_new[2] - b_value + self.mcu_probe.endstop_bdsensor_offset
         # toolhead.set_position(pos_new)
-        axis_twist_compensation = self.printer.lookup_object(
-            'axis_twist_compensation', None)
+        axis_twist_compensation = self.printer.lookup_object('axis_twist_compensation', None)
         z_compensation = 0
         if axis_twist_compensation is not None:
-            z_compensation = (
-                axis_twist_compensation.get_z_compensation_value(pos))
+            z_compensation = (axis_twist_compensation.get_z_compensation_value(pos))
         # add z compensation to probe position
         epos[2] += z_compensation
-        self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-                                "  (pos:%.6f - bd:%.3f) "
-                                % (epos[0], epos[1], epos[2],
-                                   pos_new[2], b_value))
+        self.gcode.respond_info(
+            "probe at %.3f,%.3f is z=%.6f (pos:%.6f - bd:%.3f) "
+            % (epos[0], epos[1], epos[2], pos_new[2], b_value)
+        )
         self.mcu_probe.homeing = 0
         return epos[:3]
 
@@ -755,6 +754,7 @@ class BDsensorEndstopWrapper:
         self.I2C_BD_receive_cmd2 = None
         self.gcode_move = self.printer.load_object(config, "gcode_move")
         self.gcode = self.printer.lookup_object('gcode')
+        self.bedmesh = self.printer.lookup_object('bed_mesh', None)
 
         # Wrappers
         self.bd_value = 10.24
@@ -777,7 +777,6 @@ class BDsensorEndstopWrapper:
         self._trdispatch = ffi_main.gc(ffi_lib.trdispatch_alloc(), ffi_lib.free)
         self._trsyncs = [MCU_trsync(self.mcu_endstop, self._trdispatch)]
         self.ncont = 0
-        self.bedmesh = self.printer.lookup_object('bed_mesh', None)
         self.z_last = 0
 
     def get_mcu(self):
@@ -803,7 +802,8 @@ class BDsensorEndstopWrapper:
             "BDendstop_home oid=%c clock=%u sample_ticks=%u sample_count=%c"
             " rest_ticks=%u pin_value=%c trsync_oid=%c trigger_reason=%c"
             " endstop_pin=%c",
-            cq=cmd_queue)
+            cq=cmd_queue
+        )
 
     def _handle_BD_Update(self, params):
         # print("_handle_BD_Update :%s " %params['distance_val'])
@@ -854,8 +854,10 @@ class BDsensorEndstopWrapper:
         stepper.set_position((0., 0., 0.))
         axis_r, accel_t, cruise_t, cruise_v = calc_move_time(dist, speed, accel)
         print_time = self.toolhead.get_last_move_time()
-        self.trapq_append(self.trapq, print_time, accel_t, cruise_t, accel_t,
-                          0., 0., 0., axis_r, 0., 0., 0., cruise_v, accel)
+        self.trapq_append(
+            self.trapq, print_time, accel_t, cruise_t, accel_t,
+            0., 0., 0., axis_r, 0., 0., 0., cruise_v, accel
+        )
         print_time = print_time + accel_t + cruise_t + accel_t
         stepper.generate_steps(print_time)
         self.trapq_finalize_moves(self.trapq, print_time + 99999.9)
@@ -914,8 +916,7 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1018")  # 1018// finish reading
         self.bd_sensor.I2C_BD_send("1018")
         self.switch_mode = 1
-        if "V1.0 " in self.bdversion or "V1.1 " in self.bdversion \
-                or "V1.2 " in self.bdversion:
+        if "V1.0 " in self.bdversion or "V1.1 " in self.bdversion or "V1.2 " in self.bdversion:
             self.switch_mode = 0
         if "andapi" in self.bdversion:
             self.gcode.respond_info(
@@ -1179,8 +1180,7 @@ class BDsensorEndstopWrapper:
     def get_steppers(self):
         return [s for trsync in self._trsyncs for s in trsync.get_steppers()]
 
-    def home_start(self, print_time, sample_time, sample_count, rest_time,
-                   triggered=True):
+    def home_start(self, print_time, sample_time, sample_count, rest_time, triggered=True):
         self.BD_Sensor_Read(2)
         if "V1." not in self.bdversion:
             self.BD_version(self.gcode)
@@ -1195,12 +1195,10 @@ class BDsensorEndstopWrapper:
             expire_timeout = TRSYNC_SINGLE_MCU_TIMEOUT
         for i, trsync in enumerate(self._trsyncs):
             report_offset = float(i) / len(self._trsyncs)
-            trsync.start(print_time, report_offset,
-                         self.trigger_completion, expire_timeout)
+            trsync.start(print_time, report_offset, self.trigger_completion, expire_timeout)
         self.etrsync = self._trsyncs[0]
         ffi_main, ffi_lib = chelper.get_ffi()
-        ffi_lib.trdispatch_start(self._trdispatch,
-                                 self.etrsync.REASON_HOST_REQUEST)
+        ffi_lib.trdispatch_start(self._trdispatch,self.etrsync.REASON_HOST_REQUEST)
         self.homeing = 1
         if self.switch_mode == 1:
             self.bd_sensor.I2C_BD_send("1023")
@@ -1214,6 +1212,7 @@ class BDsensorEndstopWrapper:
         else:
             sample_time = .03
             sample_count = 1
+
         self._home_cmd.send(
             [
                 self.oid_endstop,
@@ -1228,7 +1227,6 @@ class BDsensorEndstopWrapper:
             ],
             reqclock=clock
         )
-
         self.finish_home_complete = self.trigger_completion
         return self.trigger_completion
 
@@ -1276,8 +1274,7 @@ class BDsensorEndstopWrapper:
             homepos[2] += steps
             self.toolhead.manual_move([None, None, homepos[2]], 50)
             self.toolhead.wait_moves()
-            pr = self.I2C_BD_receive_cmd.send([self.oid,
-                                               "32".encode('utf-8')])
+            pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
             raw_d = int(pr['response'])
             if (raw_d - intr) >= 6:
                 pos_old_1 = homepos[2]
@@ -1295,9 +1292,10 @@ class BDsensorEndstopWrapper:
                     homepos_n = self.toolhead.get_position()
                     if (raw_d - intr) >= 6 or homepos[2] >= pos_old_1:
                         self.bd_value = self.BD_Sensor_Read(2)
-                        self.gcode.respond_info("auto adjust Z axis +%.2fmm,"
-                                                "Raw data from %.1f to %.1f"
-                                                % (homepos[2] - pos_old, intr_old, raw_d))
+                        self.gcode.respond_info(
+                            "auto adjust Z axis +%.2fmm, Raw data from %.1f to %.1f"
+                            % (homepos[2] - pos_old, intr_old, raw_d)
+                        )
                         break
                     intr = raw_d
                 break
