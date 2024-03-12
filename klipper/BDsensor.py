@@ -1292,7 +1292,7 @@ class BDsensorEndstopWrapper:
                     if (raw_d - intr) >= 6 or homepos[2] >= pos_old_1:
                         self.bd_value = self.BD_Sensor_Read(2)
                         self.gcode.respond_info(
-                            "auto adjust Z axis +%.2fmm, Raw data from %.1f to %.1f"
+                            "auto adjust Z axis +%.2fmm,\nraw data from %.1f to %.1f"
                             % (homepos[2] - pos_old, intr_old, raw_d)
                         )
                         break
