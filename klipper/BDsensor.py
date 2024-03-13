@@ -966,6 +966,7 @@ class BDsensorEndstopWrapper:
         if self.switch_mode == 1 and self.collision_calibrate == 1:
             self.collision_calibrating = 1
             gcmd.respond_info("Homing")
+            self.gcode.run_script_from_command("BED_MESH_CLEAR")
             self.gcode.run_script_from_command("G28")
             self.gcode.run_script_from_command("G1 Z0")
         gcmd.respond_info("Calibrating, don't power off the printer")
@@ -1308,7 +1309,7 @@ class BDsensorEndstopWrapper:
            and (self.collision_homing == 1
                 or self.collision_calibrating == 1):
             self.adjust_probe()
-            homepos[2] = 0
+            homepos[2] = 0 + self.z_offset
             self.toolhead.set_position(homepos)
         elif self.homeing == 1:
             self.bd_sensor.I2C_BD_send("1018")
