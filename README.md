@@ -24,7 +24,7 @@ Resolution:0.01mm
 * Easy to install:
   small and light; can be installed anywhere, even surrounding metal above
 * Support Can bus module
-* Support high temperature chamber(120C) with the long cable probe BDsensorM.
+* Support high temperature chamber(120C) with the long cable probe [BDsensorM](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M).
 ### Hardware Version
  . | hardware | firmware
 --- | --- |---  
