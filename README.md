@@ -20,11 +20,11 @@ Range: 4mm (for different metal the range should be different, the normal pei st
 Resolution:0.01mm
 
 ### Hardware:
-* Supported on all mainboards
+* It can connect to most motherboards or GPIOs on the RaspberryPi
 * Easy to install:
-
-  small and light; can be installed anywhere, even surrounding metal above;no need to open the mainboard box as it is compatible with BLtouch connections.
+  small and light; can be installed anywhere, even surrounding metal above
 * Support Can bus module
+* Support high temperature chamber(120C) with the long cable probe BDsensorM.
 ### Hardware Version
  . | hardware | firmware
 --- | --- |---  
@@ -36,13 +36,14 @@ Resolution:0.01mm
 ### Software
  . | Marlin | Klipper
 --- | --- |---  
-Real Time leveling |:heavy_check_mark:| :heavy_check_mark:  
+Real Time leveling(beta) |:heavy_check_mark:| :heavy_check_mark:  
 Fast bed mesh |:heavy_check_mark:| :heavy_check_mark: 
 Fast bed mesh(No toolhead stop)|:heavy_check_mark: | :heavy_check_mark: 
 Distance display |:heavy_check_mark: | :heavy_check_mark: 
 Can bus toolhead|No | :heavy_check_mark: 
 standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark: 
 [KAMP](https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging) Adaptive Meshing & Purging |No | :heavy_check_mark: 
+nozzle collision sensing|Coming soon  | :heavy_check_mark: 
 
 
 #### Installation: [Marlin](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-Bed-Distance-Sensor) | [Klipper](https://github.com/markniu/Bed_Distance_sensor/wiki/Installing-for-Klipper) 
