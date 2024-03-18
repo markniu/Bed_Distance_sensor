@@ -1264,7 +1264,7 @@ class BDsensorEndstopWrapper:
         intr = int(pr['response'])
         intr_old = intr
         if intr > 700:
-            raise self.printer.command_error("trigger at air, %d, please increase the second_homing_speed"%intr)
+            raise self.printer.command_error("triggered in air, %d, please increase the Z second_homing_speed"%intr)
         pos_old = homepos[2]
         while 1:
             homepos[2] += up_steps
