@@ -1185,7 +1185,7 @@ class BDsensorEndstopWrapper:
                 self.bd_sensor.I2C_BD_send(str(1))
             else:
                 self.bd_sensor.I2C_BD_send(str(int(self.position_endstop * 100)))
-                self.gcode.respond_info("home_start:%d" % sample_count)
+                self.gcode.respond_info("home_pos:%s" % str(int(self.position_endstop * 100)))
             # time.sleep(0.01)
         else:
             sample_time = .03
@@ -1263,8 +1263,8 @@ class BDsensorEndstopWrapper:
         pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
         intr = int(pr['response'])
         intr_old = intr
-        #if intr > 700:
-        #    raise self.printer.command_error("trigger at air, %d, please increase the second_homing_speed"%intr)
+        if intr > 700:
+            raise self.printer.command_error("trigger at air, %d, please increase the second_homing_speed"%intr)
         pos_old = homepos[2]
         while 1:
             homepos[2] += up_steps
