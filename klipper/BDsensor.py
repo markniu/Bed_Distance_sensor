@@ -1263,7 +1263,7 @@ class BDsensorEndstopWrapper:
         pr = self.I2C_BD_receive_cmd.send([self.oid, "32".encode('utf-8')])
         intr = int(pr['response'])
         intr_old = intr
-        if intr > 700:
+        if intr > 650:
             raise self.printer.command_error("triggered in air, %d, please increase the Z second_homing_speed"%intr)
         pos_old = homepos[2]
         while 1:
@@ -1274,7 +1274,7 @@ class BDsensorEndstopWrapper:
             pr = self.I2C_BD_receive_cmd.send([self.oid,
                                               "32".encode('utf-8')])
             raw_d = int(pr['response'])
-            if (raw_d - intr) >= 6:
+            if (raw_d - intr) >= 10:
                 pos_old_1 = homepos[2]
                 homepos[2] -= up_steps
                 self.toolhead.manual_move([None, None, homepos[2]], 50)
@@ -1334,7 +1334,7 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1020")
         adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.03)      
         if adj_z <= 0.07 and adj_raw >= 6:
-            self.gcode.respond_info("trigger at air, adjusting")
+            self.gcode.respond_info("trigger in air, adjusting")
             self.adjust_probe_down(0.05)
             adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.03) 
         self.bd_value = self.BD_Sensor_Read(2)
@@ -1348,7 +1348,9 @@ class BDsensorEndstopWrapper:
            and (self.collision_homing == 1
                 or self.collision_calibrating == 1):
             self.adjust_probe()
-            homepos[2] = 0 + self.z_offset
+            homepos[2] = 0
+            if self.collision_calibrating != 1:
+                homepos[2] = 0 + self.z_offset
             self.toolhead.set_position(homepos)
         elif self.homeing == 1:
             self.bd_sensor.I2C_BD_send("1018")
