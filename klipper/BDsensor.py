@@ -57,7 +57,7 @@ class MCU_I2C_BD:
             "I2C_BD_send oid=%c data=%*s", cq=self.cmd_queue)
         self.I2C_BD_receive_cmd = self.mcu.lookup_query_command(
             "I2C_BD_receive oid=%c data=%*s",
-            "I2C_BD_receive_response oid=%c response=%*s",
+            "I2C_BD_receive_response oid=%c response=%c",
             oid=self.oid, cq=self.cmd_queue)
 
     def get_oid(self):
@@ -816,7 +816,7 @@ class BDsensorEndstopWrapper:
     def build_config(self):
         self.I2C_BD_receive_cmd = self.mcu.lookup_query_command(
             "I2C_BD_receive oid=%c data=%*s",
-            "I2C_BD_receive_response oid=%c response=%*s",
+            "I2C_BD_receive_response oid=%c response=%c",
             oid=self.oid,
             cq=self.cmd_queue
         )
@@ -957,8 +957,8 @@ class BDsensorEndstopWrapper:
                                        self.collision_homing,
                                        self.collision_calibrate))
         else:
-            self.gcode.respond_info("No data from BDsensor,"
-                                    "please check connection")
+            self.gcode.respond_info("No data or corrupt data from BDsensor(%s), "
+                                    "Please check connection"%self.bdversion)
 
     def BD_calibrate(self, gcmd):
         if "V1." not in self.bdversion:
@@ -1120,7 +1120,7 @@ class BDsensorEndstopWrapper:
         elif cmd_bd == -8:
             self.bd_sensor.I2C_BD_send("1022")  # reboot sensor
         elif cmd_bd == -9:
-            self.bd_sensor.I2C_BD_send("1023")  # reboot sensor
+            self.bd_sensor.I2C_BD_send("1023")  #
             self.bd_sensor.I2C_BD_send(str(int(self.position_endstop * 100)))
             self.gcode.respond_info("in switch mode, the endstop position is"
                                     "%.3f mm" % self.position_endstop)
@@ -1185,7 +1185,7 @@ class BDsensorEndstopWrapper:
                 self.bd_sensor.I2C_BD_send(str(1))
             else:
                 self.bd_sensor.I2C_BD_send(str(int(self.position_endstop * 100)))
-                self.gcode.respond_info("home_pos:%s" % str(int(self.position_endstop * 100)))
+                #self.gcode.respond_info("home_pos:%s" % str(int(self.position_endstop * 100)))
             # time.sleep(0.01)
         else:
             sample_time = .03
@@ -1319,7 +1319,7 @@ class BDsensorEndstopWrapper:
                                   "32".encode('utf-8')])
             raw_d = int(pr['response'])
            # self.gcode.respond_info("  %d "%raw_d)
-            if (intr - raw_d) < 1:
+            if (intr - raw_d) < 1 and raw_d < 500:
                 self.gcode.respond_info(" stop at %d "%raw_d)
                 break;
             intr = raw_d
@@ -1334,7 +1334,7 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1020")
         adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.03)      
         if adj_z <= 0.07 and adj_raw >= 6:
-            self.gcode.respond_info("trigger in air, adjusting")
+            self.gcode.respond_info("triggered in air, adjusting")
             self.adjust_probe_down(0.05)
             adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.03) 
         self.bd_value = self.BD_Sensor_Read(2)

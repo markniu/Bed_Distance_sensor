@@ -18,11 +18,22 @@
 #include "sched.h" // struct timer
 #include "trsync.h" // trsync_add_signal
 
+#define DATA_IS_CMD                   1015
+#define CMD_READ_VERSION              1016
+#define CMD_START_READ_CALIBRATE_DATA 1017
+#define CMD_END_READ_CALIBRATE_DATA   1018
+#define CMD_START_CALIBRATE           1019
+#define CMD_END_CALIBRATE             1021
+#define CMD_REBOOT_SENSOR             1022
+#define CMD_SWITCH_MODE               1023
+#define DATA_ERROR                    1024
 
 #define BYTE_CHECK_OK     0x01
 #define BYTE_CHECK_ERR    0x00
+
 #define BD_setLow(x)  gpio_out_write(x,0)
 #define BD_setHigh(x) gpio_out_write(x,1)
+
 
 struct endstop {
     struct timer time;
@@ -37,7 +48,7 @@ enum { ESF_PIN_HIGH=1<<0, ESF_HOMING=1<<1 };
 uint32_t delay_m = 20, homing_pose = 0;
 int sda_pin = -1, scl_pin = -1, z_ofset = 0;
 uint16_t BD_Data;
-uint16_t BD_read_flag=1018,BD_read_lock=0;
+uint16_t BD_read_flag=CMD_END_READ_CALIBRATE_DATA;
 int switch_mode = 0; //1:in switch mode
 struct gpio_out sda_gpio, scl_gpio;
 struct gpio_in sda_gpio_in;
@@ -63,7 +74,7 @@ int BD_i2c_init(uint32_t _sda,uint32_t _scl,
 
     gpio_out_write(sda_gpio, 1);
     gpio_out_write(scl_gpio, 1);
-    BD_i2c_write(1022); //reset BDsensor
+    BD_i2c_write(CMD_REBOOT_SENSOR); //reset BDsensor
     return 1;
 }
 
@@ -74,8 +85,8 @@ uint32_t nsecs_to_ticks_bd(uint32_t ns)
 
 void ndelay_bd_c(uint32_t nsecs)
 {
-    if (CONFIG_MACH_AVR)
-        return;
+   // if (CONFIG_MACH_AVR)
+   //     return;
     uint32_t end = timer_read_time() + nsecs_to_ticks_bd(nsecs);
     while (timer_is_before(timer_read_time(), end));
        // irq_poll();
@@ -157,10 +168,8 @@ void  BD_i2c_stop(void)
 
 uint16_t BD_i2c_read(void)
 {
-    uint16_t b = 1024;
-    BD_read_lock=1;
+    uint16_t b = DATA_ERROR;
     BD_I2C_start();
-
     BD_setHigh(sda_gpio);
     BD_setHigh(scl_gpio);
     ndelay_bd(delay_m);
@@ -169,7 +178,7 @@ uint16_t BD_i2c_read(void)
     ndelay_bd(delay_m);
     b = 0;
     BD_setHigh(sda_gpio);
-    sda_gpio_in=gpio_in_setup(sda_pin, 1);
+    sda_gpio_in=gpio_in_setup(sda_pin,0);
     for (unsigned char i = 0; i <= 10; i++) {
         b <<= 1;
         ndelay_bd(delay_m);
@@ -182,16 +191,15 @@ uint16_t BD_i2c_read(void)
     BD_i2c_stop();
     if (BD_Check_OddEven(b) && (b & 0x3FF) < 1020){
         b = (b & 0x3FF);
-        if(BD_read_flag==1018&&(b<1000)){
+        if(BD_read_flag==CMD_END_READ_CALIBRATE_DATA&&(b<1000)){
             b = b - z_ofset;
-            if(b>1024)
+            if(b>DATA_ERROR)
                 b=0;
         }
 
     }
     else
-        b=1024;
-    BD_read_lock=0;
+        b=DATA_ERROR;
     return b;
 }
 
@@ -222,89 +230,13 @@ void BD_i2c_write(unsigned int addr)
     BD_i2c_stop();
 }
 
-uint32_t INT_to_String(uint32_t BD_z1,uint8_t*data)
-{
-    uint32_t BD_z=BD_z1;
-    uint32_t len=0,j=0;
-    if(BD_z>=1000)
-    {
-        j=BD_z/1000;
-        data[len++] = '0'+j;
-        BD_z-=1000*j;
-        data[len]='0';
-        data[len+1]='0';
-        data[len+2]='0';
-    }
-    if(BD_z>=100)
-    {
-        j=BD_z/100;
-        data[len++] = '0'+j;
-        BD_z-=100*j;
-        data[len]='0';
-        data[len+1]='0';
-    }
-    else if(data[len])
-        len++;
-    if(BD_z>=10)
-    {
-        j=BD_z/10;
-        data[len++] = '0'+j;
-        BD_z-=10*j;
-        data[len]='0';
-    }
-    else if(data[len])
-        len++;
-    j=BD_z;
-    data[len++] = '0'+j;
-    data[len]=0;
-    return len;
-}
-
 //for gcode command
 void
 command_I2C_BD_receive(uint32_t *args)
 {
     uint8_t oid = args[0];
-    uint8_t data[8];
-    uint16_t BD_z;
-    BD_z=BD_i2c_read();//BD_Data;
-    BD_Data=BD_z;
-    memset(data,0,8);
-    uint32_t len=0,j=0;
-
-    //same as function itoa()
-    if(BD_z>=1000)
-    {
-        j=BD_z/1000;
-        data[len++] = '0'+j;
-        BD_z-=1000*j;
-        data[len]='0';
-        data[len+1]='0';
-        data[len+2]='0';
-    }
-    if(BD_z>=100)
-    {
-        j=BD_z/100;
-        data[len++] = '0'+j;
-        BD_z-=100*j;
-        data[len]='0';
-        data[len+1]='0';
-    }
-    else if(data[len])
-        len++;
-    if(BD_z>=10)
-    {
-        j=BD_z/10;
-        data[len++] = '0'+j;
-        BD_z-=10*j;
-        data[len]='0';
-    }
-    else if(data[len])
-        len++;
-    j=BD_z;
-    data[len++] = '0'+j;
-
-    sendf("I2C_BD_receive_response oid=%c response=%*s", oid,len,data);
+    BD_Data=BD_i2c_read();
+    sendf("I2C_BD_receive_response oid=%c response=%c", oid,BD_Data);
 }
 
 DECL_COMMAND(command_I2C_BD_receive, "I2C_BD_receive oid=%c data=%*s");
@@ -315,12 +247,12 @@ command_I2C_BD_send(uint32_t *args)
 {
     unsigned int addr=atoi(command_decode_ptr(args[2]));
     BD_read_flag=addr;
-    if(addr==1015)
+    if(addr==DATA_IS_CMD)
         return;
     BD_i2c_write(addr);
-    if (addr==1023)
+    if (addr==CMD_SWITCH_MODE)
         switch_mode=1;
-    else if(addr>1015)
+    else if(addr>DATA_IS_CMD)
         switch_mode=0;
     else if(switch_mode==1){//write switch value
         sda_gpio_in=gpio_in_setup(sda_pin, 1);
@@ -345,7 +277,7 @@ int  read_endstop_pin(void)
 {
     uint16_t tm;
     tm=BD_i2c_read();
-    if(tm<1023)
+    if(tm<DATA_ERROR)
         BD_Data=tm;
     else
         BD_Data=0;
