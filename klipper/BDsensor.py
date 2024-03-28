@@ -1268,23 +1268,23 @@ class BDsensorEndstopWrapper:
         pos_old = homepos[2]
         while 1:
             homepos[2] += up_steps
-            self.toolhead.manual_move([None, None, homepos[2]], 50)
+            self.toolhead.manual_move([None, None, homepos[2]], 80)
             self.toolhead.wait_moves()
-            time.sleep(0.03)
+            time.sleep(0.05)
             pr = self.I2C_BD_receive_cmd.send([self.oid,
                                               "32".encode('utf-8')])
             raw_d = int(pr['response'])
             if (raw_d - intr) >= 10:
                 pos_old_1 = homepos[2]
                 homepos[2] -= up_steps
-                self.toolhead.manual_move([None, None, homepos[2]], 50)
+                self.toolhead.manual_move([None, None, homepos[2]], 80)
                 self.toolhead.wait_moves()
                 intr = raw_d
                 while 1:
                     homepos[2] += down_steps
-                    self.toolhead.manual_move([None, None, homepos[2]], 50)
+                    self.toolhead.manual_move([None, None, homepos[2]], 80)
                     self.toolhead.wait_moves()
-                    time.sleep(0.03)
+                    time.sleep(0.05)
                     pr = self.I2C_BD_receive_cmd.send([self.oid,
                                                       "32".encode('utf-8')])
                     raw_d = int(pr['response'])
@@ -1312,9 +1312,9 @@ class BDsensorEndstopWrapper:
         self.toolhead.set_position(homepos)
         while 1:
             homepos[2] -= down_steps
-            self.toolhead.manual_move([None, None, homepos[2]], 50)
+            self.toolhead.manual_move([None, None, homepos[2]], 80)
             self.toolhead.wait_moves()
-            time.sleep(0.03)
+            time.sleep(0.05)
             pr = self.I2C_BD_receive_cmd.send([self.oid,
                                   "32".encode('utf-8')])
             raw_d = int(pr['response'])
@@ -1333,9 +1333,9 @@ class BDsensorEndstopWrapper:
         self.bd_sensor.I2C_BD_send("1020")
         self.bd_sensor.I2C_BD_send("1020")
         adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.03)      
-        if adj_z <= 0.07 and adj_raw >= 6:
+        if adj_z <= 0.1 and adj_raw >= 6:
             self.gcode.respond_info("triggered in air, adjusting")
-            self.adjust_probe_down(0.05)
+            self.adjust_probe_down(0.1)
             adj_z,adj_raw = self.adjust_probe_up_down(0.1,0.03) 
         self.bd_value = self.BD_Sensor_Read(2)
         self.bd_sensor.I2C_BD_send("1018")
