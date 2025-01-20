@@ -35,7 +35,7 @@ Range: 4mm (for different metal the range should be different, the normal pei st
 ### Software
  . | Marlin | Klipper
 --- | --- |---  
-Real Time leveling(beta) |:heavy_check_mark:| :heavy_check_mark:  
+Real Time leveling |:heavy_check_mark:| :heavy_check_mark:  
 Fast bed mesh |:heavy_check_mark:| :heavy_check_mark: 
 Fast bed mesh(No toolhead stop)|:heavy_check_mark: | :heavy_check_mark: 
 Distance display |:heavy_check_mark: | :heavy_check_mark: 
