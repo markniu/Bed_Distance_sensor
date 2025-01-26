@@ -816,7 +816,7 @@ class BDsensorEndstopWrapper:
         self.toolhead = self.printer.lookup_object('toolhead')
         kin = self.toolhead.get_kinematics()
         for stepper in kin.get_steppers():
-            if stepper.is_active_axis('z'):
+            if stepper.is_active_axis('z') or stepper.is_active_axis('a') or stepper.is_active_axis('b') or stepper.is_active_axis('c'):
                 self.bd_set_cur_z(z,1)   
                 break
         self.I2C_BD_send(CMD_DISTANCE_MODE)
@@ -907,9 +907,15 @@ class BDsensorEndstopWrapper:
             self.BD_version(self.gcode,20)
         if self.switch_mode == 1 and self.collision_calibrate == 1:
             self.collision_calibrating = 1
-            gcmd.respond_info("Homing")
+            #gcmd.respond_info("Homing")
             self.gcode.run_script_from_command("BED_MESH_CLEAR")
-            self.gcode.run_script_from_command("G28")
+            curtime = self.printer.get_reactor().monotonic()
+            if 'x' not in self.toolhead.get_status(curtime)['homed_axes']:
+                gcmd.respond_info("Homing all")
+                self.gcode.run_script_from_command("G28")
+            else:
+                gcmd.respond_info("Homing z")
+                self.gcode.run_script_from_command("G28 Z")
             self.gcode.run_script_from_command("G1 Z0")
         self.toolhead.wait_moves()
         gcmd.respond_info("Calibrating, don't power off the printer")
@@ -1078,7 +1084,7 @@ class BDsensorEndstopWrapper:
         kin = self.toolhead.get_kinematics()
         z_index = 0
         for stepper in kin.get_steppers():
-            if stepper.is_active_axis('z'):
+            if stepper.is_active_axis('z') or stepper.is_active_axis('a') or stepper.is_active_axis('b') or stepper.is_active_axis('c'):
                 steps_per_mm = 1.0/stepper.get_step_dist()
                 #z = self.gcode_move.last_position[2]
                 z=self.gcode_move.last_position[2] - self.gcode_move.base_position[2]
@@ -1315,8 +1321,8 @@ class BDsensorEndstopWrapper:
                                 temp, target = heaters.get_temp(self.printer.get_reactor().monotonic())
                             except Exception as e:
                                 pass
-                            self.gcode.respond_info("Raw data:%d at 0 mm, BDsensor to bed: %.4f mm, Bed: %.1fC"
-                                                % (raw_d,raw_d*0.004,temp))
+                            self.gcode.respond_info("Raw data:%d at 0 mm, BDsensor to bed: %.4f mm, Bed: %.1fC, z_offset: %.3f"
+                                                % (raw_d,raw_d*0.004,temp,self.z_offset))
                         return homepos[2]-pos_old,raw_d-intr_old
                         break
                     intr = raw_d
@@ -1374,9 +1380,29 @@ class BDsensorEndstopWrapper:
            and (self.collision_homing == 1
                 or self.collision_calibrating == 1):
             self.adjust_probe()
-            homepos[2] = 0
+            #homepos[2] = 0
             if self.collision_calibrating != 1:
+              #  homepos[2] = 0 + self.z_offset + 0.5
+                self.I2C_BD_send(CMD_DISTANCE_MODE)               
+                homepos = self.toolhead.get_position()
+                homepos[2] +=0.5               
+                self.toolhead.manual_move([None, None, homepos[2]], 2)
+                self.toolhead.wait_moves()
+                self.bd_value = self.BD_Sensor_Read(2)
+                time.sleep(0.1)
+                homepos[2] -=0.5
+                self.toolhead.manual_move([None, None, homepos[2]], 2)
+                self.toolhead.wait_moves()
+                self.gcode.respond_info("bd_value at %.3f mm" % self.bd_value)
+                if abs(self.bd_value-0.5)>0.05:
+                    self.gcode.respond_info("Detect the plate changed or others, the BD sensor needs recalibration %.3f" % (self.bd_value-0.5))
+                   # self.toolhead.manual_move([None, None, homepos[2]+10], 2)
+                    self.gcode.run_script_from_command("M102 S-6")
+                    return
+                
                 homepos[2] = 0 + self.z_offset
+            else:
+                homepos[2] = 0
             self.toolhead.set_position(homepos)
         elif self.homing == 1:
             self.I2C_BD_send(CMD_DISTANCE_MODE)
