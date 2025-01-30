@@ -570,6 +570,7 @@ class BDsensorEndstopWrapper:
 
         self.config = config
         self.name = config.get_name()
+        self.g28_cmd = config.get('homing_cmd', 'G28')
         self.z_adjust = config.getfloat('z_adjust', 0., minval=-0.3, below=0.3)
         self.z_offset = config.getfloat('z_offset', 0., minval=-0.6, maxval=0.6)
         self.position_endstop = config.getfloat('position_endstop', 0.7,
@@ -911,11 +912,13 @@ class BDsensorEndstopWrapper:
             self.gcode.run_script_from_command("BED_MESH_CLEAR")
             curtime = self.printer.get_reactor().monotonic()
             if 'x' not in self.toolhead.get_status(curtime)['homed_axes']:
-                gcmd.respond_info("Homing all")
-                self.gcode.run_script_from_command("G28")
+                gstr=self.g28_cmd
+                gcmd.respond_info("Homing all:"+gstr)
+                self.gcode.run_script_from_command(gstr)
             else:
-                gcmd.respond_info("Homing z")
-                self.gcode.run_script_from_command("G28 Z")
+                gstr=self.g28_cmd+" Z"
+                gcmd.respond_info("Homing z:"+gstr)
+                self.gcode.run_script_from_command(gstr)
             self.gcode.run_script_from_command("G1 Z0")
         self.toolhead.wait_moves()
         gcmd.respond_info("Calibrating, don't power off the printer")
