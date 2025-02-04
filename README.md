@@ -23,7 +23,7 @@ Range: 4mm (for different metal the range should be different, the normal pei st
 * Support Can bus module
 * Support high temperature chamber(120C) with the long cable probe [BDsensorM](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M).
 ### Hardware Version
- . | hardware | firmware
+ . | hardware | firmware/software
 --- | --- |---  
 2022.6 | BDsensor VA, V1.0 | V1.0  
 2023.4 | BDsensor VB, V1.1, the connector was changed | V1.1, support self reboot
@@ -31,6 +31,7 @@ Range: 4mm (for different metal the range should be different, the normal pei st
 2024.2  |              |V1.2c, [Support nozzle collision sensing](https://github.com/markniu/Bed_Distance_sensor/wiki/Collision-sensing)
 2024.3  | BDsensorM V1.0             | V1.2c
 2024.7  | BDsensorM V1.1             |  V1.2c, [Pins order](https://github.com/markniu/Bed_Distance_sensor/issues/178#issuecomment-2319621934) are changed in EXP1 connector
+2025.1  |             | Auto calibration
 
 ### Software
  . | Marlin | Klipper
