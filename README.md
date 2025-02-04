@@ -31,7 +31,7 @@ Range: 4mm (for different metal the range should be different, the normal pei st
 2024.2  |              |V1.2c, [Support nozzle collision sensing](https://github.com/markniu/Bed_Distance_sensor/wiki/Collision-sensing)
 2024.3  | BDsensorM V1.0             | V1.2c
 2024.7  | BDsensorM V1.1             |  V1.2c, [Pins order](https://github.com/markniu/Bed_Distance_sensor/issues/178#issuecomment-2319621934) are changed in EXP1 connector
-2025.1  |             | Auto calibration
+2025.1  |             | [Auto calibration](https://www.pandapi3d.com/post/new-feature-for-bdsensor)
 
 ### Software
  . | Marlin | Klipper
