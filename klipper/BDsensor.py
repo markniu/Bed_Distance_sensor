@@ -1397,7 +1397,7 @@ class BDsensorEndstopWrapper:
                 self.toolhead.manual_move([None, None, homepos[2]], 2)
                 self.toolhead.wait_moves()
                 self.gcode.respond_info("bd_value at %.3f mm" % self.bd_value)
-                if abs(self.bd_value-0.5)>0.05:
+                if abs(self.bd_value-self.z_offset-0.5)>0.05:
                     self.gcode.respond_info("Detect the plate changed or others, the BD sensor needs recalibration %.3f" % (self.bd_value-0.5))
                    # self.toolhead.manual_move([None, None, homepos[2]+10], 2)
                     self.gcode.run_script_from_command("M102 S-6")
