@@ -114,12 +114,15 @@ uint16_t BD_i2c_read(void);
 void adust_Z_calc(uint16_t sensor_z,struct stepper *s);
 
 void timer_bd_init(void);
+int  read_endstop_pin(void);
 
 
 int BD_i2c_init(uint32_t _sda,uint32_t _scl,
-    uint32_t delays,uint32_t h_pose,int z_adjust)
+    uint32_t delays,uint32_t h_pose,int z_adjust,uint32_t enstop_num)
 {
     int i=0;
+	e.pin_num = enstop_num;
+    e.pin =  gpio_in_setup(e.pin_num, 1);
     sda_pin=_sda;
     scl_pin =_scl;
     homing_pose = h_pose;
@@ -551,9 +554,9 @@ command_I2C_BD_send(uint32_t *args)
     //output("command_I2C_BD_send mcuoid=%c cmd=%c dat=%c", args[0],cmd_c,args[2]);
 	//only read data
 	if(cmd_c==CMD_READ_DATA && args[2]==1){
-        uint8_t oid = args[0];
+        
         BD_Data=BD_i2c_read();
-        sendf("I2CBDr oid=%c r=%c", oid,BD_Data);
+        sendf("I2CBDr oid=%c r=%c", oid_g,BD_Data);
 	}
 	else if(cmd_c<1025&& args[2]==0){
         BD_read_flag=cmd_c;
@@ -561,13 +564,24 @@ command_I2C_BD_send(uint32_t *args)
         if(cmd_c>CMD_READ_DATA){
             switch_mode=0;
          }
-        sendf("I2CBDr oid=%c r=%c", args[0],cmd_c);
+        sendf("I2CBDr oid=%c r=%c", oid_g,cmd_c);
     }
 	else if(cmd_c>=1025 && cmd_c<=1032 ){
 		BD_read_flag=cmd_c;
 		switch_mode=0;
 	    cmd_RT_Live(args);
-		sendf("I2CBDr oid=%c r=%c", args[0],cmd_c);
+		sendf("I2CBDr oid=%c r=%c", oid_g,cmd_c);
+	}
+	else if(cmd_c==1033 ){
+		if(e.pin_num!=sda_pin)
+			cmd_c = gpio_in_read(e.pin);
+		else if (switch_mode == 1){
+			cmd_c = gpio_in_read(sda_gpio_in);
+		}
+		else
+			cmd_c = read_endstop_pin();
+
+		sendf("I2CBDr oid=%c r=%c", oid_g,cmd_c);
 	}
 }
 
@@ -577,11 +591,11 @@ DECL_COMMAND(command_I2C_BD_send, "I2CBD oid=%c c=%c d=%c");
 void
 command_config_I2C_BD(uint32_t *args)
 {
-    BD_i2c_init(args[1],args[2],args[3],args[4],args[5]);
+    BD_i2c_init(args[1],args[2],args[3],args[4],args[5],args[6]);
 }
 DECL_COMMAND(command_config_I2C_BD,
              "config_I2C_BD oid=%c sda_pin=%u scl_pin=%u"
-             " delay=%u h_pos=%u z_adjust=%u");
+             " delay=%u h_pos=%u z_adjust=%u estop_pin=%u");
 
 int  read_endstop_pin(void)
 {
