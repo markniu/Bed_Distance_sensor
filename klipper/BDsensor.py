@@ -904,7 +904,7 @@ class BDsensorEndstopWrapper:
 
     def BD_version(self, gcmd,r_lenght=20):
         self.I2C_BD_send(CMD_READ_VERSION)  # 1016 // // read sensor version
-        self.I2C_BD_send(CMD_READ_VERSION)
+       # self.I2C_BD_send(CMD_READ_VERSION)
         self.toolhead = self.printer.lookup_object('toolhead')
         ncount1 = 0
         x = []
@@ -923,7 +923,7 @@ class BDsensorEndstopWrapper:
                 self.bdversion = res
                 break
         self.I2C_BD_send(CMD_DISTANCE_MODE)
-        self.I2C_BD_send(CMD_DISTANCE_MODE)
+        #self.I2C_BD_send(CMD_DISTANCE_MODE)
         self.switch_mode = 1
         if "V1.0 " in self.bdversion \
            or "V1.1 " in self.bdversion \
@@ -1417,8 +1417,7 @@ class BDsensorEndstopWrapper:
 
     def multi_probe_end(self):
         self.toolhead = self.printer.lookup_object('toolhead')
-        homepos = self.toolhead.get_position()
-        self.gcode.respond_info("multi_probe_end%s,%s"%(self.endstop_pin_num,self.sda_pin_num))
+        homepos = self.toolhead.get_position()        
         if self.endstop_pin_num == self.sda_pin_num:
            
             if self.switch_mode == 1 \

@@ -98,7 +98,7 @@ enum {
 };
 struct endstop bd_tim ;
 
-int32_t	diff_step=0,RT_SAMPLE_TIME=0,adjusted_step=0,RT_RANGE=1000;
+int32_t	diff_step=0,RT_SAMPLE_TIME=0,adjusted_step=0,RT_RANGE=300;//1000==1mm
 
 int abs_bd(int a, int b){
  if (a > b)
@@ -368,7 +368,7 @@ void adjust_z_move(void)
 		} 
 		
 	} 
-	/*
+	
 	///limite the adjust range
 	if(abs_bd(adjusted_step *1000 / step_adj[0].steps_per_mm,0)>RT_RANGE){//>+-0.3mm
 		//diff_step = 0;
@@ -385,7 +385,7 @@ void adjust_z_move(void)
 		}
 		return;
 	}
-  */
+  
 }
 
 #define MAX_Z_PLUSE_TIME  1200
@@ -485,7 +485,7 @@ void adust_Z_calc(uint16_t sensor_z,struct stepper *s)
     static int sensor_z_old=0;
     if(step_adj[0].zoid==0 || step_adj[0].adj_z_range<=0 
 		|| (step_adj[0].cur_z>step_adj[0].adj_z_range)
-		|| (sensor_z>=300)||BD_read_flag!=1018){
+		|| sensor_z>=380||BD_read_flag!=1018){
 
 		diff_step = 0;
     	return;
@@ -498,9 +498,9 @@ void adust_Z_calc(uint16_t sensor_z,struct stepper *s)
     int diff_mm = (sensor_z*10 - step_adj[0].cur_z);
     diff_step = diff_mm * step_adj[0].steps_per_mm/1000;
     //nozzle collision detection prected
-	if ((sensor_z == sensor_z_old && sensor_z <= 0.3 && (abs_bd(diff_mm,0)>50))
-		||sensor_z == 0){
-		diff_step = -100 * step_adj[0].steps_per_mm/1000;
+	if ((sensor_z == sensor_z_old && sensor_z <= 30 && (abs_bd(diff_mm,0)>50))
+		||sensor_z <= 5 ){
+		diff_step = -10 * step_adj[0].steps_per_mm/1000;
 	}
 	sensor_z = sensor_z_old;
 	speed_smooth(diff_step);
