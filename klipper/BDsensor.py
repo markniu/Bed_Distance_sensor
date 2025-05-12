@@ -363,6 +363,9 @@ class BDPrinterProbe:
                     intd = self.mcu_probe.BD_Sensor_Read(0)                    
                     pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset
                     self.mcu_probe.results.append(pos)
+                    # Allow axis_twist_compensation to update results
+                    self.printer.send_event("probe:update_results", pos)
+                    # limit the message output to the console else it may take a lot of time
                     if len(self.mcu_probe.results) < 500:
                         self.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
                                             % (pos[0], pos[1], pos[2]))
