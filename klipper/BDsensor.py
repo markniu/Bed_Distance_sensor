@@ -621,7 +621,7 @@ class BDsensorEndstopWrapper:
         self.rt_sample_time = config.getint('rt_sample_time', 0)#ms
         self.rt_max_range = config.getfloat('rt_max_range', 0, minval=0)
         self.QGL_Tilt_Probe = config.getint('QGL_Tilt_Probe', 1)
-        self.switch_mode_sample_time = config.getint('SWITCH_MODE_SAMPLE_TIME', 0.006)
+        self.switch_mode_sample_time = config.getfloat('SWITCH_MODE_SAMPLE_TIME', 0.006)
         self.speed = config.getfloat('speed', 3.0, above=0.)
         
         gcode_macro = self.printer.load_object(config,
@@ -954,7 +954,7 @@ class BDsensorEndstopWrapper:
                 gstr=self.g28_cmd
                 gcmd.respond_info("Homing all:"+gstr)
                 self.gcode.run_script_from_command(gstr)
-            else:
+            elif 'z' not in self.toolhead.get_status(curtime)['homed_axes']:
                 gstr=self.g28_cmd+" Z"
                 gcmd.respond_info("Homing z:"+gstr)
                 self.gcode.run_script_from_command(gstr)
@@ -1389,7 +1389,7 @@ class BDsensorEndstopWrapper:
             time.sleep(0.05)
             raw_d = self.I2C_BD_send(CMD_READ_DATA, 1)
             #self.gcode.respond_info("  %d "%raw_d)
-            if (intr - raw_d) < down_steps*100 and raw_d < 500:
+            if (intr - raw_d) < down_steps*200 and raw_d < 600:
                 #self.gcode.respond_info(" stop at %d "%raw_d)
                 break;
             intr = raw_d
@@ -1443,13 +1443,17 @@ class BDsensorEndstopWrapper:
                     self.toolhead.manual_move([None, None, homepos[2]], 2)
                     self.toolhead.wait_moves()
                     self.gcode.respond_info("bd_value at %.3f mm" % self.bd_value)
+                    homepos[2] = 0 + self.z_offset
                     if abs(self.bd_value-self.z_offset-0.5)>0.05:
                         self.gcode.respond_info("Detect the plate changed or others, the BD sensor needs recalibration %.3f" % (self.bd_value-0.5))
                        # self.toolhead.manual_move([None, None, homepos[2]+10], 2)
+                        self.gcode.run_script_from_command("SET_KINEMATIC_POSITION Z=0")
                         self.gcode.run_script_from_command("M102 S-6")
+                        
+                        self.homing = 0
                         return
                     
-                    homepos[2] = 0 + self.z_offset
+                    
                 else:
                     homepos[2] = 0
                 self.toolhead.set_position(homepos)
