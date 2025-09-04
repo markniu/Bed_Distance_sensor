@@ -839,7 +839,7 @@ class BDsensorEndstopWrapper:
         hgt = hgt-(self.z_offset-self.z_offset_adj)
         hgt=int(hgt*1000) 
         self.I2C_BD_send(1026, hgt)
-    def event_motor_off(self,print_time):
+    def event_motor_off(self,print_time=0):
         if self.adjust_range != 0:
             self.BD_real_time(0)
 
@@ -1202,7 +1202,7 @@ class BDsensorEndstopWrapper:
     def lower_probe(self):
         return
 
-    def query_endstop(self, print_time):
+    def query_endstop(self, print_time=0):
         params = 1
         params = self.I2C_BD_send(CMD_READ_ENDSTOP)
         if self.endstop_pin_num != self.sda_pin_num and self._invert_endstop:
