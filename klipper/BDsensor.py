@@ -377,9 +377,47 @@ class BDPrinterProbe:
                     pos = self._lookup_toolhead_pos(pos_time)
                     intd = self.mcu_probe.BD_Sensor_Read(0)
                     pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset
+
+                    # Axis Twist Manual (Cosine)
+                    atc_obj = self.printer.lookup_object('axis_twist_compensation', None)
+                    twist_applied = 0.0
+
+                    if atc_obj:
+                        try:
+                            def get_cosine_interp(coord, vals, start, end):
+                                if not vals or coord < start or coord > end: return 0.0
+                                count = len(vals)
+                                if count < 2: return vals[0]
+                                step = (end - start) / (count - 1)
+                                t_raw = (coord - start) / step
+                                idx = int(t_raw)
+                                if idx >= count - 1: return vals[-1]
+                                t = t_raw - idx
+                                mu2 = (1 - math.cos(t * math.pi)) / 2
+                                return (vals[idx] * (1 - mu2) + vals[idx+1] * mu2)
+
+                            # X
+                            if hasattr(atc_obj, 'z_compensations') and atc_obj.z_compensations:
+                                x_start = atc_obj.compensation_start_x if atc_obj.compensation_start_x is not None else atc_obj.calibrate_start_x
+                                x_end = atc_obj.compensation_end_x if atc_obj.compensation_end_x is not None else atc_obj.calibrate_end_x
+                                if x_start is not None and x_end is not None:
+                                    twist_applied += get_cosine_interp(pos[0], atc_obj.z_compensations, x_start, x_end)
+
+                            # Y
+                            if hasattr(atc_obj, 'zy_compensations') and atc_obj.zy_compensations:
+                                y_start = atc_obj.compensation_start_y if atc_obj.compensation_start_y is not None else atc_obj.calibrate_start_y
+                                y_end = atc_obj.compensation_end_y if atc_obj.compensation_end_y is not None else atc_obj.calibrate_end_y
+                                if y_start is not None and y_end is not None:
+                                    twist_applied += get_cosine_interp(pos[1], atc_obj.zy_compensations, y_start, y_end)
+
+                            pos[2] += twist_applied
+
+                        except Exception:
+                            pass
+
                     self.mcu_probe.results.append(pos)
                     # Allow axis_twist_compensation to update results
-                    self.printer.send_event("probe:update_results", pos)
+                    # self.printer.send_event("probe:update_results", pos)
                     # limit the message output to the console else it may take a lot of time
                     if len(self.mcu_probe.results) < 500:
                         self.gcode.respond_info(
@@ -764,6 +802,7 @@ class BDsensorEndstopWrapper:
             )
             self.gcode.register_command("BDSENSOR_DISTANCE", self.bd_distance)
             self.gcode.register_command("BDSENSOR_SET", self.bd_set)
+            self.gcode.register_command('BDSENSOR_AXIS_TWIST', self.bd_axis_twist_calibrate)
 
         self.gcode_move = self.printer.load_object(config, "gcode_move")
         self.gcode = self.printer.lookup_object("gcode")
@@ -1653,6 +1692,253 @@ class BDsensorEndstopWrapper:
     def get_position_endstop(self):
         # print("BD get_position_endstop")
         return self.position_endstop
+
+    def bd_axis_twist_calibrate(self, gcmd):
+        import math # Ensures import for square root
+
+        axis_param = gcmd.get('AXIS', 'BOTH').upper()
+
+        # If DEGREE is specified, force that degree.
+        # Otherwise (default 0), activate AUTO mode.
+        force_degree = gcmd.get_int('DEGREE', 0)
+
+        axes_to_scan = []
+        if axis_param == 'BOTH': axes_to_scan = ['X', 'Y']
+        elif axis_param == 'X': axes_to_scan = ['X']
+        elif axis_param == 'Y': axes_to_scan = ['Y']
+        else:
+            self.gcode.respond_info("Error: Invalid axis.")
+            return
+
+        mode_str = "AUTO-TUNE" if force_degree == 0 else "FORCED (Degree %d)" % force_degree
+        self.gcode.respond_info("--- Axis Twist: Scan + Math (%s) ---" % mode_str)
+
+        self.is_axis_twist_active = True
+        toolhead = self.printer.lookup_object('toolhead')
+
+        # Limits (Same safe logic as before)
+        scan_min_x, scan_max_x = 20.0, 200.0
+        scan_min_y, scan_max_y = 20.0, 200.0
+        try:
+            curtime = self.printer.get_reactor().monotonic()
+            status = toolhead.get_status(curtime)
+            phys_min_x, phys_max_x = float(status['axis_minimum'][0]), float(status['axis_maximum'][0])
+            phys_min_y, phys_max_y = float(status['axis_minimum'][1]), float(status['axis_maximum'][1])
+            bed_mesh = self.printer.lookup_object('bed_mesh', None)
+            if bed_mesh:
+                # Try to get mesh configs
+                if hasattr(bed_mesh, 'bmc'): cfg = bed_mesh.bmc
+                elif hasattr(bed_mesh, 'mesh_min'): cfg = bed_mesh
+                else: cfg = None
+
+                if cfg:
+                    scan_min_x, scan_max_x = float(cfg.mesh_min[0]), float(cfg.mesh_max[0])
+                    scan_min_y, scan_max_y = float(cfg.mesh_min[1]), float(cfg.mesh_max[1])
+        except: pass
+
+        center_x = (scan_max_x - scan_min_x) / 2.0 + scan_min_x
+        center_y = (scan_max_y - scan_min_y) / 2.0 + scan_min_y
+
+        # Increased points to 20 for Auto-Tune to work well
+        points = gcmd.get_int('POINTS', 20)
+        z_hop  = gcmd.get_float('Z_HOP', 5.0)
+
+        old_col_homing = self.collision_homing
+        old_col_cal = self.collision_calibrate
+        self.collision_homing = 1
+        self.collision_calibrate = 0
+
+        if 'z' not in toolhead.get_status(curtime)['homed_axes']:
+             self.gcode.run_script_from_command("G28")
+
+        try:
+            self.gcode.run_script_from_command("SET_GCODE_VARIABLE MACRO=_HACK_SAFE_Z VARIABLE=allow_unsafe_z VALUE=True")
+        except: pass
+
+        final_results = {}
+
+        # --- EXECUTION OF SCAN ---
+        for current_axis in axes_to_scan:
+            self.gcode.respond_info(">>> Scan Axis %s (%d points)..." % (current_axis, points))
+
+            # Geometry
+            if current_axis == 'X':
+                start_val, end_val = scan_min_x, scan_max_x
+                fixed_pos = center_y
+                if start_val < phys_min_x + 5: start_val = phys_min_x + 5
+                if end_val > phys_max_x - 5: end_val = phys_max_x - 5
+            else:
+                start_val, end_val = scan_min_y, scan_max_y
+                fixed_pos = center_x
+                if start_val < phys_min_y + 5: start_val = phys_min_y + 5
+                if end_val > phys_max_y - 5: end_val = phys_max_y - 5
+
+            step = (end_val - start_val) / (points - 1)
+            axis_data_points = []
+
+            for i in range(points):
+                current_pos_val = start_val + (i * step)
+                if current_axis == 'X': target = [current_pos_val, fixed_pos, z_hop]
+                else: target = [fixed_pos, current_pos_val, z_hop]
+
+                self.toolhead.manual_move(target, 100.0)
+                self.toolhead.wait_moves()
+                self.gcode.run_script_from_command("G28 Z")
+                time.sleep(0.1)
+
+                val = self.bd_value
+                axis_data_points.append([current_pos_val, val])
+                self.gcode.respond_info("   Pt %d: Pos=%.1f | Z=%.4f" % (i+1, current_pos_val, val))
+                self.toolhead.manual_move([None, None, z_hop], 100.0)
+
+            final_results[current_axis] = { 'raw_data': axis_data_points, 'start': start_val, 'end': end_val, 'fixed': fixed_pos }
+
+        # --- CLEANUP ---
+        self.collision_homing = old_col_homing
+        self.collision_calibrate = old_col_cal
+        self.is_axis_twist_active = False
+        try:
+            self.gcode.run_script_from_command("SET_GCODE_VARIABLE MACRO=_HACK_SAFE_Z VARIABLE=allow_unsafe_z VALUE=False")
+        except: pass
+        self.gcode.run_script_from_command("G28 Z")
+
+        # --- MATH ENGINE ---
+        def polynomial_regression(data_pairs, degree):
+            n = len(data_pairs)
+            if n < degree + 1: return [0.0] * (degree + 1)
+            X = [p[0] for p in data_pairs]
+            Y = [p[1] for p in data_pairs]
+            sigma_x = [0.0] * (2 * degree + 1)
+            for i in range(2 * degree + 1): sigma_x[i] = sum([x**i for x in X])
+            sigma_xy = [0.0] * (degree + 1)
+            for i in range(degree + 1): sigma_xy[i] = sum([Y[j] * (X[j]**i) for j in range(n)])
+            matrix_A = []
+            for i in range(degree + 1):
+                row = []
+                for j in range(degree + 1): row.append(sigma_x[i + j])
+                matrix_A.append(row)
+            N = len(matrix_A)
+            for i in range(N):
+                pivot = matrix_A[i][i]
+                for j in range(i + 1, N):
+                    factor = matrix_A[j][i] / pivot
+                    for k in range(i, N): matrix_A[j][k] -= factor * matrix_A[i][k]
+                    sigma_xy[j] -= factor * sigma_xy[i]
+            coeffs = [0.0] * N
+            for i in range(N - 1, -1, -1):
+                sum_ax = sum([matrix_A[i][j] * coeffs[j] for j in range(i + 1, N)])
+                coeffs[i] = (sigma_xy[i] - sum_ax) / matrix_A[i][i]
+            return coeffs
+
+        def eval_poly(coeffs, x):
+            y = 0.0
+            for i, c in enumerate(coeffs): y += c * (x**i)
+            return y
+
+        # --- AUTO-SELECTION LOGIC (CALIBRATED AI) ---
+        # --- RANGE OPTIMIZATION LOGIC (BED FLATNESS) ---
+        def find_best_fit(pairs, max_degree=4):
+            best_deg = 1
+            best_range = 9999.0
+            best_coeffs = []
+
+            # Get the original range (without compensation) to compare
+            z_vals_raw = [p[1] for p in pairs]
+            raw_range = max(z_vals_raw) - min(z_vals_raw)
+
+            # Test each degree
+            for d in range(1, max_degree + 1):
+                coeffs = polynomial_regression(pairs, d)
+
+                # Simulate the residual (what remains after correction)
+                residuals = []
+                for p in pairs:
+                    prediction = eval_poly(coeffs, p[0])
+                    # The residual is the error the compensation couldn't remove
+                    residuals.append(p[1] - prediction)
+
+                # Calculate the Range of the residual (Peak to Peak)
+                current_range = max(residuals) - min(residuals)
+
+                # --- DECISION CRITERIA ---
+                # 1. Penalty of 0.005mm (5 microns) per extra degree.
+                # Only increase degree if range improvement is greater than 5 microns.
+                # This prevents overfitting due to sensor noise.
+                effective_range = current_range + (d * 0.005)
+
+                if d == 1:
+                    best_range_score = effective_range
+                    best_deg = d
+                    best_coeffs = coeffs
+                    final_real_range = current_range
+                else:
+                    if effective_range < best_range_score:
+                        best_range_score = effective_range
+                        best_deg = d
+                        best_coeffs = coeffs
+                        final_real_range = current_range
+
+            return best_deg, best_coeffs, final_real_range
+
+        # --- PROCESSING AND OUTPUT ---
+        configfile = self.printer.lookup_object('configfile')
+        section_name = 'axis_twist_compensation'
+
+        out = []
+        out.append("")
+        out.append("-" * 20)
+        out.append("FINAL RESULT (AUTO-TUNE):")
+        out.append("[axis_twist_compensation]")
+
+        for axis_key in final_results:
+            pack = final_results[axis_key]
+            pairs = pack['raw_data']
+
+            try:
+                # DEGREE SELECTION
+                if force_degree > 0:
+                    deg = force_degree
+                    coeffs = polynomial_regression(pairs, deg)
+                    rmse = 0.0 # irrelevant
+                else:
+                    deg, coeffs, rmse = find_best_fit(pairs)
+                    self.gcode.respond_info("Axis %s: Best fit found -> Degree %d (Mean Error: %.5fmm)" % (axis_key, deg, rmse))
+
+                # GENERATE SMOOTH CURVE
+                fitted_values = []
+                for p in pairs:
+                    fitted_values.append(eval_poly(coeffs, p[0]))
+
+                avg = sum(fitted_values) / len(fitted_values)
+                comps_str = ", ".join(["%.6f" % (avg - v) for v in fitted_values])
+
+                # Save
+                if axis_key == 'X':
+                    configfile.set(section_name, 'calibrate_start_x', "%.1f" % pack['start'])
+                    configfile.set(section_name, 'calibrate_end_x', "%.1f" % pack['end'])
+                    configfile.set(section_name, 'calibrate_y', "%.1f" % pack['fixed'])
+                    configfile.set(section_name, 'z_compensations', comps_str)
+                    out.append("# --- AXIS X (Auto Degree %d) ---" % deg)
+                    out.append("calibrate_start_x: %.1f" % pack['start'])
+                    out.append("calibrate_end_x: %.1f" % pack['end'])
+                    out.append("calibrate_y: %.1f" % pack['fixed'])
+                    out.append("z_compensations: %s" % comps_str)
+                else:
+                    configfile.set(section_name, 'calibrate_start_y', "%.1f" % pack['start'])
+                    configfile.set(section_name, 'calibrate_end_y', "%.1f" % pack['end'])
+                    configfile.set(section_name, 'calibrate_x', "%.1f" % pack['fixed'])
+                    configfile.set(section_name, 'zy_compensations', comps_str)
+                    out.append("# --- AXIS Y (Auto Degree %d) ---" % deg)
+                    out.append("calibrate_start_y: %.1f" % pack['start'])
+                    out.append("calibrate_end_y: %.1f" % pack['end'])
+                    out.append("calibrate_x: %.1f" % pack['fixed'])
+                    out.append("zy_compensations: %s" % comps_str)
+            except Exception as e:
+                self.gcode.respond_info("Error calculating %s: %s" % (axis_key, str(e)))
+
+        out.append("-" * 20)
+        self.gcode.respond_raw("\n".join(out))
+        self.gcode.respond_info("SUCCESS: Type SAVE_CONFIG.")
 
 
 def load_config(config):
