@@ -9,14 +9,14 @@
 #endif
 
 I2C_SegmentBED BD_SENSOR_I2C;
-#define  I2C_BED_SDA  12  
-#define  I2C_BED_SCL  11  
+#define  I2C_BED_SDA  12
+#define  I2C_BED_SCL  11
 #define DELAY 100
 #define MAX_BD_HEIGHT 6.9
 #define CMD_START_READ_CALIBRATE_DATA   1017
 #define CMD_END_READ_CALIBRATE_DATA   1018
 #define CMD_START_CALIBRATE 1019
-#define CMD_END_CALIBRATE 1021  
+#define CMD_END_CALIBRATE 1021
 #define CMD_READ_VERSION  1016
 #define CMD_DISTANCD_RAWDATA_TYPE 1020       // switch output distance data type to raw data, default is mm (1 represent 0.01mm)
 
@@ -24,13 +24,13 @@ char tmp_1[50];
 unsigned int n=0,i=0;
 float Distance=0.0;
 
-U8G2_SSD1306_128X32_UNIVISION_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);  
+U8G2_SSD1306_128X32_UNIVISION_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);
 
 
 
 void dis_text(char *tmp_d,char x,char y)
 {
-  
+
   u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
   u8g2.drawStr(x,y,tmp_d);  // write something to the internal memory
   u8g2.sendBuffer();          // transfer internal memory to the display
@@ -40,7 +40,7 @@ void dis_text(char *tmp_d,char x,char y)
 unsigned short read_one_data()
 {
     unsigned short tmp=0;
-    tmp=BD_SENSOR_I2C.BD_i2c_read();    
+    tmp=BD_SENSOR_I2C.BD_i2c_read();
     if(BD_SENSOR_I2C.BD_Check_OddEven(tmp)==0)
       //printf("CRC error!\n");
      // sprintf(tmp_1,"CRC error");
@@ -83,21 +83,21 @@ void setup(void) {
   read_version(tmp_1+strlen(tmp_1));
   dis_text(tmp_1,0,10);
   ///
-  
+
 }
 
 void loop(void) {
-  u8g2.clearBuffer(); 
+  u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
   //u8g2.drawStr(x,y,tmp_d);  // write something to the internal memory
-  //u8g2.sendBuffer();   
+  //u8g2.sendBuffer();
 
   sprintf(tmp_1,"");
   read_version(tmp_1+strlen(tmp_1));
   //dis_text(tmp_1,0,10);
   u8g2.drawStr(0,10,tmp_1);
-  
-  //delay(10);  
+
+  //delay(10);
   //read and display raw data
   n=read_raw_data();
   sprintf(tmp_1,"%d ",n);

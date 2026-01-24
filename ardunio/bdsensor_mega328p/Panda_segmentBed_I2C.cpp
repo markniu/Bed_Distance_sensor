@@ -9,9 +9,9 @@ int delay_time=100;
 void    I2C_SegmentBED::setLow(unsigned char pin) {
       noInterrupts();
        pinMode(pin, OUTPUT);
-   // if (_pullup) 
+   // if (_pullup)
       digitalWrite(pin, LOW);
-    
+
 
     interrupts();
 }
@@ -25,7 +25,7 @@ void   I2C_SegmentBED::setHigh(unsigned char pin) {
  // digitalWrite(pin,1);
  // return;
      noInterrupts();
-    //if (_pullup) 
+    //if (_pullup)
       pinMode(pin, INPUT_PULLUP);
    // else
    //   pinMode(pin, INPUT);
@@ -50,7 +50,7 @@ int  I2C_SegmentBED::i2c_init(unsigned char _sda,unsigned char _scl,unsigned cha
 }
 
 // Start transfer function: <addr> is the 8-bit I2C address (including the R/W
-// bit). 
+// bit).
 // Return: true if the slave replies with an "acknowledge", false otherwise
 
 bool  I2C_SegmentBED::i2c_start(unsigned char addr) {
@@ -71,7 +71,7 @@ bool  I2C_SegmentBED::i2c_start(unsigned char addr) {
 }
 */
 // Repeated start function: After having claimed the bus with a start condition,
-// you can address another or the same chip again without an intervening 
+// you can address another or the same chip again without an intervening
 // stop condition.
 // Return: true if the slave replies with an "acknowledge", false otherwise
 bool  I2C_SegmentBED::i2c_rep_start(unsigned char addr) {
@@ -97,7 +97,7 @@ void  I2C_SegmentBED::i2c_stop(void) {
 // Return: true if the slave replies with an "acknowledge", false otherwise
 bool  I2C_SegmentBED::i2c_write(unsigned char value) {
   for (unsigned char curr = 0X80; curr != 0; curr >>= 1) {
-    if (curr & value) {setHigh(I2C_BED_SDA);} else  setLow(I2C_BED_SDA); 
+    if (curr & value) {setHigh(I2C_BED_SDA);} else  setLow(I2C_BED_SDA);
     setHigh(I2C_BED_SCL);
     delayMicroseconds(delay_time);
     setLow(I2C_BED_SCL);
@@ -109,13 +109,13 @@ bool  I2C_SegmentBED::i2c_write(unsigned char value) {
   delayMicroseconds(delay_time);
   unsigned char ack = digitalRead(I2C_BED_SDA);
   setLow(I2C_BED_SCL);
-  delayMicroseconds(delay_time);  
+  delayMicroseconds(delay_time);
   setLow(I2C_BED_SDA);
   return ack == 0;
 }
 
-// Read one byte. If <last> is true, we send a NAK after having received 
-// the byte in order to terminate the read sequence. 
+// Read one byte. If <last> is true, we send a NAK after having received
+// the byte in order to terminate the read sequence.
 unsigned char  I2C_SegmentBED::i2c_read(bool last) {
   unsigned char b = 0;
   setHigh(I2C_BED_SDA);
@@ -131,7 +131,7 @@ unsigned char  I2C_SegmentBED::i2c_read(bool last) {
   setHigh(I2C_BED_SCL);
   delayMicroseconds(delay_time);
   setLow(I2C_BED_SCL);
-  delayMicroseconds(delay_time);  
+  delayMicroseconds(delay_time);
   setLow(I2C_BED_SDA);
   return b;
 }
@@ -154,13 +154,13 @@ void  I2C_SegmentBED::I2C_send_str(char *dat_r,char send_now)
     }
     i2c_stop();
   }
-    
-  
+
+
 }
 
 void I2C_SegmentBED::I2C_read_str(char *dat_r,int addr)
 {
-  i2c_stop(); 
+  i2c_stop();
   if(i2c_start((I2C_7BITADDR<<1)|I2C_WRITE))
   {
     int i =0;
@@ -174,32 +174,32 @@ void I2C_SegmentBED::I2C_read_str(char *dat_r,int addr)
       i++;
     }
     i2c_read(true);
-    
+
   }
   i2c_stop();
 }
 ////////////////////////////
- 
+
 unsigned short I2C_SegmentBED::BD_Add_OddEven(unsigned short byte)
 {
 	unsigned char i;
-	unsigned char n; 
-	unsigned short r; 
+	unsigned char n;
+	unsigned short r;
 	n =0;
   for(i=0;i<10;i++)
 	{
 	  if(((byte >>i)&0x01) == 0x01)
 		{
 		   n++;
-		}	
+		}
 	}
 	if((n&0x01) == 0x01)
 	{
-		r = byte | 0x400; 
+		r = byte | 0x400;
 	}
 	else
 	{
-	  r = byte | 0x00;  
+	  r = byte | 0x00;
 	}
 	return r;
 }
@@ -212,26 +212,26 @@ unsigned short I2C_SegmentBED::BD_Add_OddEven(unsigned short byte)
 unsigned short I2C_SegmentBED::BD_Check_OddEven(unsigned short byte)
 {
 	unsigned char i;
-	unsigned char n;  
-	unsigned char r;  
+	unsigned char n;
+	unsigned char r;
 	n =0;
-   for(i=0;i<10;i++) 
+   for(i=0;i<10;i++)
 	{
 	  if(((byte >>i)&0x01) == 0x01)
 		{
-		   n++;  
-		}	
+		   n++;
+		}
 	}
-	if((byte>>10) == (n&0x01)) 
+	if((byte>>10) == (n&0x01))
 	{
-		r = BYTE_CHECK_OK;  
+		r = BYTE_CHECK_OK;
 	}
 	else
 	{
-	  r = BYTE_CHECK_ERR;  
+	  r = BYTE_CHECK_ERR;
 	}
 	return r;
-}	
+}
 
 void   I2C_SegmentBED::BD_setLow(unsigned char pin) {
       noInterrupts();
@@ -279,7 +279,7 @@ void  I2C_SegmentBED::BD_i2c_stop(void) {
 
 unsigned short I2C_SegmentBED::BD_i2c_read(void)
 {
-   
+
   BD_I2C_start();
   //// read
   BD_setHigh(I2C_BED_SDA);
@@ -309,7 +309,7 @@ unsigned short I2C_SegmentBED::BD_i2c_read(void)
 
 void I2C_SegmentBED::BD_i2c_write(unsigned int addr)
 {
- 
+
   BD_I2C_start();
   //// write
   BD_setLow(I2C_BED_SDA);
@@ -319,10 +319,10 @@ void I2C_SegmentBED::BD_i2c_write(unsigned int addr)
   addr=BD_Add_OddEven(addr);
   ///write address
   delayMicroseconds(delay_time);
-  for (int i=10; i >=0; i--) 
+  for (int i=10; i >=0; i--)
   {
-    if ((addr>>i)&0x01) {BD_set_force_High(I2C_BED_SDA);} else  BD_setLow(I2C_BED_SDA); 
-    //if (addr &curr) {set_force_High(I2C_BED_SDA);} else  setLow(I2C_BED_SDA); 
+    if ((addr>>i)&0x01) {BD_set_force_High(I2C_BED_SDA);} else  BD_setLow(I2C_BED_SDA);
+    //if (addr &curr) {set_force_High(I2C_BED_SDA);} else  setLow(I2C_BED_SDA);
     BD_set_force_High(I2C_BED_SCL);
     delayMicroseconds(delay_time);
     BD_setLow(I2C_BED_SCL);
@@ -330,6 +330,6 @@ void I2C_SegmentBED::BD_i2c_write(unsigned int addr)
   }
   ////////////
   BD_i2c_stop();
-  
+
 
 }

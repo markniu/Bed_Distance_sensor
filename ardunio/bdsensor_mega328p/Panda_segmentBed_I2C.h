@@ -1,4 +1,4 @@
-// 
+//
 #ifndef Panda_segmentBed_I2C_h
 #define Panda_segmentBed_I2C_h
 
@@ -9,13 +9,13 @@
 #define I2C_MAXWAIT 5000
 //#define I2C_7BITADDR 0x3C// DS1307
 #define MEMLOC 0x0A
-#define ADDRLEN 1 
+#define ADDRLEN 1
 
 class I2C_SegmentBED{
 public:
 	int i2c_init(unsigned char _sda,unsigned char _scl,unsigned char _addr,int delay_m);
 	void I2C_read_str(char *dat_r,int addr);
-	void I2C_send_str(char *dat_r,char send_now);	 
+	void I2C_send_str(char *dat_r,char send_now);
 //////////////////////
 	void BD_i2c_write(unsigned int addr);
 	unsigned short BD_i2c_read(void);
