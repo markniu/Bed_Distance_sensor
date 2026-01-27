@@ -261,7 +261,7 @@ class BDPrinterProbe:
             return gcmd.get_float("LIFT_SPEED", self.lift_speed, above=0.)
         return self.lift_speed
 
-    def get_offsets(self):
+    def get_offsets(self, gcmd=None):
         return self.x_offset, self.y_offset, self.z_offset
 
     def _probe_enstop(self, speed):
@@ -566,7 +566,7 @@ class BDPrinterProbe:
         curpos[2] += 5.
         self._move(curpos, lift_speed)
         # Move the nozzle over the probe point
-        x_offset, y_offset, z_offset = self.get_offsets()
+        x_offset, y_offset, z_offset = self.get_offsets(gcmd)
         curpos[0] += x_offset
         curpos[1] += y_offset
         self._move(curpos, params['probe_speed'])
