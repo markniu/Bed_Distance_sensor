@@ -3,7 +3,7 @@
 HOME_DIR="${HOME}/klipper"
 
 if [  -d "$1" ] ; then
-    
+
 	echo "$1"
 	HOME_DIR=""$1"/klipper"
 fi

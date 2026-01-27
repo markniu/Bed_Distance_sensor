@@ -1,14 +1,14 @@
 #include <Arduino.h>
 #include <Panda_segmentBed_I2C.h>
 I2C_SegmentBED BD_SENSOR_I2C;
-#define  I2C_BED_SDA  2  
-#define  I2C_BED_SCL  15  
+#define  I2C_BED_SDA  2
+#define  I2C_BED_SCL  15
 #define DELAY 100
 #define MAX_BD_HEIGHT 6.9
 #define CMD_START_READ_CALIBRATE_DATA   1017
 #define CMD_END_READ_CALIBRATE_DATA   1018
 #define CMD_START_CALIBRATE 1019
-#define CMD_END_CALIBRATE 1021  
+#define CMD_END_CALIBRATE 1021
 #define CMD_READ_VERSION  1016
 
 char tmp_1[50];
@@ -23,7 +23,7 @@ void setup() {
 
 void loop() {
     unsigned short tmp=0;
-    tmp=BD_SENSOR_I2C.BD_i2c_read();    
+    tmp=BD_SENSOR_I2C.BD_i2c_read();
     if(BD_SENSOR_I2C.BD_Check_OddEven(tmp)==0)
       printf("CRC error!\n");
     else
@@ -33,7 +33,7 @@ void loop() {
       printf(tmp_1);
     }
     delay(100);
-    if((tmp&0x3ff)<1020)  
+    if((tmp&0x3ff)<1020)
     {
       /////Read Calibrate data
       if(n==10)
@@ -61,8 +61,8 @@ void loop() {
       delay(500);
       BD_SENSOR_I2C.BD_i2c_stop();
     }
-  
- 
 
- 
+
+
+
 }

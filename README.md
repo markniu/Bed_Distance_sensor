@@ -6,9 +6,9 @@ it can measure the bed distance at any point in real time without moving the z a
 Faster leveling, realtime compensation, high accuracy.
 
 1. No need to do probe points before every print, it will be automatically compensated for based on actual distance in real time.
- 
+
 2. You can do bed mesh leveling like a normal proximity sensor but much faster with this BDsensor.
-   
+
 3. Easy manual bed level adjustment thanks to ability to display the live sensor distance measurement on your screen.
 
 Sensor type: inductive, eddy, can only measure the metal plate.
@@ -24,8 +24,8 @@ Range: 4mm (for different metal the range should be different, the normal pei st
 * Support high temperature chamber(120C) with the long cable probe [BDsensorM](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M).
 ### Hardware Version
  . | hardware | firmware/software
---- | --- |---  
-2022.6 | BDsensor VA, V1.0 | V1.0  
+--- | --- |---
+2022.6 | BDsensor VA, V1.0 | V1.0
 2023.4 | BDsensor VB, V1.1, the connector was changed | V1.1, support self reboot
 2023.11 | BDsensor VB, V1.3, Upgrade the MCU to STM32 | V1.2, for stm32
 2024.2  |              |V1.2c, [Support nozzle collision sensing](https://github.com/markniu/Bed_Distance_sensor/wiki/Collision-sensing)
@@ -35,15 +35,15 @@ Range: 4mm (for different metal the range should be different, the normal pei st
 
 ### Software
  . | Marlin | Klipper
---- | --- |---  
-Real Time leveling |:heavy_check_mark:| :heavy_check_mark:  
-Fast bed mesh |:heavy_check_mark:| :heavy_check_mark: 
-Fast bed mesh(No toolhead stop)|:heavy_check_mark: | :heavy_check_mark: 
-Distance display |:heavy_check_mark: | :heavy_check_mark: 
-Can bus toolhead|No | :heavy_check_mark: 
-standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark: 
-[KAMP](https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging) Adaptive Meshing & Purging |No | :heavy_check_mark: 
-nozzle collision sensing|[Detail](https://github.com/markniu/Bed_Distance_sensor/wiki/Collision-sensing-for-Marlin):heavy_check_mark:  | :heavy_check_mark: 
+--- | --- |---
+Real Time leveling |:heavy_check_mark:| :heavy_check_mark:
+Fast bed mesh |:heavy_check_mark:| :heavy_check_mark:
+Fast bed mesh(No toolhead stop)|:heavy_check_mark: | :heavy_check_mark:
+Distance display |:heavy_check_mark: | :heavy_check_mark:
+Can bus toolhead|No | :heavy_check_mark:
+standby mode automatic while printing|:heavy_check_mark: | :heavy_check_mark:
+[KAMP](https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging) Adaptive Meshing & Purging |No | :heavy_check_mark:
+nozzle collision sensing|[Detail](https://github.com/markniu/Bed_Distance_sensor/wiki/Collision-sensing-for-Marlin):heavy_check_mark:  | :heavy_check_mark:
 
 ### Benefit of Collision sensing
 1.  **Auto z offset calibration**.
@@ -70,5 +70,5 @@ nozzle collision sensing|[Detail](https://github.com/markniu/Bed_Distance_sensor
 #### Where to buy:
  [pandapi3d.com](https://www.pandapi3d.com) , [elecrow](https://www.elecrow.com/bd-sensor.html) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
 
- 
+
 
