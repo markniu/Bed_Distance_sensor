@@ -294,7 +294,7 @@ class BDPrinterProbe:
         #return self.x_offset, self.y_offset, self.z_offset
         return self.probe_offsets.get_offsets(gcmd)
 
-    def _probe_enstop(self, speed):
+    def _probe_external_endstop(self, speed):
         toolhead = self.printer.lookup_object('toolhead')
         curtime = self.printer.get_reactor().monotonic()
         if 'z' not in toolhead.get_status(curtime)['homed_axes']:
@@ -303,24 +303,25 @@ class BDPrinterProbe:
         pos = toolhead.get_position()
         pos[2] = self.z_position
         try:
-            epos = phoming.probing_move(self.mcu_probe, pos, speed)
+            ppos = phoming.probing_move(self.mcu_probe, pos, speed)
         except self.printer.command_error as e:
             reason = str(e)
             if "Timeout during endstop homing" in reason:
                 reason += HINT_TIMEOUT
             raise self.printer.command_error(reason)
         # Allow axis_twist_compensation to update results
-        self.printer.send_event("probe:update_results", epos)
+        epos = self.probe_offsets.create_probe_result(ppos)
+        self.printer.send_event("probe:update_results", [epos])
         # add z compensation to probe position
         gcode = self.printer.lookup_object('gcode')
-        gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
-                           % (epos[0], epos[1], epos[2]))
-        return epos[:3]
+        gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
+                           % (epos.bed_x, epos.bed_y, epos.bed_z))
+        return epos
 
     def _probe(self, speed):
         self.mcu_probe.homing = 0
         if self.mcu_probe.endstop_pin_num != self.mcu_probe.sda_pin_num:
-            return self._probe_enstop(speed)
+            return self._probe_external_endstop(speed)
         toolhead = self.printer.lookup_object('toolhead')
         curtime = self.printer.get_reactor().monotonic()
         if 'z' not in toolhead.get_status(curtime)['homed_axes']:
@@ -823,7 +824,7 @@ class BDsensorEndstopWrapper:
         if cmd == CMD_READ_DATA or cmd == CMD_READ_ENDSTOP:
             pr = self.I2C_BD_send_cmd.send([self.oid, cmd, data])
             #self.gcode.respond_info(f"{pr}")
-            #self.test_v = self.test_v + 1
+            #self.test_v = self.test_v + 5
             #return self.test_v #int(pr['r'])
             return int(pr['r'])
         else:
