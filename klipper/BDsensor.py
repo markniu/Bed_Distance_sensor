@@ -1558,6 +1558,8 @@ class BDsensorEndstopWrapper:
 
     def get_position_endstop(self):
         # print("BD get_position_endstop")
+        if self.endstop_pin_num != self.sda_pin_num:
+            return 0
         return self.position_endstop
 
 
