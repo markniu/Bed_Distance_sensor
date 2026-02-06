@@ -65,7 +65,8 @@ nozzle collision sensing|[Detail](https://github.com/markniu/Bed_Distance_sensor
 
 ### Support
  https://www.facebook.com/groups/380795976169477
-
+ 
+ https://discord.gg/5HdfvpKQJu
 
 #### Where to buy:
  [pandapi3d.com](https://www.pandapi3d.com) , [elecrow](https://www.elecrow.com/bd-sensor.html) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
