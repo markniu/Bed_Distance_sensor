@@ -801,10 +801,10 @@ class BDsensorEndstopWrapper:
             "I2CBDr oid=%c r=%c",
             oid=self.oid, cq=self.cmd_queue)
 
-        self.mcu.register_response(self._handle_BD_Update,
-                                   "BD_Update", self.oid)
-        self.mcu.register_response(self.handle_probe_Update,
-                                   "X_probe_Update", self.oid)
+    #    self.mcu.register_serial_response(self._handle_BD_Update,
+     #                              "BD_Update", self.oid)
+      #  self.mcu.register_serial_response(self.handle_probe_Update,
+      #                             "X_probe_Update", self.oid)
         self.mcu_endstop.add_config_cmd(
             "BDendstop_home oid=%d clock=0 sample_ticks=0 sample_count=0"
             " rest_ticks=0 pin_value=0 trsync_oid=0 trigger_reason=0"
