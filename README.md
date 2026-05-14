@@ -17,10 +17,9 @@ Range: 4mm (for different metal the range should be different, the normal pei st
 
 
 ### Hardware:
-* It can connect to most motherboards or GPIOs on the RaspberryPi
-* Easy to install:
-  small and light; can be installed anywhere, even surrounding metal above
-* Support Can bus module
+* Shielded Coil
+* Work with any GPIO pins(softI2C)
+* The lightest and samllest eddy probe, 1.5g:
 * Support high temperature chamber(120C) with the long cable probe [BDsensorM](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M).
 ### Hardware Version
  . | hardware | firmware/software
