@@ -1,20 +1,9 @@
 ##  The Future of 3D printer Bed Leveling
 
-[BDsensor](https://www.pandapi3d.com/bdsensor) is the first distance sensor that can work with 3D printer and do fast bed leveling and adjust z axis in real time.
+[BDsensor](https://www.pandapi3d.com/bdsensor) is the first eddy bed level sensor that can work with 3D printer since 2022 and do fast bed leveling and adjust z axis in real time.
 it can measure the bed distance at any point in real time without moving the z axis up and down.
 
 Faster leveling, realtime compensation, high accuracy.
-
-1. No need to do probe points before every print, it will be automatically compensated for based on actual distance in real time.
- 
-2. You can do bed mesh leveling like a normal proximity sensor but much faster with this BDsensor.
-   
-3. Easy manual bed level adjustment thanks to ability to display the live sensor distance measurement on your screen.
-
-Sensor type: inductive, eddy, can only measure the metal plate.
-
-Range: 4mm (for different metal the range should be different, the normal pei steel plate is 4mm, but aluminum is about 2mm)
-
 
 ### Hardware:
 * Shielded Coil
