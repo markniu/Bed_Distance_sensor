@@ -115,7 +115,7 @@ class HomingProbeOffsetsHelper:
         return ProbeResult(
             test_pos[0]+self.x_offset, test_pos[1]+self.y_offset,
             test_pos[2]-self.z_offset, test_pos[0], test_pos[1], test_pos[2])
-    
+
 class BDPrinterProbe:
     def __init__(self, config, mcu_probe):
         self.printer = config.get_printer()
@@ -197,7 +197,7 @@ class BDPrinterProbe:
         self.reactor = self.printer.get_reactor()
         self.bd_sample_timer = self.reactor.register_timer(
             self.scan_sample_event)
-        
+
     def _probe_state_error(self):
         raise self.printer.command_error(
                 "Internal probe error - start/end probe session mismatch")
@@ -213,11 +213,11 @@ class BDPrinterProbe:
         self.multi_probe_pending = True
         self.mcu_probe.results = []
         return self
-        
+
     def pull_probed_results(self):
         toolhead = self.printer.lookup_object("toolhead")
         toolhead.get_last_move_time()
-        if self.rapid_scan == True:    
+        if self.rapid_scan == True:
             self.bedmesh = self.printer.lookup_object('bed_mesh', None)
             helperc = self.bedmesh.bmc.probe_mgr.probe_helper
             while len(self.mcu_probe.results) < len(helperc.probe_points):
@@ -231,10 +231,10 @@ class BDPrinterProbe:
     def end_probe_session(self):
         if not self.multi_probe_pending:
             self._probe_state_error()
-        self.mcu_probe.results = []    
+        self.mcu_probe.results = []
         self.multi_probe_pending = False
         self.mcu_probe.multi_probe_end()
-        
+
     def get_probe_params(self, gcmd=None):
         if gcmd is None:
             gcmd = self.dummy_gcode_cmd
@@ -272,7 +272,7 @@ class BDPrinterProbe:
             self.mcu_probe.multi_probe_begin()
             self.multi_probe_pending = True
             for i, rail in enumerate(rails):
-                if (self.mcu_probe.collision_homing == 1 
+                if (self.mcu_probe.collision_homing == 1
                           and rail.homing_retract_dist == 0):
                     self.homing_speed_tmp = rail.homing_speed
                     rail.homing_speed = rail.second_homing_speed
@@ -286,7 +286,7 @@ class BDPrinterProbe:
                          and rail.homing_retract_dist == 0):
                     rail.homing_speed = self.homing_speed_tmp
             self.multi_probe_end()
-            
+
 
     def _handle_command_error(self):
         try:
@@ -373,7 +373,7 @@ class BDPrinterProbe:
             raise self.printer.command_error("Must home before probe")
         phoming = self.printer.lookup_object('homing')
         pos = toolhead.get_position()
-        self.mcu_probe.reactor.update_timer(self.mcu_probe.bd_update_timer, 
+        self.mcu_probe.reactor.update_timer(self.mcu_probe.bd_update_timer,
                                    self.mcu_probe.reactor.NEVER)
         pos[2] = self.z_position
         try:
@@ -420,7 +420,7 @@ class BDPrinterProbe:
         # even number of samples
         return self._calc_mean(z_sorted[middle - 1:middle + 1])
 
-      
+
     def _lookup_toolhead_pos(self, pos_time):
         toolhead = self.printer.lookup_object('toolhead')
         kin = toolhead.get_kinematics()
@@ -428,7 +428,7 @@ class BDPrinterProbe:
                                       s.get_past_mcu_position(pos_time))
                     for s in kin.get_steppers()}
         return kin.calc_position(kin_spos)
-    
+
     def scan_sample_event(self, eventtime):
         toolhead = self.printer.lookup_object("toolhead")
         while self._probe_times:
@@ -438,7 +438,7 @@ class BDPrinterProbe:
                 est_print_time = toolhead.mcu.estimated_print_time(systime)
                 if est_print_time>=pos_time:
                     pos = self._lookup_toolhead_pos(pos_time)
-                    intd = self.mcu_probe.BD_Sensor_Read(0)                    
+                    intd = self.mcu_probe.BD_Sensor_Read(0)
                     pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset
                     epos = self.probe_offsets.create_probe_result(pos)
                     self.mcu_probe.results.append(epos)
@@ -452,11 +452,11 @@ class BDPrinterProbe:
                     break
                 toolhead.reactor.pause(systime + 0.002)
             self._probe_times.pop(0)
-            
-        return eventtime + 0.005
-            
 
-    def _scan_lookahead_cb(self, printtime):       
+        return eventtime + 0.005
+
+
+    def _scan_lookahead_cb(self, printtime):
         self._probe_times.append(printtime)
 
     def _get_next_probe_xy(self, gcmd, current_idx):
@@ -700,7 +700,7 @@ class BDPrinterProbe:
                              sample_count, sample_retract_dist,
                              speed, lift_speed))
         # Probe bed sample_count times
-        
+
         # toolhead.manual_move([None, None, pos[2]], speed)
         # toolhead.wait_moves()
         fo_params = dict(gcmd.get_command_parameters())
@@ -777,7 +777,7 @@ class BDPrinterProbe:
 
     cmd_PROBE_CALIBRATE_help = "Calibrate the probe's z_offset"
 
-    def cmd_PROBE_CALIBRATE(self, gcmd):      
+    def cmd_PROBE_CALIBRATE(self, gcmd):
         manual_probe.verify_no_manual_probe(self.printer)
         params = self.get_probe_params(gcmd)
         # Perform initial probe
@@ -794,7 +794,7 @@ class BDPrinterProbe:
         self.probe_calibrate_info = (ppos, self.get_offsets(gcmd))
         manual_probe.ManualProbeHelper(self.printer, gcmd,
                                        self.probe_calibrate_finalize)
-        
+
     cmd_Z_OFFSET_APPLY_PROBE_help = "Adjust the probe's z_offset"
 
     def cmd_Z_OFFSET_APPLY_PROBE(self, gcmd):
@@ -871,7 +871,7 @@ class BDsensorEndstopWrapper:
         self.QGL_Tilt_Probe = config.getint('QGL_Tilt_Probe', 1)
         self.switch_mode_sample_time = config.getfloat('SWITCH_MODE_SAMPLE_TIME', 0.006)
         self.speed = config.getfloat('speed', 3.0, above=0.)
-        
+
         gcode_macro = self.printer.load_object(config,
                                                'gcode_macro')
         self.activate_gcode = \
@@ -882,7 +882,7 @@ class BDsensorEndstopWrapper:
         self.collision_calibrating = 0
         self.switch_mode = 0
         self.printer.register_event_handler("stepper_enable:motor_off",
-                                            self.event_motor_off)                                    
+                                            self.event_motor_off)
         ppins = self.printer.lookup_object('pins')
         # self.mcu_pwm = ppins.setup_pin('pwm', config.get('scl_pin'))
         self.bdversion = ''
@@ -973,7 +973,7 @@ class BDsensorEndstopWrapper:
         self.reactor = self.printer.get_reactor()
         self.bd_update_timer = self.reactor.register_timer(
             self.bd_update_event)
-        
+
         self.status_dis = None
         # try:
         # self.status_dis=self.printer.lookup_object('display_status')
@@ -1088,7 +1088,7 @@ class BDsensorEndstopWrapper:
             #self.gcode.respond_info("Since current z <0 ")
             return;
         hgt = hgt-(self.z_offset-self.z_offset_adj)
-        hgt=int(hgt*1000) 
+        hgt=int(hgt*1000)
         self.I2C_BD_send(1026, hgt)
     def event_motor_off(self,print_time=0):
         if self.adjust_range != 0:
@@ -1099,10 +1099,10 @@ class BDsensorEndstopWrapper:
         kin = self.toolhead.get_kinematics()
         for stepper in kin.get_steppers():
             if stepper.is_active_axis('z') or stepper.is_active_axis('a') or stepper.is_active_axis('b') or stepper.is_active_axis('c'):
-                self.bd_set_cur_z(z,1)   
+                self.bd_set_cur_z(z,1)
                 break
         self.I2C_BD_send(CMD_DISTANCE_MODE)
-        
+
     def bd_update_event(self, eventtime):
         z=self.gcode_move.last_position[2] - self.gcode_move.base_position[2]
         if self.homing == 1:
@@ -1222,7 +1222,7 @@ class BDsensorEndstopWrapper:
                 raise self.printer.command_error("Unable to communicate with bdsensor,%d"%raw_d)
             raise self.printer.command_error("BDsensor is too far from the bed:%d"%raw_d)
         self.I2C_BD_send(CMD_DISTANCE_MODE)
-        
+
         self.I2C_BD_send(CMD_START_CALIBRATE)
         self.I2C_BD_send(CMD_START_CALIBRATE)
         self.gcode.run_script_from_command("SET_KINEMATIC_POSITION Z=0")
@@ -1330,7 +1330,7 @@ class BDsensorEndstopWrapper:
 
         cmd_bd = gcmd.get_float('REAL_TIME_HEIGHT', None)
         if cmd_bd is not None:
-            self.BD_real_time(cmd_bd) 
+            self.BD_real_time(cmd_bd)
             return
 
         cmd_bd = gcmd.get_int('NO_STOP_PROBE', None)
@@ -1366,7 +1366,7 @@ class BDsensorEndstopWrapper:
         elif bd_height < 0.0:
             bd_height = 0
         self.gcode.respond_info("Real time leveling height:%.2f ( %.2f - z_offset:%.2f ) "%(bd_height-self.z_offset,bd_height,self.z_offset))
-        
+
         if bd_height == 0:
             self.adjust_range = 0
         else:
@@ -1401,7 +1401,7 @@ class BDsensorEndstopWrapper:
             self.reactor.update_timer(self.bd_update_timer, self.reactor.NEVER)
         else:
             self.reactor.update_timer(self.bd_update_timer, self.reactor.NOW)
-        
+
     def process_M102(self, gcmd):
         self.process_m102 = 1
         cmd_bd = 0
@@ -1420,12 +1420,12 @@ class BDsensorEndstopWrapper:
         elif cmd_bd == -2:  # gcode M102 S-2 read distance data
             self.bd_distance(gcmd)
         elif cmd_bd == -7:
-            self.I2C_BD_send(CMD_DISTANCE_RAWDATA_TYPE) 
+            self.I2C_BD_send(CMD_DISTANCE_RAWDATA_TYPE)
             strd = "Raw data:" + str(self.I2C_BD_send(CMD_READ_DATA, 1))
             self.I2C_BD_send(CMD_DISTANCE_MODE)
             self.bd_value = self.BD_Sensor_Read(1)
             strd = strd + ",  Then we can calculate the distance by comparing to the calibration data:"+str(self.bd_value) + "mm"
-            gcmd.respond_raw(strd) 
+            gcmd.respond_raw(strd)
             return
         elif cmd_bd == -8:
             self.I2C_BD_send(CMD_REBOOT_SENSOR)
@@ -1634,7 +1634,7 @@ class BDsensorEndstopWrapper:
                         break
                     intr = raw_d
                 break
-            intr = raw_d         
+            intr = raw_d
         return 0,0
 
     def adjust_probe_down(self, down_steps):
@@ -1656,46 +1656,46 @@ class BDsensorEndstopWrapper:
             intr = raw_d
 
 
-    
+
 
     def adjust_probe(self):
         self.toolhead = self.printer.lookup_object('toolhead')
         homepos = self.toolhead.get_position()
         self.I2C_BD_send(CMD_DISTANCE_RAWDATA_TYPE)
         self.I2C_BD_send(CMD_DISTANCE_RAWDATA_TYPE)
-        adj_z,adj_raw = self.adjust_probe_up(0.1,0,1)      
+        adj_z,adj_raw = self.adjust_probe_up(0.1,0,1)
         #if adj_z <= 0.15: # and adj_raw >= 6:
-        
+
         self.adjust_probe_down(0.1)
-        adj_z,adj_raw = self.adjust_probe_up(0.05,0.01,0) 
-        
+        adj_z,adj_raw = self.adjust_probe_up(0.05,0.01,0)
+
         self.adjust_probe_down(0.05)
-        adj_z,adj_raw = self.adjust_probe_up(0.05,0.005,1) 
-        
+        adj_z,adj_raw = self.adjust_probe_up(0.05,0.005,1)
+
         #if adj_z <= 0.1: # and adj_raw >= 6:
         #    self.gcode.respond_info("re-adjusting")
         #    self.adjust_probe_down(0.1)
-        #    adj_z,adj_raw = self.adjust_probe_up(0.05,0.01,1) 
+        #    adj_z,adj_raw = self.adjust_probe_up(0.05,0.01,1)
         self.bd_value = self.BD_Sensor_Read(2)
         self.I2C_BD_send(CMD_DISTANCE_MODE)
 
     def multi_probe_end(self):
         self.toolhead = self.printer.lookup_object('toolhead')
-        homepos = self.toolhead.get_position()        
+        homepos = self.toolhead.get_position()
         if self.endstop_pin_num == self.sda_pin_num:
-           
+
             if self.switch_mode == 1 \
                and self.homing == 1 \
                and (self.collision_homing == 1
                     or self.collision_calibrating == 1):
-                   
+
                 self.adjust_probe()
                 #homepos[2] = 0
                 if self.collision_calibrating != 1:
                   #  homepos[2] = 0 + self.z_offset + 0.5
-                    self.I2C_BD_send(CMD_DISTANCE_MODE)               
+                    self.I2C_BD_send(CMD_DISTANCE_MODE)
                     homepos = self.toolhead.get_position()
-                    homepos[2] +=0.5               
+                    homepos[2] +=0.5
                     self.toolhead.manual_move([None, None, homepos[2]], 2)
                     self.toolhead.wait_moves()
                     self.bd_value = self.BD_Sensor_Read(2)
@@ -1710,11 +1710,11 @@ class BDsensorEndstopWrapper:
                        # self.toolhead.manual_move([None, None, homepos[2]+10], 2)
                         self.gcode.run_script_from_command("SET_KINEMATIC_POSITION Z=0")
                         self.gcode.run_script_from_command("M102 S-6")
-                        
+
                         self.homing = 0
                         return
-                    
-                    
+
+
                 else:
                     homepos[2] = 0
                 self.toolhead.set_position(homepos)
