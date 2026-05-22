@@ -624,14 +624,38 @@ class BDPrinterProbe:
         if mpresult is None:
             return
         ppos, offsets = self.probe_calibrate_info
-        z_offset = offsets[2] - mpresult.bed_z + ppos.bed_z
-        self.gcode.respond_info(
-            "%s: z_offset: %.3f\n"
-            "The SAVE_CONFIG command will update the printer config file\n"
-            "with the above and restart the printer." % (self.name, z_offset)
-        )
         configfile = self.printer.lookup_object('configfile')
-        configfile.set(self.name, 'z_offset', "%.3f" % z_offset)
+        if self.mcu_probe.endstop_pin_num != self.mcu_probe.sda_pin_num:
+            # External endstop (e.g. Tap): calibrate homing_probe_z_offset.
+            # We want: after G28, Z=0 = paper/bed surface.
+            # At trigger the raw Z is ppos.probe_z; at the paper test it is
+            # mpresult.bed_z.  The new offset is therefore:
+            #   new = trigger_z - paper_z  →  trigger_z - new = paper_z = 0 ✓
+            # get_position_endstop() = position_endstop + homing_probe_z_offset
+            # After trigger: ppos.probe_z = position_endstop + homing_probe_z_offset
+            # We want new get_position_endstop() = ppos.probe_z - mpresult[2]
+            # → new_H = ppos.probe_z - mpresult[2] - position_endstop
+            # mpresult is a plain kin_pos list [x, y, z, e] from manual_probe
+            new_offset = (ppos.probe_z - mpresult[2]
+                          - self.mcu_probe.position_endstop)
+            self.gcode.respond_info(
+                "%s: homing_probe_z_offset: %.3f\n"
+                "The SAVE_CONFIG command will update the printer config file\n"
+                "with the above and restart the printer."
+                % (self.name, new_offset)
+            )
+            configfile.set(self.name, 'homing_probe_z_offset',
+                           "%.3f" % new_offset)
+        else:
+            # BD sensor mode: calibrate BD z_offset (standard formula).
+            # mpresult is a plain kin_pos list [x, y, z, e] from manual_probe
+            z_offset = offsets[2] - mpresult[2] + ppos.bed_z
+            self.gcode.respond_info(
+                "%s: z_offset: %.3f\n"
+                "The SAVE_CONFIG command will update the printer config file\n"
+                "with the above and restart the printer." % (self.name, z_offset)
+            )
+            configfile.set(self.name, 'z_offset', "%.3f" % z_offset)
 
     cmd_PROBE_CALIBRATE_help = "Calibrate the probe's z_offset"
 
@@ -698,16 +722,27 @@ class BDsensorEndstopWrapper:
         self.g28_cmd = config.get('homing_cmd', 'G28')
         self.z_adjust = config.getfloat('z_adjust', 0., minval=-0.3, below=0.3)
         self.z_offset = config.getfloat('z_offset', 0., minval=-0.6, maxval=0.6)
-        self.position_endstop = config.getfloat('position_endstop', 0.7,
-                                                minval=0.5, below=2.5)
-        if self.z_adjust > self.position_endstop:
-            raise self.printer.command_error("The 'z_adjust' cannot be greater"
-                                             " than 'position_endstop' in "
-                                             "section [BDsensor]")
-        if self.z_offset > self.position_endstop:
-            raise self.printer.command_error("The 'z_offset' cannot be greater"
-                                             " than 'position_endstop' in "
-                                             "section [BDsensor]")
+        # When an external endstop (e.g. Tap) is configured the position_endstop
+        # is used as a coarse trigger-height setting and may span the full Z
+        # travel range.  For BD-sensor-only mode the original tight limits apply.
+        _has_external_endstop = config.get('endstop_pin', None) is not None
+        if _has_external_endstop:
+            self.position_endstop = config.getfloat('position_endstop', 0.)
+        else:
+            self.position_endstop = config.getfloat('position_endstop', 0.7,
+                                                    minval=0.5, below=2.5)
+            if self.z_adjust > self.position_endstop:
+                raise self.printer.command_error(
+                    "The 'z_adjust' cannot be greater than 'position_endstop'"
+                    " in section [BDsensor]")
+            if self.z_offset > self.position_endstop:
+                raise self.printer.command_error(
+                    "The 'z_offset' cannot be greater than 'position_endstop'"
+                    " in section [BDsensor]")
+        # Fine-tune offset for external endstop (Tap); calibrated via
+        # PROBE_CALIBRATE or Z_OFFSET_APPLY_PROBE.  Kept separate from
+        # position_endstop so the coarse value never needs editing.
+        self.homing_probe_z_offset = config.getfloat('homing_probe_z_offset', 0.)
         self.stow_on_each_sample = config.getboolean(
             'deactivate_on_each_sample', True)
         self.no_stop_probe = config.get('no_stop_probe', None)
