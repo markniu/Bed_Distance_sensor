@@ -71,7 +71,7 @@ def calc_probe_z_average(positions, method='average'):
     if method != 'median':
         # Use mean average
         inv_count = 1. / float(len(positions))
-        return manual_probe.ProbeResult(
+        return ProbeResult(
             *[sum([pos[i] for pos in positions]) * inv_count
               for i in range(len(positions[0]))])
     # Use median
@@ -100,7 +100,7 @@ class ProbeOffsetsHelper:
     def get_offsets(self, gcmd=None):
         return self.x_offset, self.y_offset, self.z_offset
     def create_probe_result(self, test_pos):
-        return manual_probe.ProbeResult(
+        return ProbeResult(
             test_pos[0]+self.x_offset, test_pos[1]+self.y_offset,
             test_pos[2]-self.z_offset, test_pos[0], test_pos[1], test_pos[2])
     
