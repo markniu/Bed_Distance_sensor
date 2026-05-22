@@ -129,6 +129,7 @@ class BDPrinterProbe:
         self.x_offset = config.getfloat('x_offset', 0.)
         self.y_offset = config.getfloat('y_offset', 0.)
         self.z_offset = config.getfloat('z_offset')
+        self.console_verbosity = config.getint('console_verbosity', 0, minval=0, maxval=2)
         self.probe_calibrate_z = 0.
         self.multi_probe_pending = False
         self.rapid_scan = False
@@ -357,7 +358,8 @@ class BDPrinterProbe:
         self.printer.send_event("probe:update_results", [epos])
         # add z compensation to probe position
         gcode = self.printer.lookup_object('gcode')
-        gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
+        if self.console_verbosity >= 2:
+            gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
                            % (epos.bed_x, epos.bed_y, epos.bed_z))
         return epos
 
@@ -395,7 +397,8 @@ class BDPrinterProbe:
         self.printer.send_event("probe:update_results", [epos])
         # Report results
         gcode = self.printer.lookup_object('gcode')
-        gcode.respond_info("0probe: at %.3f,%.3f bed will contact at z=%.6f"
+        if self.console_verbosity >= 1:
+            gcode.respond_info("0probe: at %.3f,%.3f bed will contact at z=%.6f"
                            % (epos.bed_x, epos.bed_y, epos.bed_z))
         #self.mcu_probe.homeing = 0
         return epos
@@ -443,6 +446,7 @@ class BDPrinterProbe:
                     #self.printer.send_event("probe:update_results", [epos])
                     # limit the message output to the console else it may take a lot of time
                     if len(self.mcu_probe.results) < 500:
+                        if self.console_verbosity >= 1:
                         self.gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
                                  % (epos.bed_x, epos.bed_y, epos.bed_z))
                     break
@@ -600,8 +604,9 @@ class BDPrinterProbe:
                     self.printer.send_event("probe:update_results", [epos])
                     # Report results
                     gcode = self.printer.lookup_object('gcode')
-                    gcode.respond_info("run probe: at %.3f,%.3f bed will contact at z=%.6f"
-                                    % (epos.bed_x, epos.bed_y, epos.bed_z))
+                    if self.console_verbosity >= 1:
+                        gcode.respond_info("run probe: at %.3f,%.3f bed will contact at z=%.6f"
+                                        % (epos.bed_x, epos.bed_y, epos.bed_z))
                     # return pos[:3]
                    # positions.append(pos[:3])
                     positions.append(epos)
