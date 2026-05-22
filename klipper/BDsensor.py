@@ -652,6 +652,8 @@ class BDPrinterProbe:
         epos = calc_probe_z_average(positions, samples_result)
         #self.results.append(epos)
         self.mcu_probe.results.append(epos)
+        # New probe.py collects results via run_probe's return value
+        return epos
 
     cmd_PROBE_help = "Probe Z-height at current XY position"
 
