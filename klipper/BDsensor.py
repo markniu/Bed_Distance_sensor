@@ -447,7 +447,7 @@ class BDPrinterProbe:
                     # limit the message output to the console else it may take a lot of time
                     if len(self.mcu_probe.results) < 500:
                         if self.console_verbosity >= 1:
-                        self.gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
+                            self.gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
                                  % (epos.bed_x, epos.bed_y, epos.bed_z))
                     break
                 toolhead.reactor.pause(systime + 0.002)
