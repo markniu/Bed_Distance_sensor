@@ -103,11 +103,24 @@ class ProbeOffsetsHelper:
         return ProbeResult(
             test_pos[0]+self.x_offset, test_pos[1]+self.y_offset,
             test_pos[2]-self.z_offset, test_pos[0], test_pos[1], test_pos[2])
+# Helper to read the xyz homing probe offsets from the config
+class HomingProbeOffsetsHelper:
+    def __init__(self, config):
+        self.x_offset = config.getfloat('homing_probe_x_offset', 0.)
+        self.y_offset = config.getfloat('homing_probe_y_offset', 0.)
+        self.z_offset = config.getfloat('homing_probe_z_offset', 0.)
+    def get_offsets(self, gcmd=None):
+        return self.x_offset, self.y_offset, self.z_offset
+    def create_probe_result(self, test_pos):
+        return ProbeResult(
+            test_pos[0]+self.x_offset, test_pos[1]+self.y_offset,
+            test_pos[2]-self.z_offset, test_pos[0], test_pos[1], test_pos[2])
     
 class BDPrinterProbe:
     def __init__(self, config, mcu_probe):
         self.printer = config.get_printer()
         self.probe_offsets = ProbeOffsetsHelper(config)
+        self.homing_probe_offsets = HomingProbeOffsetsHelper(config)
         self.name = config.get_name()
         self.config = config
         self.mcu_probe = mcu_probe
@@ -324,7 +337,10 @@ class BDPrinterProbe:
                 reason += HINT_TIMEOUT
             raise self.printer.command_error(reason)
         # Allow axis_twist_compensation to update results
-        epos = self.probe_offsets.create_probe_result(ppos)
+        # Use homing_probe_offsets here because the external endstop (e.g. Tap)
+        # is physically at the nozzle — it has its own x/y/z offsets, not the
+        # BD sensor ones stored in probe_offsets.
+        epos = self.homing_probe_offsets.create_probe_result(ppos)
         self.printer.send_event("probe:update_results", [epos])
         # add z compensation to probe position
         gcode = self.printer.lookup_object('gcode')
@@ -644,6 +660,20 @@ class BDPrinterProbe:
         configfile = self.printer.lookup_object('configfile')
         if offset == 0:
             self.gcode.respond_info("Nothing to do: Z Offset is 0")
+        elif self.mcu_probe.endstop_pin_num != self.mcu_probe.sda_pin_num:
+            # External endstop (Tap): fine-tune goes into homing_probe_z_offset.
+            # Increasing homing_probe_z_offset raises get_position_endstop(),
+            # which makes G28 set a higher Z at trigger → Z=0 is lower → nozzle
+            # goes further down.  So: new_H = old_H - offset (same sign as BD).
+            hp_z_offset = self.homing_probe_offsets.get_offsets(gcmd)[2]
+            new_hp = hp_z_offset - offset
+            self.gcode.respond_info(
+                "%s: homing_probe_z_offset: %.3f\n"
+                "The SAVE_CONFIG command will update the printer config file\n"
+                "with the above and restart the printer."
+                % (self.name, new_hp))
+            configfile.set(self.name, 'homing_probe_z_offset',
+                           "%.3f" % new_hp)
         else:
             z_offset = self.probe_offsets.get_offsets(gcmd)[2]
             new_calibrate = z_offset - offset
