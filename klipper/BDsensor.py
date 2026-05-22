@@ -10,6 +10,20 @@ import math
 from threading import Timer
 from mcu import MCU, MCU_trsync
 from . import manual_probe
+try:
+    ProbeResult = manual_probe.ProbeResult
+except AttributeError:
+    class ProbeResult(list):
+        def __init__(self, bed_x, bed_y, bed_z, probe_x=None, probe_y=None, probe_z=None):
+            # Initialize as list [x, y, z] to satisfy Klipper unpacking
+            super().__init__([bed_x, bed_y, bed_z])
+            # Keep attributes for BDsensor internal usage
+            self.bed_x = bed_x
+            self.bed_y = bed_y
+            self.bed_z = bed_z
+            self.probe_x = probe_x
+            self.probe_y = probe_y
+            self.probe_z = probe_z
 from . import probe
 BD_TIMER = 0.600
 TRSYNC_TIMEOUT = 0.025
