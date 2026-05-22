@@ -1611,9 +1611,11 @@ class BDsensorEndstopWrapper:
             self.raise_probe()
 
     def get_position_endstop(self):
-        # print("BD get_position_endstop")
         if self.endstop_pin_num != self.sda_pin_num:
-            return 0
+            # External endstop (Tap): Klipper sets Z to this value when the
+            # endstop fires.  position_endstop is the coarse trigger height;
+            # homing_probe_z_offset is the PROBE_CALIBRATE / babystep fine-tune.
+            return self.position_endstop + self.homing_probe_z_offset
         return self.position_endstop
 
 
