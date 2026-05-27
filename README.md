@@ -51,13 +51,12 @@ nozzle collision sensing|[Detail](https://github.com/markniu/Bed_Distance_sensor
 
 #### Mount STL:  [BLtouch_Compatible](https://www.thingiverse.com/thing:6098131) | [VzBoT](https://discord.com/channels/829828765512106054/1163237892957671424) | [Stealthburner Voron](https://www.printables.com/model/831679-lazy-bd-sensor-adapter-for-stealthburner-voron)
 
-### Support
- https://www.facebook.com/groups/380795976169477
- 
- https://discord.gg/5HdfvpKQJu
-
-#### Where to buy:
- [pandapi3d.com](https://www.pandapi3d.com) , [elecrow](https://www.elecrow.com/bd-sensor.html) , [淘宝店](https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-14344044600.5.60a16ff77NRBL5&id=684572042388)
+| Channel | Link |
+|---|---|
+| Discord | [discord.gg/z6ahddnGVU](https://discord.gg/z6ahddnGVU) |
+| Facebook group | [facebook.com/groups/380795976169477](https://facebook.com/groups/380795976169477) |
+| Where to buy | [fabreeko.com](https://fabreeko.com) <br> [pandapi3d.com](https://pandapi3d.com) , [淘宝](https://shop62248922.taobao.com/)
+|
 
  
 
