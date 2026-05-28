@@ -917,11 +917,15 @@ class BDsensorEndstopWrapper:
         self._invert_endstop = self._invert
         self.oid_endstop = self.oid
         self.endstop_pin_num = self.sda_pin_num
+        self.endstop_pin_num_resolved = self.sda_pin_num
         self.endstop_bdsensor_offset = 0
         try:
             pin = config.get('endstop_pin')
             pin_params = ppins.lookup_pin(pin, can_invert=True, can_pullup=True)
             self.endstop_pin_num = pin_params['pin']
+            pin_resolver = ppins.get_pin_resolver(pin_params['chip_name'])
+            self.endstop_pin_num_resolved = pin_resolver.aliases.get(
+                pin_params['pin'], pin_params['pin'])
             self.mcu_endstop = pin_params['chip']
             self._invert_endstop = pin_params['invert']
             if self.mcu_endstop is not self.mcu:
@@ -1536,6 +1540,11 @@ class BDsensorEndstopWrapper:
         ffi_lib.trdispatch_start(self._trdispatch,
                                  self.etrsync.REASON_HOST_REQUEST)
 
+        # When endstop is on a different MCU, scl_gpio/sda_pin are not
+        # initialized on that MCU (only config_I2C_BD on the main MCU sets
+        # them up). Sending sw=1 would cause BD_setLow(scl_gpio) with an
+        # uninitialized gpio_out -> "Not an output pin" firmware shutdown.
+        ext_sw_mode = 0 if self.mcu_endstop is not self.mcu else self.switch_mode
         self._home_cmd.send(
             [
                 self.oid_endstop,
@@ -1546,8 +1555,8 @@ class BDsensorEndstopWrapper:
                 triggered ^ self._invert_endstop,
                 self.etrsync.get_oid(),
                 self.etrsync.REASON_ENDSTOP_HIT,
-                self.endstop_pin_num,
-                self.switch_mode,collision_value
+                self.endstop_pin_num_resolved,
+                ext_sw_mode, collision_value
             ],
             reqclock=clock
         )
@@ -1566,7 +1575,7 @@ class BDsensorEndstopWrapper:
             self.trigger_completion.complete(True)
         self.trigger_completion.wait()
         self._home_cmd.send([self.oid_endstop, 0, 0, 0, 0, 0, 0, 0,
-                            self.endstop_pin_num,0,0])
+                            self.endstop_pin_num_resolved,0,0])
         ffi_main, ffi_lib = chelper.get_ffi()
         ffi_lib.trdispatch_stop(self._trdispatch)
         res = [trsync.stop() for trsync in self._trsyncs]
