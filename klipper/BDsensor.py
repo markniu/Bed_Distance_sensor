@@ -14,16 +14,16 @@ try:
     ProbeResult = manual_probe.ProbeResult
 except AttributeError:
     class ProbeResult(list):
-        def __init__(self, bed_x, bed_y, bed_z, probe_x=None, probe_y=None, probe_z=None):
+        def __init__(self, bed_x, bed_y, bed_z, test_x=None, test_y=None, test_z=None):
             # Initialize as list [x, y, z] to satisfy Klipper unpacking
             super().__init__([bed_x, bed_y, bed_z])
             # Keep attributes for BDsensor internal usage
             self.bed_x = bed_x
             self.bed_y = bed_y
             self.bed_z = bed_z
-            self.probe_x = probe_x
-            self.probe_y = probe_y
-            self.probe_z = probe_z
+            self.test_x = test_x
+            self.test_y = test_y
+            self.test_z = test_z
 from . import probe
 BD_TIMER = 0.600
 TRSYNC_TIMEOUT = 0.025
@@ -365,7 +365,7 @@ class BDPrinterProbe:
 
     def _probe(self, speed):
         self.mcu_probe.homing = 0
-        if self.mcu_probe.endstop_pin_num != self.mcu_probe.sda_pin_num:
+        if self.mcu_probe.has_external_endstop:
             return self._probe_external_endstop(speed)
         toolhead = self.printer.lookup_object('toolhead')
         curtime = self.printer.get_reactor().monotonic()
@@ -743,18 +743,18 @@ class BDPrinterProbe:
             return
         ppos, offsets = self.probe_calibrate_info
         configfile = self.printer.lookup_object('configfile')
-        if self.mcu_probe.endstop_pin_num != self.mcu_probe.sda_pin_num:
+        if self.mcu_probe.has_external_endstop:
             # External endstop (e.g. Tap): calibrate homing_probe_z_offset.
             # We want: after G28, Z=0 = paper/bed surface.
-            # At trigger the raw Z is ppos.probe_z; at the paper test it is
+            # At trigger the raw Z is ppos.test_z; at the paper test it is
             # mpresult.bed_z.  The new offset is therefore:
             #   new = trigger_z - paper_z  →  trigger_z - new = paper_z = 0 ✓
             # get_position_endstop() = position_endstop + homing_probe_z_offset
-            # After trigger: ppos.probe_z = position_endstop + homing_probe_z_offset
-            # We want new get_position_endstop() = ppos.probe_z - mpresult[2]
-            # → new_H = ppos.probe_z - mpresult[2] - position_endstop
+            # After trigger: ppos.test_z = raw toolhead Z at trigger
+            # We want new get_position_endstop() = ppos.test_z - mpresult[2]
+            # → new_H = ppos.test_z - mpresult[2] - position_endstop
             # mpresult is a plain kin_pos list [x, y, z, e] from manual_probe
-            new_offset = (ppos.probe_z - mpresult[2]
+            new_offset = (ppos.test_z - mpresult[2]
                           - self.mcu_probe.position_endstop)
             self.gcode.respond_info(
                 "%s: homing_probe_z_offset: %.3f\n"
@@ -764,6 +764,8 @@ class BDPrinterProbe:
             )
             configfile.set(self.name, 'homing_probe_z_offset',
                            "%.3f" % new_offset)
+            # Reset any stale z_offset left over from a previous BD-only run.
+            configfile.set(self.name, 'z_offset', '0.000')
         else:
             # BD sensor mode: calibrate BD z_offset (standard formula).
             # mpresult is a plain kin_pos list [x, y, z, e] from manual_probe
@@ -791,7 +793,10 @@ class BDPrinterProbe:
         curpos[1] = ppos.bed_y
         self._move(curpos, params['probe_speed'])
         # Start manual probe
-        self.probe_calibrate_info = (ppos, self.get_offsets(gcmd))
+        if self.mcu_probe.has_external_endstop:
+            self.probe_calibrate_info = (ppos, self.homing_probe_offsets.get_offsets(gcmd))
+        else:
+            self.probe_calibrate_info = (ppos, self.get_offsets(gcmd))
         manual_probe.ManualProbeHelper(self.printer, gcmd,
                                        self.probe_calibrate_finalize)
 
