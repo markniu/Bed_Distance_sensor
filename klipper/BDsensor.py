@@ -807,7 +807,7 @@ class BDPrinterProbe:
         configfile = self.printer.lookup_object('configfile')
         if offset == 0:
             self.gcode.respond_info("Nothing to do: Z Offset is 0")
-        elif self.mcu_probe.endstop_pin_num != self.mcu_probe.sda_pin_num:
+        elif self.mcu_probe.has_external_endstop:
             # External endstop (Tap): fine-tune goes into homing_probe_z_offset.
             # Increasing homing_probe_z_offset raises get_position_endstop(),
             # which makes G28 set a higher Z at trigger → Z=0 is lower → nozzle
@@ -848,8 +848,8 @@ class BDsensorEndstopWrapper:
         # When an external endstop (e.g. Tap) is configured the position_endstop
         # is used as a coarse trigger-height setting and may span the full Z
         # travel range.  For BD-sensor-only mode the original tight limits apply.
-        _has_external_endstop = config.get('endstop_pin', None) is not None
-        if _has_external_endstop:
+        self.has_external_endstop = config.get('endstop_pin', None) is not None
+        if self.has_external_endstop:
             self.position_endstop = config.getfloat('position_endstop', 0.)
         else:
             self.position_endstop = config.getfloat('position_endstop', 0.7,
