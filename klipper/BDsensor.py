@@ -470,7 +470,7 @@ class BDPrinterProbe:
                 bedmesh = self.printer.lookup_object('bed_mesh', None)
                 if bedmesh is None:
                     return None
-                ph = bedmesh.bmc.probe_helper
+                ph = bedmesh.bmc.probe_mgr.probe_helper
                 pts = ph.probe_points
                 next_idx = current_idx + 1
                 if next_idx >= len(pts):
@@ -520,7 +520,7 @@ class BDPrinterProbe:
                     if "BED_MESH_CALIBRATE" in gcmd.get_command():
                         bedmesh = self.printer.lookup_object('bed_mesh', None)
                         if bedmesh is not None:
-                            ph = bedmesh.bmc.probe_helper
+                            ph = bedmesh.bmc.probe_mgr.probe_helper
                             pts = ph.probe_points
                             x_off, y_off, _ = self.probe_offsets.get_offsets()
                             travel_speed = ph.speed
