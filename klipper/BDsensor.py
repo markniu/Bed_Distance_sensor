@@ -203,15 +203,29 @@ class BDPrinterProbe:
                 "Internal probe error - start/end probe session mismatch")
 
     def start_probe_session(self, gcmd):
-        # Called only by run_single_probe() (PROBE, PROBE_CALIBRATE).
-        # For BED_MESH_CALIBRATE / QGL / Z_TILT the new probe.py calls
-        # multi_probe_begin() directly, so rapid_scan is started there.
         self._probe_times = []
         if self.multi_probe_pending:
             self._probe_state_error()
         self.mcu_probe.multi_probe_begin()
         self.multi_probe_pending = True
         self.mcu_probe.results = []
+        self._rapid_scan_idx = 0
+        # Modern Klipper calls start_probe_session instead of multi_probe_begin,
+        # so we must activate rapid_scan here when no_stop_probe is configured.
+        # Only activate for commands that benefit from rapid_scan BD-sensor reads.
+        # QGL/Z_TILT default to the external endstop (physical trigger) when one
+        # is configured — rapid_scan is BD-sensor-only and must not override that.
+        # Set QGL_Tilt_Probe=0 to explicitly opt QGL/Z_TILT into BD-sensor reads.
+        _cmd = gcmd.get_command()
+        _is_qgl_tilt = ("QUAD_GANTRY_LEVEL" in _cmd or "Z_TILT_ADJUST" in _cmd)
+        _ext_handles_qgl = (self.mcu_probe.has_external_endstop
+                            and self.mcu_probe.QGL_Tilt_Probe != 0
+                            and _is_qgl_tilt)
+        if (getattr(self.mcu_probe, 'no_stop_probe', None) is not None
+                and any(cmd in _cmd for cmd in self._RAPID_SCAN_CMDS)
+                and not _ext_handles_qgl):
+            self.rapid_scan = True
+            self.reactor.update_timer(self.bd_sample_timer, self.reactor.NOW)
         return self
 
     def pull_probed_results(self):
@@ -233,6 +247,10 @@ class BDPrinterProbe:
             self._probe_state_error()
         self.mcu_probe.results = []
         self.multi_probe_pending = False
+        if self.rapid_scan:
+            self.reactor.update_timer(self.bd_sample_timer, self.reactor.NEVER)
+            self.rapid_scan = False
+            self._probe_times = []
         self.mcu_probe.multi_probe_end()
 
     def get_probe_params(self, gcmd=None):
@@ -503,6 +521,19 @@ class BDPrinterProbe:
         # intermediate point is a smooth pass-through.  Subsequent
         # run_probe calls (idx>0) just spin-wait for their pre-recorded
         # result and return immediately.
+        # If rapid_scan was enabled by the legacy multi_probe_begin path but
+        # this command should use the external endstop instead of BD-sensor
+        # distance reads (QGL/Z_TILT with external endstop and QGL_Tilt_Probe!=0),
+        # disable rapid_scan now so we fall through to the normal probe path.
+        if self.rapid_scan:
+            _cmd = gcmd.get_command()
+            if (self.mcu_probe.has_external_endstop
+                    and self.mcu_probe.QGL_Tilt_Probe != 0
+                    and ("QUAD_GANTRY_LEVEL" in _cmd
+                         or "Z_TILT_ADJUST" in _cmd)):
+                self.rapid_scan = False
+                self.reactor.update_timer(self.bd_sample_timer,
+                                          self.reactor.NEVER)
         if self.rapid_scan and any(
                 cmd in gcmd.get_command() for cmd in self._RAPID_SCAN_CMDS):
             idx = self._rapid_scan_idx
