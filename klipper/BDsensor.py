@@ -576,8 +576,8 @@ class BDPrinterProbe:
         max_value = max([p.bed_z for p in positions])
         min_value = min([p.bed_z for p in positions])
         range_value = max_value - min_value
-        avg_value = self._calc_mean(positions).bed_z
-        median = self._calc_median(positions).bed_z
+        avg_value = calc_probe_z_average(positions, 'average').bed_z
+        median = calc_probe_z_average(positions, 'median').bed_z
         # calculate the standard deviation
         deviation_sum = 0
         for i in range(len(positions)):
