@@ -233,11 +233,13 @@ class BDPrinterProbe:
 
     def _handle_homing_move_begin(self, hmove):
         if self.mcu_probe in hmove.get_mcu_endstops():
+            self.mcu_probe.homing = 1
             self.mcu_probe.probe_prepare(hmove)
 
     def _handle_homing_move_end(self, hmove):
         if self.mcu_probe in hmove.get_mcu_endstops():
             self.mcu_probe.probe_finish(hmove)
+            # homing = 0 is already handled in multi_probe_end()
 
     def _handle_home_rails_begin(self, homing_state, rails):
         endstops = [es for rail in rails for es, name in rail.get_endstops()]
@@ -1484,9 +1486,8 @@ class BDsensorEndstopWrapper:
 
     def multi_probe_end(self):
         self.toolhead = self.printer.lookup_object('toolhead')
-        homepos = self.toolhead.get_position()        
-        if self.endstop_pin_num == self.sda_pin_num:
-           
+        homepos = self.toolhead.get_position()  
+        if self.endstop_pin_num == self.sda_pin_num:   
             if self.switch_mode == 1 \
                and self.homing == 1 \
                and (self.collision_homing == 1
@@ -1509,7 +1510,10 @@ class BDsensorEndstopWrapper:
                     self.gcode.respond_info("bd_value at %.3f mm" % self.bd_value)
                     homepos[2] = 0 + self.z_offset
                     if abs(self.bd_value-self.z_offset-0.5)>0.05:
-                        self.gcode.respond_info("Detect the plate changed or others, the BD sensor needs recalibration %.3f" % (self.bd_value-0.5))
+                        #self.gcode.respond_info("Detect the z offset changed like palte changed or bed zilt, the BD sensor needs recalibration %.3f" % (self.bd_value-0.5))
+                        self.gcode.respond_info("WARNING: Unexpected Z offset detected (%.3fmm). "
+                        "Possible causes: plate swap, bed tilt, or sensor drift. "
+                        "Running auto-recalibration..." % (self.bd_value - 0.5))
                        # self.toolhead.manual_move([None, None, homepos[2]+10], 2)
                         self.gcode.run_script_from_command("SET_KINEMATIC_POSITION Z=0")
                         self.gcode.run_script_from_command("M102 S-6")
