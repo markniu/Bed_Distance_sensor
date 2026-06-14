@@ -173,6 +173,8 @@ class BDPrinterProbe:
 
     def start_probe_session(self, gcmd):   
         self._probe_times=[]
+        self.mcu_probe.current_probe_cmd = gcmd.get_command()
+        #self.gcode.respond_info("start_probe_session probe session cmd: %s" % self.mcu_probe.current_probe_cmd)
         if "BED_MESH_CALIBRATE" in gcmd.get_command():
             try:
                 if self.mcu_probe.no_stop_probe is not None:
@@ -1486,7 +1488,13 @@ class BDsensorEndstopWrapper:
 
     def multi_probe_end(self):
         self.toolhead = self.printer.lookup_object('toolhead')
-        homepos = self.toolhead.get_position()  
+        homepos = self.toolhead.get_position() 
+        current_cmd = getattr(self, 'current_probe_cmd', '')
+        is_homing = 'G28' in current_cmd or current_cmd == ''
+        if 'G28' not in current_cmd:
+            self.homing = 0
+        self.gcode.respond_info("multi_probe_end from: %s" % current_cmd)
+
         if self.endstop_pin_num == self.sda_pin_num:   
             if self.switch_mode == 1 \
                and self.homing == 1 \
