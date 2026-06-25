@@ -55,8 +55,7 @@ nozzle collision sensing|[Detail](https://github.com/markniu/Bed_Distance_sensor
 |---|---|
 | Discord | [discord.gg/z6ahddnGVU](https://discord.gg/z6ahddnGVU) |
 | Facebook group | [facebook.com/groups/380795976169477](https://facebook.com/groups/380795976169477) |
-| Where to buy | [fabreeko.com](https://fabreeko.com) <br> [pandapi3d.com](https://pandapi3d.com) , [淘宝](https://shop62248922.taobao.com/)
-|
+| Where to buy | 🇺🇸 [fabreeko.com](https://fabreeko.com) <br>  🌏 [pandapi3d.com](https://pandapi3d.com) <br> 🇨🇳 [淘宝](https://shop62248922.taobao.com/)  <br> 🇩🇰 [3do.dk](https://3do.dk/12-abl-probe) |
 
  
 
