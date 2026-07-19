@@ -520,7 +520,7 @@ class BDPrinterProbe:
         gcode = self.printer.lookup_object('gcode')
         self.last_probe_position = gcode.Coord((pos.bed_x, pos.bed_y,
                                                 pos.bed_z))
-        x_offset, y_offset, z_offset = self.probe.get_offsets(gcmd)
+        x_offset, y_offset, z_offset = self.probe_offsets.get_offsets(gcmd)
         self.last_z_result = pos.bed_z + z_offset # Deprecated
 
     cmd_QUERY_PROBE_help = "Return the status of the z-probe"
