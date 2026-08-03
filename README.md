@@ -40,10 +40,11 @@ nozzle collision sensing|[Detail](https://github.com/markniu/Bed_Distance_sensor
 3. Repeatability: **+/-0.005mm**
 4. No external hardware and easy to adjust
 
-### Benefit of version M:
+### What is the difference between VB and VM?
+The VB and VM (BDsensorM) share the same electronic design and firmware, so their functions and performance are essentially the same.
+* VB: The coil and electronics are installed on the toolhead.
+* VM: Only the lightweight 1.5 g coil is installed on the toolhead, while the PCB is mounted away from it, making the VM more suitable for high-temperature chambers up to [120C](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M).
 
-1.  For High temperature chamber up to [120C](https://github.com/markniu/Bed_Distance_sensor/wiki/BDsensor-M)
-2.  The lightest probe, 1.5g
 
 ### Document  : [WiKi](https://github.com/markniu/Bed_Distance_sensor/wiki)
 
