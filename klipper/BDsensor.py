@@ -350,7 +350,12 @@ class BDPrinterProbe:
         b_value = b_value+self.mcu_probe.BD_Sensor_Read(2)
         b_value = b_value/3
         pos_new = toolhead.get_position()
-        ppos[2] = pos_new[2] - b_value + self.mcu_probe.endstop_bdsensor_offset
+        # Add back one z_offset so the probe result is consistent with the
+        # homing reference (z_offset is applied exactly once, at homing).
+        # Otherwise the saved z_offset would be double counted (in the bed
+        # mesh and again during printing). See issue #263.
+        ppos[2] = pos_new[2] - b_value + self.mcu_probe.endstop_bdsensor_offset \
+            + self.z_offset
         epos = self.probe_offsets.create_probe_result(ppos)
         # Allow axis_twist_compensation to update results
         self.printer.send_event("probe:update_results", [epos])
@@ -396,8 +401,10 @@ class BDPrinterProbe:
                 est_print_time = toolhead.mcu.estimated_print_time(systime)
                 if est_print_time>=pos_time:
                     pos = self._lookup_toolhead_pos(pos_time)
-                    intd = self.mcu_probe.BD_Sensor_Read(0)                    
-                    pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset
+                    intd = self.mcu_probe.BD_Sensor_Read(0)
+                    # Add back one z_offset (see _probe / issue #263)
+                    pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset \
+                        + self.z_offset
                     epos = self.probe_offsets.create_probe_result(pos)
                     self.mcu_probe.results.append(epos)
                     # Allow axis_twist_compensation to update results
@@ -457,7 +464,9 @@ class BDPrinterProbe:
                     time.sleep(0.1)
                     pos = toolhead.get_position()
                     intd = self.mcu_probe.BD_Sensor_Read(0)
-                    pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset
+                    # Add back one z_offset (see _probe / issue #263)
+                    pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset \
+                        + self.z_offset
                     epos = self.probe_offsets.create_probe_result(pos)
                     # Allow axis_twist_compensation to update results
                     self.printer.send_event("probe:update_results", [epos])
