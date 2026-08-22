@@ -41,6 +41,7 @@ CMD_SWITCH_MODE = 1023
 DATA_ERROR = 1024
 CMD_READ_ENDSTOP = 1033
 
+PROBE_TIMEOUT = 10.0  # seconds to wait for a probe result during rapid_scan
 
 # Calculate a move's accel_t, cruise_t, and cruise_v
 def calc_move_time(dist, speed, accel):
@@ -242,10 +243,12 @@ class BDPrinterProbe:
         toolhead = self.printer.lookup_object("toolhead")
         toolhead.get_last_move_time()
         if self.rapid_scan == True:
-            self.bedmesh = self.printer.lookup_object('bed_mesh', None)
-            helperc = self.bedmesh.bmc.probe_mgr.probe_helper
-            while len(self.mcu_probe.results) < len(helperc.probe_points):
+            pull_timeout = 0
+            while len(self.mcu_probe.results) < len(self.probe_points) and pull_timeout < PROBE_TIMEOUT:
                 toolhead.dwell(0.1)
+                pull_timeout += 0.1
+            if pull_timeout >= PROBE_TIMEOUT:
+                self.printer.command_error("Probe pull timeout reached")
             self.reactor.update_timer(self.bd_sample_timer, self.reactor.NEVER)
             self.rapid_scan = False
         res = self.mcu_probe.results
