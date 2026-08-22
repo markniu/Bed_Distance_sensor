@@ -208,9 +208,15 @@ class BDPrinterProbe:
         #self.gcode.respond_info("start_probe_session probe session cmd: %s" % self.mcu_probe.current_probe_cmd)
         if "BED_MESH_CALIBRATE" in gcmd.get_command():
             try:
-                if self.mcu_probe.no_stop_probe is not None:
-                    self.rapid_scan = True
-                    self.reactor.update_timer(self.bd_sample_timer, self.reactor.NOW)
+                self.bedmesh = self.printer.lookup_object('bed_mesh', None)
+                self.probe_points = self.bedmesh.bmc.probe_mgr.probe_helper.probe_points
+            except AttributeError as e:
+                gcmd.respond_info("%s" % str(e))
+                raise gcmd.error("%s" % str(e))
+        elif "QUAD_GANTRY_LEVEL" in gcmd.get_command() or "Z_TILT_ADJUST" in gcmd.get_command():
+            try:
+                self.qgl = self.printer.lookup_object('quad_gantry_level', None)
+                self.probe_points = self.qgl.probe_helper.probe_points
             except AttributeError as e:
                 gcmd.respond_info("%s" % str(e))
                 raise gcmd.error("%s" % str(e))
