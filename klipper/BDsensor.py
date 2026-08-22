@@ -134,7 +134,6 @@ class BDPrinterProbe:
         self.probe_calibrate_z = 0.
         self.multi_probe_pending = False
         self.rapid_scan = False
-        self._rapid_scan_idx = 0    # per-session counter for rapid_scan
         self._rapid_scan_pts = None     # probe_points cache for rapid_scan
         self._rapid_scan_offsets = None # (x_off, y_off) cache for rapid_scan
         self.last_state = False
@@ -220,13 +219,6 @@ class BDPrinterProbe:
         self.mcu_probe.multi_probe_begin()
         self.multi_probe_pending = True
         self.mcu_probe.results = []
-        self._rapid_scan_idx = 0
-        # Modern Klipper calls start_probe_session instead of multi_probe_begin,
-        # so we must activate rapid_scan here when no_stop_probe is configured.
-        # Only activate for commands that benefit from rapid_scan BD-sensor reads.
-        # QGL/Z_TILT default to the external endstop (physical trigger) when one
-        # is configured — rapid_scan is BD-sensor-only and must not override that.
-        # Set QGL_Tilt_Probe=0 to explicitly opt QGL/Z_TILT into BD-sensor reads.
         _cmd = gcmd.get_command()
         _is_qgl_tilt = ("QUAD_GANTRY_LEVEL" in _cmd or "Z_TILT_ADJUST" in _cmd)
         _ext_handles_qgl = (self.mcu_probe.has_external_endstop
@@ -332,7 +324,6 @@ class BDPrinterProbe:
         self.multi_probe_pending = True
         self._probe_times = []
         self.mcu_probe.results = []
-        self._rapid_scan_idx = 0
         # Enable rapid-scan (no_stop_probe) mode when the feature is configured.
         # The bd_sample_timer reads the sensor at each lookahead-registered
         # printtime so the toolhead doesn't need to fully stop at every point.
@@ -528,95 +519,11 @@ class BDPrinterProbe:
 
     def run_probe(self, gcmd, retry_session=None):
         toolhead = self.printer.lookup_object("toolhead")
-        # --- rapid-scan (no_stop_probe) path ---
-        # BD sensor reads distance while the toolhead is in motion, so we
-        # use lookahead timing callbacks to record the printtime at each
-        # probe point and read the sensor in the bd_sample_timer event.
-        #
-        # Key insight: pre-queuing only ONE move ahead still causes a stop
-        # because each pre-queued move is the *last* move when flushed,
-        # causing the lookahead to plan deceleration to 0.
-        #
-        # Fix: on the very first call (idx==0) register callbacks AND
-        # pre-queue ALL remaining probe points in one shot.  The entire
-        # mesh sweep is in the lookahead before the first flush, so every
-        # intermediate point is a smooth pass-through.  Subsequent
-        # run_probe calls (idx>0) just spin-wait for their pre-recorded
-        # result and return immediately.
-        # If rapid_scan was enabled by the legacy multi_probe_begin path but
-        # this command should use the external endstop instead of BD-sensor
-        # distance reads (QGL/Z_TILT with external endstop and QGL_Tilt_Probe!=0),
-        # disable rapid_scan now so we fall through to the normal probe path.
-        if self.rapid_scan:
-            _cmd = gcmd.get_command()
-            if (self.mcu_probe.has_external_endstop
-                    and self.mcu_probe.QGL_Tilt_Probe != 0
-                    and ("QUAD_GANTRY_LEVEL" in _cmd
-                         or "Z_TILT_ADJUST" in _cmd)):
-                self.rapid_scan = False
-                self.reactor.update_timer(self.bd_sample_timer,
-                                          self.reactor.NEVER)
-        if self.rapid_scan and any(
-                cmd in gcmd.get_command() for cmd in self._RAPID_SCAN_CMDS):
-            idx = self._rapid_scan_idx
-            self._rapid_scan_idx += 1
-            if idx == 0:
-                # Register callback for P_0 (probe.py already queued its
-                # move — it is the last move in the lookahead right now).
+        if self.rapid_scan == True:
+            if len(self._probe_times) == 0:
+                toolhead.wait_moves()
                 toolhead.register_lookahead_callback(self._scan_lookahead_cb)
-                # Pre-queue P_1 … P_{N-1} and attach a callback to each,
-                # so the whole sweep is planned as one continuous lookahead
-                # path — every intermediate point is a smooth pass-through.
-                self._rapid_scan_pts = None
-                self._rapid_scan_offsets = None
-                try:
-                    if "BED_MESH_CALIBRATE" in gcmd.get_command():
-                        bedmesh = self.printer.lookup_object('bed_mesh', None)
-                        if bedmesh is not None:
-                            ph = bedmesh.bmc.probe_mgr.probe_helper
-                            pts = ph.probe_points
-                            x_off, y_off, _ = self.probe_offsets.get_offsets()
-                            travel_speed = ph.speed
-                            self._rapid_scan_pts = pts
-                            self._rapid_scan_offsets = (x_off, y_off)
-                            for i in range(1, len(pts)):
-                                toolhead.manual_move(
-                                    [pts[i][0] - x_off,
-                                     pts[i][1] - y_off,
-                                     None],
-                                    travel_speed)
-                                toolhead.register_lookahead_callback(
-                                    self._scan_lookahead_cb)
-                            # After pre-queuing, commanded_pos is at P_{N-1}.
-                            # Reset it to P_1 so probe.py's next _move_next()
-                            # queues a zero-distance (skipped) move instead of
-                            # driving the toolhead backward for a 2nd pass.
-                            if len(pts) > 1:
-                                toolhead.commanded_pos[0] = (
-                                    pts[1][0] - x_off)
-                                toolhead.commanded_pos[1] = (
-                                    pts[1][1] - y_off)
-                except AttributeError:
-                    pass
-            else:
-                # For each subsequent point: advance commanded_pos to P_{idx+1}
-                # so probe.py's _move_next() for that point is zero-distance
-                # and gets silently skipped (no 2nd-pass backward moves).
-                pts = self._rapid_scan_pts
-                if pts is not None and idx + 1 < len(pts):
-                    x_off, y_off = self._rapid_scan_offsets
-                    toolhead.commanded_pos[0] = pts[idx + 1][0] - x_off
-                    toolhead.commanded_pos[1] = pts[idx + 1][1] - y_off
-            # Reactor-safe spin until scan_sample_event delivers result[idx].
-            while len(self.mcu_probe.results) <= idx:
-                toolhead.dwell(0.005)
-            epos = self.mcu_probe.results[idx]
-            self.printer.send_event("probe:update_results", [epos])
-            if self.console_verbosity >= 1:
-                self.gcode.respond_info(
-                    "rapid probe: at %.3f,%.3f bed will contact at z=%.6f"
-                    % (epos.bed_x, epos.bed_y, epos.bed_z))
-            return epos
+            return
         speed = gcmd.get_float("PROBE_SPEED", self.speed, above=0.)
         lift_speed = self.get_lift_speed(gcmd)
 
