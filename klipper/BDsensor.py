@@ -349,6 +349,7 @@ class BDPrinterProbe:
             self.mcu_probe.multi_probe_end()
 
     def setup_pin(self, pin_type, pin_params):
+        pins = self.printer.lookup_object('pins')
         if pin_type != 'endstop' or pin_params['pin'] != 'z_virtual_endstop':
             raise pins.error("Probe virtual endstop only"
                              "useful as endstop pin")
@@ -389,7 +390,7 @@ class BDPrinterProbe:
         # add z compensation to probe position
         gcode = self.printer.lookup_object('gcode')
         if self.console_verbosity >= 2:
-            gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
+            gcode.respond_info("external probe: at %.3f,%.3f bed will contact at z=%.6f"
                            % (epos.bed_x, epos.bed_y, epos.bed_z))
         return epos
 
@@ -433,7 +434,7 @@ class BDPrinterProbe:
         # Report results
         gcode = self.printer.lookup_object('gcode')
         if self.console_verbosity >= 1:
-            gcode.respond_info("0probe: at %.3f,%.3f bed will contact at z=%.6f"
+            gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
                            % (epos.bed_x, epos.bed_y, epos.bed_z))
         #self.mcu_probe.homeing = 0
         return epos
@@ -528,7 +529,7 @@ class BDPrinterProbe:
         if self.rapid_scan == True:
             if len(self._probe_times) == 0:
                 toolhead.wait_moves()
-                toolhead.register_lookahead_callback(self._scan_lookahead_cb)
+            toolhead.register_lookahead_callback(self._scan_lookahead_cb)
             return
         speed = gcmd.get_float("PROBE_SPEED", self.speed, above=0.)
         lift_speed = self.get_lift_speed(gcmd)
@@ -573,8 +574,8 @@ class BDPrinterProbe:
                     # Report results
                     gcode = self.printer.lookup_object('gcode')
                     if self.console_verbosity >= 1:
-                        gcode.respond_info("run probe: at %.3f,%.3f bed will contact at z=%.6f"
-                                        % (epos.bed_x, epos.bed_y, epos.bed_z))
+                    gcode.respond_info("run probe: at %.3f,%.3f bed will contact at z=%.6f"
+                                    % (epos.bed_x, epos.bed_y, epos.bed_z))
                     # return pos[:3]
                    # positions.append(pos[:3])
                     positions.append(epos)
@@ -1665,7 +1666,6 @@ class BDsensorEndstopWrapper:
         self.toolhead = self.printer.lookup_object('toolhead')
         homepos = self.toolhead.get_position()
         current_cmd = getattr(self, 'current_probe_cmd', '')
-        is_homing = 'G28' in current_cmd or current_cmd == ''
         if 'G28' not in current_cmd:
             self.homing = 0
         self.gcode.respond_info("multi_probe_end from: %s" % current_cmd)
@@ -1720,7 +1720,7 @@ class BDsensorEndstopWrapper:
                     self.bd_value = self.BD_Sensor_Read(2)
                     if self.bd_value > (self.position_endstop + 0.7):
                         raise self.printer.command_error("Home z failed! "
-                                                         "the triggered at "
+                                                         "the probe triggered at "
                                                          "%.3fmm" % self.bd_value)
                 if self.bd_value <= 0:
                     self.gcode.respond_info("warning:triggered at 0mm")
