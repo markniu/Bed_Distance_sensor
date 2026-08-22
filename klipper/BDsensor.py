@@ -1437,7 +1437,7 @@ class BDsensorEndstopWrapper:
     def query_endstop(self, print_time=0):
         params = 1
         params = self.I2C_BD_send(CMD_READ_ENDSTOP)
-        if self.endstop_pin_num != self.sda_pin_num and self._invert_endstop:
+        if self.has_external_endstop and self._invert_endstop:
             if params == 0:
                 params = 1
             else :
@@ -1559,7 +1559,7 @@ class BDsensorEndstopWrapper:
         curtime = self.printer.get_reactor().monotonic()
         self.toolhead = self.printer.lookup_object('toolhead')
         kin_status = self.toolhead.get_kinematics().get_status(curtime)
-        if 'z' not in kin_status['homed_axes'] and self.endstop_pin_num == self.sda_pin_num:
+        if 'z' not in kin_status['homed_axes'] and not self.has_external_endstop:
             #self.gcode.respond_info("Check bd sensor")
             self.BD_Sensor_Read(2)# check the if the BDsensor is working
         if self.stow_on_each_sample:
@@ -1664,7 +1664,7 @@ class BDsensorEndstopWrapper:
             self.homing = 0
         self.gcode.respond_info("multi_probe_end from: %s" % current_cmd)
 
-        if self.endstop_pin_num == self.sda_pin_num:
+        if not self.has_external_endstop:
             if self.switch_mode == 1 \
                and self.homing == 1 \
                and (self.collision_homing == 1
@@ -1720,7 +1720,7 @@ class BDsensorEndstopWrapper:
                     self.gcode.respond_info("warning:triggered at 0mm")
                 # time.sleep(0.1)
                 self.endstop_bdsensor_offset = 0
-                if self.sda_pin_num is not self.endstop_pin_num:
+                if self.has_external_endstop:
                     self.endstop_bdsensor_offset = homepos[2] - self.bd_value
                     self.gcode.respond_info("offset of endstop to bdsensor %.3fmm"
                                             % self.endstop_bdsensor_offset)
@@ -1748,7 +1748,7 @@ class BDsensorEndstopWrapper:
             self.raise_probe()
 
     def get_position_endstop(self):
-        if self.endstop_pin_num != self.sda_pin_num:
+        if self.has_external_endstop:
             # External endstop (Tap): Klipper sets Z to this value when the
             # endstop fires.  position_endstop is the coarse trigger height;
             # homing_probe_z_offset is the PROBE_CALIBRATE / babystep fine-tune.
