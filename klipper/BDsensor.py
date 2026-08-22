@@ -208,15 +208,22 @@ class BDPrinterProbe:
         #self.gcode.respond_info("start_probe_session probe session cmd: %s" % self.mcu_probe.current_probe_cmd)
         if "BED_MESH_CALIBRATE" in gcmd.get_command():
             try:
-                self.bedmesh = self.printer.lookup_object('bed_mesh', None)
-                self.probe_points = self.bedmesh.bmc.probe_mgr.probe_helper.probe_points
+                bm = self.printer.lookup_object('bed_mesh', None)
+                self.probe_points = bm.bmc.probe_mgr.probe_helper.probe_points
             except AttributeError as e:
                 gcmd.respond_info("%s" % str(e))
                 raise gcmd.error("%s" % str(e))
-        elif "QUAD_GANTRY_LEVEL" in gcmd.get_command() or "Z_TILT_ADJUST" in gcmd.get_command():
+        elif "QUAD_GANTRY_LEVEL" in gcmd.get_command():
             try:
-                self.qgl = self.printer.lookup_object('quad_gantry_level', None)
-                self.probe_points = self.qgl.probe_helper.probe_points
+                qgl = self.printer.lookup_object('quad_gantry_level', None)
+                self.probe_points = qgl.probe_helper.probe_points
+            except AttributeError as e:
+                gcmd.respond_info("%s" % str(e))
+                raise gcmd.error("%s" % str(e))
+        elif "Z_TILT_ADJUST" in gcmd.get_command():
+            try:
+                zt = self.printer.lookup_object('z_tilt', None)
+                self.probe_points = zt.probe_helper.probe_points
             except AttributeError as e:
                 gcmd.respond_info("%s" % str(e))
                 raise gcmd.error("%s" % str(e))
@@ -572,9 +579,8 @@ class BDPrinterProbe:
                     # Allow axis_twist_compensation to update results
                     self.printer.send_event("probe:update_results", [epos])
                     # Report results
-                    gcode = self.printer.lookup_object('gcode')
                     if self.console_verbosity >= 1:
-                    gcode.respond_info("run probe: at %.3f,%.3f bed will contact at z=%.6f"
+                        gcmd.respond_info("run probe: at %.3f,%.3f bed will contact at z=%.6f"
                                     % (epos.bed_x, epos.bed_y, epos.bed_z))
                     # return pos[:3]
                    # positions.append(pos[:3])
