@@ -233,15 +233,28 @@ class BDPrinterProbe:
         self.multi_probe_pending = True
         self.mcu_probe.results = []
         _cmd = gcmd.get_command()
-        _is_qgl_tilt = ("QUAD_GANTRY_LEVEL" in _cmd or "Z_TILT_ADJUST" in _cmd)
-        _ext_handles_qgl = (self.mcu_probe.has_external_endstop
-                            and self.mcu_probe.QGL_Tilt_Probe != 0
-                            and _is_qgl_tilt)
+
+        # rapid scan enabled if no_stop_probe is set (and switch it off on any if encountering contrary conditions)
+        _z_move_on_probe = self.mcu_probe.QGL_Tilt_Probe
         if (getattr(self.mcu_probe, 'no_stop_probe', None) is not None
-                and any(cmd in _cmd for cmd in self._RAPID_SCAN_CMDS)
-                and not _ext_handles_qgl):
+            and self.mcu_probe.no_stop_probe):
             self.rapid_scan = True
+
+        if not any(cmd in _cmd for cmd in self._RAPID_SCAN_CMDS):
+            if self.rapid_scan and self.console_verbosity > 0: gcmd.respond_info("Rapid scan disabled as command does not support it (%s)" % _cmd)
+            self.rapid_scan = False
+
+        if self.mcu_probe.use_endstop:
+            if self.rapid_scan and self.console_verbosity > 0: gcmd.respond_info("Rapid scan disabled due to external handling (USE_ENDSTOP=1)")
+            self.rapid_scan = False
+
+        if _z_move_on_probe:
+            if self.rapid_scan and self.console_verbosity > 0: gcmd.respond_info("Rapid scan disabled due to Z move on probe (QGL_Tilt_Probe=1)")
+            self.rapid_scan = False
+
+        if self.rapid_scan and self.console_verbosity > 0:
             self.reactor.update_timer(self.bd_sample_timer, self.reactor.NOW)
+            if self.console_verbosity > 0: gcmd.respond_info("Rapid scan enabled")
         return self
 
     def pull_probed_results(self):
