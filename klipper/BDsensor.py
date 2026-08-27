@@ -254,8 +254,6 @@ class BDPrinterProbe:
                 pull_timeout += 0.1
             if pull_timeout >= PROBE_TIMEOUT:
                 self.printer.command_error("Probe pull timeout reached")
-            self.reactor.update_timer(self.bd_sample_timer, self.reactor.NEVER)
-            self.rapid_scan = False
         res = self.mcu_probe.results
         self.mcu_probe.results = []
         return res
@@ -627,8 +625,6 @@ class BDPrinterProbe:
         epos = calc_probe_z_average(positions, samples_result)
         #self.results.append(epos)
         self.mcu_probe.results.append(epos)
-        # New probe.py collects results via run_probe's return value
-        return epos
 
     cmd_PROBE_help = "Probe Z-height at current XY position"
 
