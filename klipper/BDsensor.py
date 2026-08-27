@@ -130,7 +130,7 @@ class BDPrinterProbe:
         self.x_offset = config.getfloat('x_offset', 0.)
         self.y_offset = config.getfloat('y_offset', 0.)
         self.z_offset = config.getfloat('z_offset')
-        self.console_verbosity = config.getint('console_verbosity', 0, minval=0, maxval=2)
+        self.console_verbosity = mcu_probe.console_verbosity
         self.probe_calibrate_z = 0.
         self.multi_probe_pending = False
         self.rapid_scan = False
@@ -312,7 +312,7 @@ class BDPrinterProbe:
                           and rail.homing_retract_dist == 0):
                     self.homing_speed_tmp = rail.homing_speed
                     rail.homing_speed = rail.second_homing_speed
-                    self.gcode.respond_info("Homing_speed at %.3f" % (rail.homing_speed))
+                    if self.console_verbosity > 0 : self.gcode.respond_info("Homing_speed at %.3f" % (rail.homing_speed))
 
     def _handle_home_rails_end(self, homing_state, rails):
         endstops = [es for rail in rails for es, name in rail.get_endstops()]
@@ -394,7 +394,7 @@ class BDPrinterProbe:
         self.printer.send_event("probe:update_results", [epos])
         # add z compensation to probe position
         gcode = self.printer.lookup_object('gcode')
-        if self.console_verbosity >= 2:
+        if self.console_verbosity > 1:
             gcode.respond_info("external probe: at %.3f,%.3f bed will contact at z=%.6f"
                            % (epos.bed_x, epos.bed_y, epos.bed_z))
         return epos
@@ -438,7 +438,7 @@ class BDPrinterProbe:
         self.printer.send_event("probe:update_results", [epos])
         # Report results
         gcode = self.printer.lookup_object('gcode')
-        if self.console_verbosity >= 1:
+        if self.console_verbosity > 1:
             gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
                            % (epos.bed_x, epos.bed_y, epos.bed_z))
         #self.mcu_probe.homeing = 0
@@ -489,7 +489,7 @@ class BDPrinterProbe:
                     #self.printer.send_event("probe:update_results", [epos])
                     # limit the message output to the console else it may take a lot of time
                     if len(self.mcu_probe.results) < 500:
-                        if self.console_verbosity >= 1:
+                        if self.console_verbosity > 1:
                             self.gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
                                  % (epos.bed_x, epos.bed_y, epos.bed_z))
                     break
@@ -577,7 +577,7 @@ class BDPrinterProbe:
                     # Allow axis_twist_compensation to update results
                     self.printer.send_event("probe:update_results", [epos])
                     # Report results
-                    if self.console_verbosity >= 1:
+                    if self.console_verbosity > 1:
                         gcmd.respond_info("run probe: at %.3f,%.3f bed will contact at z=%.6f"
                                     % (epos.bed_x, epos.bed_y, epos.bed_z))
                     # return pos[:3]
@@ -630,7 +630,7 @@ class BDPrinterProbe:
 
     def cmd_PROBE(self, gcmd):
         pos = run_single_probe(self, gcmd)
-        gcmd.respond_info("Result: at %.3f,%.3f estimate contact at z=%.6f"
+        if self.console_verbosity > 0 : gcmd.respond_info("Result: at %.3f,%.3f estimate contact at z=%.6f"
                           % (pos.bed_x, pos.bed_y, pos.bed_z))
         gcode = self.printer.lookup_object('gcode')
         self.last_probe_position = gcode.Coord((pos.bed_x, pos.bed_y,
@@ -813,6 +813,7 @@ class BDsensorEndstopWrapper:
 
         self.config = config
         self.name = config.get_name()
+        self.console_verbosity = config.getint('console_verbosity', 0, minval=0, maxval=2)
         self.g28_cmd = config.get('homing_cmd', 'G28')
         self.z_adjust = config.getfloat('z_adjust', 0., minval=-0.3, below=0.3)
         self.z_offset = config.getfloat('z_offset', 0., minval=-0.6, maxval=0.6)
@@ -1670,7 +1671,7 @@ class BDsensorEndstopWrapper:
         current_cmd = getattr(self, 'current_probe_cmd', '')
         if 'G28' not in current_cmd:
             self.homing = 0
-        self.gcode.respond_info("multi_probe_end from: %s" % current_cmd)
+        if self.console_verbosity > 0 : self.gcode.respond_info("multi_probe_end from: %s" % current_cmd)
 
         if not self.has_external_endstop:
             if self.switch_mode == 1 \
