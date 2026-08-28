@@ -428,7 +428,7 @@ class BDPrinterProbe:
             raise self.printer.command_error(reason)
         # self.mcu_probe.adjust_probe()
         toolhead.wait_moves()
-        time.sleep(0.1)
+        toolhead.dwell(0.1)
         b_value = self.mcu_probe.BD_Sensor_Read(2)
         b_value = b_value+self.mcu_probe.BD_Sensor_Read(2)
         b_value = b_value+self.mcu_probe.BD_Sensor_Read(2)
@@ -574,7 +574,7 @@ class BDPrinterProbe:
                          and self.mcu_probe.QGL_Tilt_Probe == 0))):
                     # pos = self._probe(speed)
                     toolhead.wait_moves()
-                    time.sleep(0.1)
+                    toolhead.dwell(0.1)
                     pos = toolhead.get_position()
                     intd = self.mcu_probe.BD_Sensor_Read(0)
                     # Add back one z_offset (see _probe / issue #263)
@@ -1720,13 +1720,13 @@ class BDsensorEndstopWrapper:
                 self.toolhead.set_position(homepos)
             elif self.homing == 1:
                 self.I2C_BD_send(CMD_DISTANCE_MODE)
-                time.sleep(0.1)
+                self.toolhead.dwell(0.1)
                 #self.gcode.respond_info("multi_probe_end")
                 self.bd_value = self.BD_Sensor_Read(2)
                 if self.bd_value > (self.position_endstop + 2):
                     self.gcode.respond_info("triggered at %.3f mm" % self.bd_value)
                     self.I2C_BD_send(CMD_REBOOT_SENSOR)
-                    time.sleep(0.9)
+                    self.toolhead.dwell(0.9)
                     self.bd_value = self.BD_Sensor_Read(2)
                     if self.bd_value > (self.position_endstop + 0.7):
                         raise self.printer.command_error("Home z failed! "
