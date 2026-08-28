@@ -1736,7 +1736,7 @@ class BDsensorEndstopWrapper:
                     self.gcode.respond_info("warning:triggered at 0mm")
                 # time.sleep(0.1)
                 self.endstop_bdsensor_offset = 0
-                if self.has_external_endstop:
+                if self.has_external_endstop: # !FIXME: Might be dead code as the first if already checks this
                     self.endstop_bdsensor_offset = homepos[2] - self.bd_value
                     self.gcode.respond_info("offset of endstop to bdsensor %.3fmm"
                                             % self.endstop_bdsensor_offset)
