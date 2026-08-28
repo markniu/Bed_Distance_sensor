@@ -567,11 +567,7 @@ class BDPrinterProbe:
         while len(positions) < sample_count:
             # Probe position
             try:
-                if ((self.mcu_probe is not None) and
-                        (("BED_MESH_CALIBRATE" in gcmd.get_command()) or
-                         (("QUAD_GANTRY_LEVEL" in gcmd.get_command() or
-                           "Z_TILT_ADJUST" in gcmd.get_command())
-                         and self.mcu_probe.QGL_Tilt_Probe == 0))):
+                if self.rapid_scan :
                     # pos = self._probe(speed)
                     toolhead.wait_moves()
                     toolhead.dwell(0.1)
