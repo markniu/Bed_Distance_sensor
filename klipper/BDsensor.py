@@ -348,12 +348,6 @@ class BDPrinterProbe:
         self.multi_probe_pending = True
         self._probe_times = []
         self.mcu_probe.results = []
-        # Enable rapid-scan (no_stop_probe) mode when the feature is configured.
-        # The bd_sample_timer reads the sensor at each lookahead-registered
-        # printtime so the toolhead doesn't need to fully stop at every point.
-        if getattr(self.mcu_probe, 'no_stop_probe', None) is not None:
-            self.rapid_scan = True
-            self.reactor.update_timer(self.bd_sample_timer, self.reactor.NOW)
 
     def multi_probe_end(self):
         if self.multi_probe_pending:
