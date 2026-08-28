@@ -852,7 +852,8 @@ class BDsensorEndstopWrapper:
         self.collision_calibrate = config.getint('collision_calibrate', 0)
         self.rt_sample_time = config.getint('rt_sample_time', 0)#ms
         self.rt_max_range = config.getfloat('rt_max_range', 0, minval=0)
-        self.QGL_Tilt_Probe = config.getint('QGL_Tilt_Probe', 1)
+        self.QGL_Tilt_Probe = config.getint('QGL_Tilt_Probe', 1) # wether to use z lowering mecanism to probe the Z_TILT or QGL points
+        self.use_endstop = 0 # wether to use external probe, should be set at runtime by bd_set()
         self.switch_mode_sample_time = config.getfloat('SWITCH_MODE_SAMPLE_TIME', 0.006)
         self.speed = config.getfloat('speed', 3.0, above=0.)
 
