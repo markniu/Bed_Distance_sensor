@@ -1329,23 +1329,34 @@ class BDsensorEndstopWrapper:
                               "command will update the printer config", cmd_bd)
             return
 
-        cmd_bd = gcmd.get_float('QGL_TILT_PROBE', None)
+        cmd_bd = gcmd.get_int('QGL_TILT_PROBE', None)
         if cmd_bd is not None:
             self.QGL_Tilt_Probe = cmd_bd
             self.gcode.respond_info("QGL_Tilt_Probe:%d"%self.QGL_Tilt_Probe)
             return
+        cmd_bd = gcmd.get_int('USE_ENDSTOP', None)
+        if cmd_bd is not None:
+            if self.has_external_endstop:
+                self.use_endstop = cmd_bd
+                self.gcode.respond_info("USE_ENDSTOP:%d"%self.use_endstop)
+            else:
+                gcmd.respond_info("Cannot set USE_ENDSTOP because there is no external endstop defined.")
+            return
 
-        cmd_bd = gcmd.get_float('COLLISION_HOMING', None)
+        cmd_bd = gcmd.get_int('COLLISION_HOMING', None)
         if cmd_bd is not None:
             self.collision_homing = cmd_bd
+            self.gcode.respond_info("COLLISION_HOMING:%d"%self.collision_homing)
             return
-        cmd_bd = gcmd.get_float('COLLISION_CALIBRATING', None)
+        cmd_bd = gcmd.get_int('COLLISION_CALIBRATING', None)
         if cmd_bd is not None:
             self.collision_calibrating = cmd_bd
+            self.gcode.respond_info("COLLISION_CALIBRATING:%d"%self.collision_calibrating)
             return
         cmd_bd = gcmd.get_float('POSITION_ENDSTOP', None)
         if cmd_bd is not None:
             self.position_endstop = cmd_bd
+            self.gcode.respond_info("POSITION_ENDSTOP:%.3f"%self.position_endstop)
             return
 
     def BD_real_time(self, bd_height):
