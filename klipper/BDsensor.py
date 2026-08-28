@@ -252,9 +252,10 @@ class BDPrinterProbe:
             if self.rapid_scan and self.console_verbosity > 0: gcmd.respond_info("Rapid scan disabled due to Z move on probe (QGL_Tilt_Probe=1)")
             self.rapid_scan = False
 
-        if self.rapid_scan and self.console_verbosity > 0:
+        if self.rapid_scan:
             self.reactor.update_timer(self.bd_sample_timer, self.reactor.NOW)
             if self.console_verbosity > 0: gcmd.respond_info("Rapid scan enabled")
+
         return self
 
     def pull_probed_results(self):
