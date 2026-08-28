@@ -916,7 +916,7 @@ class BDsensorEndstopWrapper:
             if self.mcu_endstop is not self.mcu:
                 self.oid_endstop = self.mcu_endstop.create_oid()
         except Exception as e:
-            pass
+            raise self.config.error("%s" % str(e))
         self.cmd_queue = self.mcu.alloc_command_queue()
         # Setup iterative solver
         ffi_main, ffi_lib = chelper.get_ffi()
