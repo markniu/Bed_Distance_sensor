@@ -315,7 +315,9 @@ class BDPrinterProbe:
             raise self.printer.command_error(reason)
         # Allow axis_twist_compensation to update results
         epos = self.probe_offsets.create_probe_result(ppos)
-        self.printer.send_event("probe:update_results", [epos])
+        poslist = [epos]
+        self.printer.send_event("probe:update_results", poslist)
+        epos = poslist[0]
         # add z compensation to probe position
         gcode = self.printer.lookup_object('gcode')
         gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
@@ -358,7 +360,9 @@ class BDPrinterProbe:
             + self.z_offset
         epos = self.probe_offsets.create_probe_result(ppos)
         # Allow axis_twist_compensation to update results
-        self.printer.send_event("probe:update_results", [epos])
+        poslist = [epos]
+        self.printer.send_event("probe:update_results", poslist)
+        epos = poslist[0]
         # Report results
         gcode = self.printer.lookup_object('gcode')
         gcode.respond_info("0probe: at %.3f,%.3f bed will contact at z=%.6f"
@@ -406,9 +410,11 @@ class BDPrinterProbe:
                     pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset \
                         + self.z_offset
                     epos = self.probe_offsets.create_probe_result(pos)
-                    self.mcu_probe.results.append(epos)
                     # Allow axis_twist_compensation to update results
-                    #self.printer.send_event("probe:update_results", [epos])
+                    poslist = [epos]
+                    self.printer.send_event("probe:update_results", poslist)
+                    epos = poslist[0]
+                    self.mcu_probe.results.append(epos)
                     # limit the message output to the console else it may take a lot of time
                     if len(self.mcu_probe.results) < 500:
                         self.gcode.respond_info("probe: at %.3f,%.3f bed will contact at z=%.6f"
@@ -469,7 +475,9 @@ class BDPrinterProbe:
                         + self.z_offset
                     epos = self.probe_offsets.create_probe_result(pos)
                     # Allow axis_twist_compensation to update results
-                    self.printer.send_event("probe:update_results", [epos])
+                    poslist = [epos]
+                    self.printer.send_event("probe:update_results", poslist)
+                    epos = poslist[0]
                     # Report results
                     gcode = self.printer.lookup_object('gcode')
                     gcode.respond_info("run probe: at %.3f,%.3f bed will contact at z=%.6f"
