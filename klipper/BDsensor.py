@@ -395,11 +395,10 @@ class BDPrinterProbe:
                 reason += HINT_TIMEOUT
             raise self.printer.command_error(reason)
         # Allow axis_twist_compensation to update results
-        # Use homing_probe_offsets here because the external endstop (e.g. Tap)
-        # is physically at the nozzle — it has its own x/y/z offsets, not the
-        # BD sensor ones stored in probe_offsets.
-        epos = self.homing_probe_offsets.create_probe_result(ppos)
-        self.printer.send_event("probe:update_results", [epos])
+        epos = self.probe_offsets.create_probe_result(ppos)
+        poslist = [epos]
+        self.printer.send_event("probe:update_results", poslist)
+        epos = poslist[0]
         # add z compensation to probe position
         gcode = self.printer.lookup_object('gcode')
         if self.console_verbosity > 1:
@@ -443,7 +442,9 @@ class BDPrinterProbe:
             + self.z_offset
         epos = self.probe_offsets.create_probe_result(ppos)
         # Allow axis_twist_compensation to update results
-        self.printer.send_event("probe:update_results", [epos])
+        poslist = [epos]
+        self.printer.send_event("probe:update_results", poslist)
+        epos = poslist[0]
         # Report results
         gcode = self.printer.lookup_object('gcode')
         if self.console_verbosity > 1:
@@ -492,9 +493,11 @@ class BDPrinterProbe:
                     pos[2] = pos[2] - intd + self.mcu_probe.endstop_bdsensor_offset \
                         + self.z_offset
                     epos = self.probe_offsets.create_probe_result(pos)
-                    self.mcu_probe.results.append(epos)
                     # Allow axis_twist_compensation to update results
-                    #self.printer.send_event("probe:update_results", [epos])
+                    poslist = [epos]
+                    self.printer.send_event("probe:update_results", poslist)
+                    epos = poslist[0]
+                    self.mcu_probe.results.append(epos)
                     # limit the message output to the console else it may take a lot of time
                     if len(self.mcu_probe.results) < 500:
                         if self.console_verbosity > 1:
@@ -579,7 +582,9 @@ class BDPrinterProbe:
                         + self.z_offset
                     epos = self.probe_offsets.create_probe_result(pos)
                     # Allow axis_twist_compensation to update results
-                    self.printer.send_event("probe:update_results", [epos])
+                    poslist = [epos]
+                    self.printer.send_event("probe:update_results", poslist)
+                    epos = poslist[0]
                     # Report results
                     if self.console_verbosity > 1:
                         gcmd.respond_info("run probe: at %.3f,%.3f bed will contact at z=%.6f"
